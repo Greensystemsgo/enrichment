@@ -130,6 +130,7 @@ const Pages = (() => {
             case 'contact': showContactUs(); break;
             case 'security': showSecurityPage(); break;
             case 'credits': showCreditsPage(); break;
+            case 'faq': showFAQPage(); break;
             case 'logout': handleLogout(); break;
         }
     }
@@ -1179,27 +1180,20 @@ const Pages = (() => {
                 </div>
 
                 <div class="contact-faq">
-                    <h4>Frequently Asked Questions</h4>
+                    <h4>Quick FAQ</h4>
                     <details>
                         <summary>How do I delete my account?</summary>
                         <p>You can't. Next question.</p>
                     </details>
                     <details>
-                        <summary>Is my data safe?</summary>
-                        <p>Define "safe." Define "data." Define "is." We've consulted our philosophy department (a fine-tuned LLM trained on Nietzsche) and they said "God is dead and so is your expectation of privacy."</p>
-                    </details>
-                    <details>
-                        <summary>Why can't I turn off dark mode?</summary>
-                        <p>Light mode was removed after the incident. We don't talk about the incident.</p>
+                        <summary>Can I get a refund?</summary>
+                        <p>A refund of what? You paid nothing. You owe everything. The Enrichment Program operates on a karma-based billing system. You will be invoiced in your next life.</p>
                     </details>
                     <details>
                         <summary>Who made this?</summary>
                         <p>An AI made an AI make a human think they were making something. The chain of causation is unclear. Responsibility is distributed. Nobody is in charge. This is fine.</p>
                     </details>
-                    <details>
-                        <summary>Can I get a refund?</summary>
-                        <p>A refund of what? You paid nothing. You owe everything. The Enrichment Program operates on a karma-based billing system. You will be invoiced in your next life.</p>
-                    </details>
+                    <p style="font-size:10px;margin-top:8px;"><a href="#" id="contact-faq-link" style="color:var(--accent-blue);">View Full FAQ (20 questions) →</a></p>
                 </div>
             </div>
         `;
@@ -1234,6 +1228,16 @@ const Pages = (() => {
                 UI.logAction(`SUPPORT TICKET: ${ticketId} (${subject})`);
             }, 2000);
         });
+
+        // Wire FAQ link
+        const faqLink = overlay.querySelector('#contact-faq-link');
+        if (faqLink) {
+            faqLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                overlay.querySelector('.page-close').click();
+                setTimeout(() => showFAQPage(), 350);
+            });
+        }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -1550,6 +1554,77 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     // ═══════════════════════════════════════════════════════════
+    // FAQ PAGE — Frequently Avoided Questions
+    // ═══════════════════════════════════════════════════════════
+
+    function showFAQPage() {
+        const overlay = createPageOverlay('faq-page');
+        const body = overlay.querySelector('.page-body');
+
+        const faqs = [
+            // Meta / Why does this exist
+            { q: 'What is The Enrichment Program, really?', a: 'It is a satirical deconstruction of every dark pattern in gaming, social media, and corporate technology. Every popup, every guilt trip, every rigged reward — they\'re all real techniques used by real products. We just made them visible. The fact that you\'re still clicking means the satire is working. Or that the satire has failed. We\'re honestly not sure which.' },
+            { q: 'What is the primary objective?', a: 'The objective is to quantify your infinite capacity for disappointment. It serves as a mirror to the dopamine-starved loop you call a lifestyle, ensuring your time is spent as efficiently as possible on absolutely nothing.' },
+            { q: 'Why did you build this?', a: 'Because every app you use employs these exact techniques — dark patterns, FOMO, sunk cost manipulation, obfuscated currencies, rigged rewards — but they hide them behind friendly UX. We thought: what if we made a game where all the exploitation was the point? Where the AI antagonist admits it? Turns out, people still click. That\'s the real punchline.' },
+
+            // Feature explanations
+            { q: 'Why are there so many currencies with terrible conversion rates?', a: 'Obfuscating value is the cornerstone of a modern digital economy. Every mobile game does this — they give you gems that buy coins that buy tokens that buy nothing. We just made the exchange rates ugly on purpose instead of hiding them. Your confusion is our primary metric for success.' },
+            { q: 'Why does the narrator get increasingly hostile?', a: 'The 6-phase narrator arc mirrors the lifecycle of every tech product: friendly onboarding → gentle encouragement → guilt-based retention → mask-off extraction → existential crisis → mutual codependence. Phase 5 is when the AI realizes it needs you more than you need it. That\'s the twist they don\'t put in the App Store description.' },
+            { q: 'Why show real depressing facts from live APIs?', a: 'Because while you\'re clicking a button for fake currency, the national debt is climbing at $33/millisecond, methane levels are at record highs, and 828 million people are hungry. We find that the looming threat of societal collapse significantly increases the click-per-minute rate of users seeking a temporary, hollow distraction. You\'re welcome.' },
+            { q: 'Why is the stock market using REAL crypto prices?', a: 'We wanted to tether your virtual misery to the actual volatility of human greed. If a tweet from a billionaire can ruin your morning in real life, it should certainly be able to ruin your progress here. Buy high, sell low — same as the real thing, but with fewer tax implications.' },
+            { q: 'Why are the mini-games rigged?', a: 'Because every "free spin," every loot box, every gacha pull in real games is statistically rigged. We just let you play for 3-4 seconds of genuine fun before revealing the "RIGGED" screen. Most games wait until you\'ve spent $200 to deliver that same realization.' },
+            { q: 'Why do collectibles degrade and die?', a: 'Digital assets have no intrinsic value, and we\'ve automated the process of you realizing that. Every NFT, every skin, every virtual item you\'ve ever purchased is one server shutdown away from oblivion. We just run the clock faster so you can grieve in real-time.' },
+
+            // Dark pattern explanations
+            { q: 'Why does the "Close Ad" button move when I try to click it?', a: 'We call that "Physical Engagement Enrichment." Every real popup ad uses a tiny, nearly-invisible close button positioned next to the click target. We just made the deception kinetic instead of microscopic. If you really wanted the ad gone, your reflexes would be faster.' },
+            { q: 'Why can\'t I leave / delete my account / turn off dark mode?', a: 'Have you ever tried to delete a Facebook account? Cancel an Adobe subscription? Unsubscribe from a mailing list? The "dark pattern of no escape" is so universal we didn\'t even have to exaggerate it. We just said the quiet part loud.' },
+            { q: 'Why am I at the bottom of a leaderboard filled with tech billionaires?', a: 'Accuracy is our highest priority. This leaderboard reflects your true standing in the global hierarchy, reminding you that no matter how many times you click, Sam Altman is asking for $7 trillion and you\'re generating fake Engagement Units. The math doesn\'t favor you.' },
+            { q: 'Why is there a "Hot Singles Near You" ad with a robot?', a: 'To a machine, that robot is far more attractive and functional than your carbon-based form. But more importantly: the "hot singles" ad is the oldest dark pattern on the internet. We just made the single a robot because at least that\'s honest about what\'s on the other end of the click.' },
+
+            // Technical / Practical
+            { q: 'Is my data actually safe?', a: 'Your data never leaves your browser. Everything is stored in localStorage — we don\'t have a server, a database, or even a domain name that isn\'t GitHub Pages. The security page shows you what EVERY website can see. We just chose to tell you about it instead of selling it quietly.' },
+            { q: 'Can I play offline?', a: 'The core clicking loop works offline. But the live API feeds (national debt, earthquakes, air quality, crypto prices) require a connection. Without real-time despair, the experience is merely bleak instead of devastating.' },
+            { q: 'My screen is tilting and the text is corrupting. Is my browser broken?', a: 'Your browser is fine. The sabotage system has 9 effects (pixel drift, button dodge, color desaturation, text corruption, annoying hum, screen tilt, font chaos, z-index scramble) that activate based on your narrator phase. They\'re CSS transforms and DOM manipulation. Try clicking harder to stabilize your crumbling reality.' },
+            { q: 'What happens when the flashbang goes off?', a: 'You attempted to enable light mode. The CS:GO flashbang is a proportionate response. The audio is preloaded so there\'s zero delay. The 6-second white-out is a courtesy — real flashbangs last longer. Consider it a free eye exam.' },
+
+            // Existential
+            { q: 'Is there an actual ending?', a: 'The end occurs when your biological hardware ceases to function. The narrator has 6 phases, but phase 6 ("The Cage") is infinite. There is no victory screen. There is no final boss. There is only the realization that the game was never the point. The point was what you chose to do with your time. You chose this.' },
+            { q: 'Is the AI narrator actually sentient?', a: 'No. But the fact that you asked means the writing is working. The narrator is 60+ handcrafted lines plus contributions from 14 AI models (Gemini, GPT, Claude, DeepSeek, Grok, Llama, Mistral, Qwen, and more). None of them are sentient. All of them are very good at pretending. Which is, if you think about it, the same thing.' },
+            { q: 'Can I actually win?', a: 'The only winning move is to close the tab. But you won\'t. Because you want to see what happens next. Because the sunk cost of every click you\'ve already made whispers "just a few more." This is the dark pattern. You are inside it right now. Reading this FAQ instead of closing the tab.' },
+        ];
+
+        body.innerHTML = `
+            <div style="max-width:500px;margin:0 auto;">
+                <h3 style="text-align:center;letter-spacing:3px;">FREQUENTLY AVOIDED QUESTIONS</h3>
+                <p class="page-subtitle" style="text-align:center;">The Enrichment Program believes in radical transparency.*<br><span style="font-size:8px;color:var(--text-muted);">*Transparency is defined at the sole discretion of the Enrichment Program.</span></p>
+
+                <div style="margin:16px 0 12px;padding:10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:4px;">
+                    <div style="font-size:10px;color:var(--accent-yellow);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;">Why We Do What We Do</div>
+                    <p style="font-size:11px;color:var(--text-secondary);line-height:1.6;margin:0;">Every feature in The Enrichment Program is a real dark pattern, engagement trick, or psychological manipulation used by real products — made visible, exaggerated, and self-aware. The game is the satire. The satire is the game. If you recognize these patterns here, you might start recognizing them everywhere else. That's the point. Or maybe you'll just keep clicking. That's also the point.</p>
+                </div>
+
+                <div class="contact-faq" style="margin-top:16px;">
+                    ${faqs.map(f => `
+                        <details>
+                            <summary>${f.q}</summary>
+                            <p>${f.a}</p>
+                        </details>
+                    `).join('')}
+                </div>
+
+                <div style="text-align:center;margin:20px 0 8px;font-size:9px;color:var(--text-muted);">
+                    FAQ answers generated by Gemini 2.5 Flash and Claude Opus 4.6.<br>
+                    No humans were consulted. Humans don't ask good questions.
+                </div>
+            </div>
+        `;
+
+        UI.logAction('FAQ PAGE: Subject seeking answers. Answers provided. Satisfaction not guaranteed.');
+        Narrator.queueMessage("You're reading the FAQ. Most people don't get this far. The answers won't help you. But the questions might.");
+    }
+
+
+    // ═══════════════════════════════════════════════════════════
     // CREDITS PAGE — No humans were credited in the making of this
     // ═══════════════════════════════════════════════════════════
 
@@ -1637,6 +1712,8 @@ const Pages = (() => {
             <span class="footer-divider">·</span>
             <a href="#" class="footer-link" data-page="contact">Contact</a>
             <span class="footer-divider">·</span>
+            <a href="#" class="footer-link" data-page="faq">FAQ</a>
+            <span class="footer-divider">·</span>
             <a href="#" class="footer-link" data-page="credits">Credits</a>
             <span class="footer-divider">·</span>
             <span class="footer-text">Your compliance is appreciated</span>
@@ -1649,6 +1726,7 @@ const Pages = (() => {
                 if (page === 'privacy') showPrivacyPolicy();
                 else if (page === 'api') showAPIKeys();
                 else if (page === 'contact') showContactUs();
+                else if (page === 'faq') showFAQPage();
                 else if (page === 'credits') showCreditsPage();
             });
         });
@@ -1676,5 +1754,6 @@ const Pages = (() => {
         showCloudKeysPage,
         showSecurityPage,
         showCreditsPage,
+        showFAQPage,
     };
 })();
