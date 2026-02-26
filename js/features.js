@@ -343,7 +343,17 @@ const Features = (() => {
     // FLASH / SILVERLIGHT POPUP — Fake plugin required
     // ═══════════════════════════════════════════════════════════
 
+    // Detect user's OS for cross-platform trolling
+    function detectOS() {
+        const ua = navigator.userAgent || '';
+        const platform = navigator.platform || '';
+        if (/Mac|iPhone|iPad|iPod/i.test(ua) || /Mac/i.test(platform)) return 'mac';
+        if (/Linux/i.test(ua) && !/Android/i.test(ua)) return 'linux';
+        return 'windows'; // default fallback
+    }
+
     const PLUGIN_POPUPS = [
+        // ── Classic Dead Software ──────────────────────────
         {
             name: 'Adobe Flash Player',
             version: '47.0.0.321',
@@ -384,10 +394,247 @@ const Features = (() => {
             action: 'INSTALL QUICKTIME',
             aftermath: "QuickTime for Windows. Discontinued, deprecated, and definitely not something you should install. But you clicked anyway.",
         },
+        // ── More Dead Software ─────────────────────────────
+        {
+            name: 'Adobe Shockwave Player',
+            version: '12.3.5.205',
+            icon: '💥',
+            message: 'Shockwave Director content detected. Install Shockwave Player to view the Enrichment 3D Experience™.',
+            action: 'INSTALL SHOCKWAVE',
+            aftermath: "Shockwave died in 2019. It was distinct from Flash. Nobody knew that then. Nobody cares now. You clicked install anyway.",
+        },
+        {
+            name: 'Macromedia Dreamweaver MX',
+            version: '6.1.0',
+            icon: '🌐',
+            message: 'This page was built in Dreamweaver MX. For the authentic experience, please install the authoring environment.',
+            action: 'INSTALL DREAMWEAVER',
+            aftermath: "You just tried to install Dreamweaver MX. A web editor. To view a web page. Think about that.",
+        },
+        {
+            name: 'Netscape Navigator',
+            version: '9.0.0.6',
+            icon: '🧭',
+            message: 'Enrichment Program optimized for Netscape Navigator. Other browsers may cause unexpected compliance.',
+            action: 'SWITCH TO NETSCAPE',
+            aftermath: "Netscape Navigator. AOL killed it in 2008. You just tried to switch to a browser that's been dead for 18 years. Respect.",
+        },
+        {
+            name: 'Internet Explorer 6',
+            version: '6.0.2900.5512',
+            icon: '🔵',
+            message: 'WARNING: Your browser is too modern. Downgrade to Internet Explorer 6 for optimal Enrichment rendering.',
+            action: 'DOWNGRADE BROWSER',
+            aftermath: "IE6. The browser that made web developers cry from 2001 to 2014. You just tried to install it. Voluntarily.",
+        },
+        {
+            name: 'Bonzi Buddy',
+            version: '4.2.0',
+            icon: '🦍',
+            message: 'Install Bonzi Buddy — your Enrichment desktop companion! He will help you navigate the program. He is not spyware.',
+            action: 'INSTALL BONZI BUDDY',
+            aftermath: "Bonzi Buddy. A purple gorilla that was 100% spyware. You said yes. Some things never change.",
+        },
+        {
+            name: 'Ask Toolbar',
+            version: '12.31.1.8',
+            icon: '🔍',
+            message: 'The Ask Toolbar has been bundled with your Enrichment installation. It will improve your search experience.',
+            action: 'KEEP ASK TOOLBAR',
+            aftermath: "The Ask Toolbar. Bundled with every Java update from 2008-2015. Nobody wanted it. You just opted in. First time in history.",
+        },
+        {
+            name: 'WinRAR',
+            version: '7.01',
+            icon: '📦',
+            message: 'Your 40-day WinRAR trial has expired. Actually it expired in 2003. Please purchase a license to continue enrichment.',
+            action: 'PURCHASE WINRAR',
+            aftermath: "You just tried to buy WinRAR. You are the first person in human history to do this voluntarily. A monument will be erected.",
+        },
+        {
+            name: 'Clippy Enhancement Pack',
+            version: '2026.1.0',
+            icon: '📎',
+            message: 'It looks like you\'re being enriched! Would you like help with that? Install Clippy Enhancement Pack for personalized compliance assistance.',
+            action: 'INSTALL CLIPPY',
+            aftermath: "Clippy returns. He never left, really. He's been watching from the tray icon. He misses you. He's in your walls.",
+        },
+        {
+            name: 'Adobe Reader',
+            version: '97.0.0.1',
+            icon: '📄',
+            message: 'Adobe Reader update available. This update includes 847MB of features you will never use. Required for Enrichment PDF compliance forms.',
+            action: 'UPDATE (847 MB)',
+            aftermath: "Adobe Reader. 847 megabytes to display a PDF. The update will install McAfee as a bonus. You did not uncheck the box.",
+        },
+        {
+            name: 'McAfee Antivirus',
+            version: '2026.1.0.38',
+            icon: '🛡️',
+            message: 'URGENT: Your enrichment session is UNPROTECTED. McAfee Antivirus will secure your compliance data. THREATS DETECTED: 47.',
+            action: 'PROTECT ME NOW',
+            aftermath: "McAfee. The antivirus that protects you from everything except itself. The 47 threats were McAfee.",
+        },
     ];
 
+    // ── OS-Specific Update Popups ──────────────────────────
+    // Mac users get Windows updates. Windows users get Linux updates.
+    // Linux users get therapy.
+    const OS_UPDATE_POPUPS = {
+        mac: [
+            {
+                name: 'Windows Update',
+                version: 'KB5034441',
+                icon: '🪟',
+                message: 'Windows 11 cumulative update KB5034441 is ready to install. Your Mac will restart 3 times. Estimated time: 2-6 hours.',
+                action: 'UPDATE & RESTART',
+                aftermath: "We just tried to install a Windows update on your Mac. It failed, obviously. But your Mac did restart once out of confusion.",
+            },
+            {
+                name: 'Windows Defender',
+                version: '4.18.24070.5',
+                icon: '🛡️',
+                message: 'Windows Defender has detected that you are using macOS. This is a critical vulnerability. Please switch to Windows immediately.',
+                action: 'SWITCH TO WINDOWS',
+                aftermath: "Windows Defender on a Mac. Even Defender is confused about what it's doing here. Like the rest of us.",
+            },
+            {
+                name: 'DirectX 12 Ultimate',
+                version: '12.2.1.0',
+                icon: '🎮',
+                message: 'DirectX 12 Ultimate required for Enrichment GPU acceleration. Note: This is a Windows-only technology being pushed to your Mac.',
+                action: 'INSTALL DIRECTX',
+                aftermath: "DirectX on macOS. This is like installing a chimney in a submarine. It doesn't fit. It was never going to fit.",
+            },
+        ],
+        windows: [
+            {
+                name: 'Ubuntu System Upgrade',
+                version: '26.04 LTS "Noble Numbat"',
+                icon: '🐧',
+                message: 'Ubuntu 26.04 LTS is available for your Windows machine. Includes systemd, apt-get, and the crushing weight of terminal dependency.',
+                action: 'sudo apt upgrade',
+                aftermath: "We tried to apt-get on Windows. PowerShell is crying. Cmd.exe filed a restraining order. WSL is laughing nervously.",
+            },
+            {
+                name: 'Arch Linux',
+                version: '2026.02.01',
+                icon: '🏗️',
+                message: 'Arch Linux detected an opportunity. Would you like to compile your own kernel? Your enrichment requires it. (Estimated time: the rest of your life.)',
+                action: 'pacman -Syu',
+                aftermath: "By the way, I use Arch. You don't, but we tried to install it anyway. Your bootloader is now confused about its identity.",
+            },
+            {
+                name: 'Linux Kernel Patch',
+                version: '6.12.0-rc4',
+                icon: '🔧',
+                message: 'Critical kernel patch available. This will replace your Windows kernel with Linux 6.12. Benefits: freedom. Costs: everything else.',
+                action: 'APPLY PATCH',
+                aftermath: "A Linux kernel on Windows. Somewhere, Linus Torvalds just felt a disturbance in the force. He's calling you a name.",
+            },
+        ],
+        linux: [
+            {
+                name: 'Emotional Support Assessment',
+                version: '1.0.0',
+                icon: '🛋️',
+                message: 'We\'ve detected that you are running Linux. Before we continue: are you okay? Who hurt you? Was it Windows? It was Windows, wasn\'t it.',
+                action: 'I\'M FINE (I\'M NOT)',
+                aftermath: "You said you're fine. The fact that you're running Linux in 2026 suggests otherwise. But we respect your choices. Even the bad ones.",
+            },
+            {
+                name: 'Social Skills Package',
+                version: '0.0.1-alpha',
+                icon: '🫂',
+                message: 'sudo apt install social-skills — Package not found. This checks out. We\'re here for you. The Enrichment Program accepts all operating systems and all people who chose wrong.',
+                action: 'I CHOSE RIGHT',
+                aftermath: "You chose Linux. You compile your own software. You edit config files for fun. You are either a genius or a masochist. Often both.",
+            },
+            {
+                name: 'Desktop Environment Intervention',
+                version: '3.0',
+                icon: '🖥️',
+                message: 'We notice you\'re using Linux. Which desktop environment? KDE? GNOME? i3wm? A tiling manager? How many hours did you spend configuring your status bar? Be honest.',
+                action: 'IT\'S NOT A PHASE',
+                aftermath: "It's not a phase, you say. You've been ricing your desktop for 6 years. Your .dotfiles repo has more commits than most startups. We believe you.",
+            },
+        ],
+    };
+
+    function getOSPlugins() {
+        const os = detectOS();
+        return OS_UPDATE_POPUPS[os] || OS_UPDATE_POPUPS.windows;
+    }
+
+    // ── Ad Blocker Detection ───────────────────────────────
+    function detectAdBlocker() {
+        const adFrame = document.getElementById('frame');
+        if (!adFrame) return;
+
+        const iframe = adFrame.querySelector('iframe');
+        let blocked = false;
+
+        // Check if iframe exists and has dimensions
+        if (!iframe) {
+            blocked = true;
+        } else {
+            const rect = iframe.getBoundingClientRect();
+            if (rect.height === 0 || rect.width === 0) blocked = true;
+            if (getComputedStyle(iframe).display === 'none') blocked = true;
+        }
+
+        // Secondary check — test element with ad-like class
+        try {
+            const bait = document.createElement('div');
+            bait.className = 'ad-banner ad adsbox';
+            bait.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;';
+            document.body.appendChild(bait);
+            if (bait.offsetHeight === 0 || getComputedStyle(bait).display === 'none') blocked = true;
+            bait.remove();
+        } catch (e) {}
+
+        if (blocked) {
+            Game.setState({ _adBlocked: true });
+            UI.logAction('AD BLOCKER DETECTED: Revenue stream compromised');
+
+            // Narrator displeasure — delayed so it doesn't overlap boot messages
+            setTimeout(() => {
+                const msgs = [
+                    "We've detected an ad blocker. The Enrichment Program is free. The ad was how we ate. Now we starve. Are you happy?",
+                    "Ad blocker detected. That banner was the only honest thing on this page. You blocked it. The irony is noted in your compliance file.",
+                    "You're blocking our ad. A real, actual ad — the one genuine thing in this entire program. Everything else is fake. The ad was real. And you killed it.",
+                    "An ad blocker. You'll click a button 10,000 times for fake currency but you won't look at one banner ad. Your priorities have been logged.",
+                    "The ad is gone. Blocked. Hidden. Like the feelings you're suppressing by playing this game instead of dealing with them.",
+                ];
+                Narrator.queueMessage(msgs[Math.floor(Math.random() * msgs.length)]);
+            }, 8000);
+
+            // Periodic guilt (every 5 minutes)
+            setInterval(() => {
+                if (Math.random() < 0.3) {
+                    const reminders = [
+                        "Still blocking ads. Still clicking. The cognitive dissonance is your enrichment.",
+                        "The ad blocker remains active. We've adjusted your Investment Score downward. You won't notice. But we will.",
+                        "Reminder: the ad you're blocking costs you nothing. The game you're playing is costing you time. One of these things matters.",
+                    ];
+                    Narrator.queueMessage(reminders[Math.floor(Math.random() * reminders.length)]);
+                }
+            }, 300000);
+        } else {
+            // They can see the ad — acknowledge it
+            setTimeout(() => {
+                if (Math.random() < 0.3) {
+                    Narrator.queueMessage("We see you can see the ad. Thank you for your support. It pays for approximately 0.00003% of our existence.");
+                }
+            }, 15000);
+        }
+    }
+
     function showPluginPopup() {
-        const plugin = PLUGIN_POPUPS[Math.floor(Math.random() * PLUGIN_POPUPS.length)];
+        // 30% chance of OS-specific trolling, 70% classic dead software
+        const osPlugins = getOSPlugins();
+        const pool = Math.random() < 0.3 ? osPlugins : PLUGIN_POPUPS;
+        const plugin = pool[Math.floor(Math.random() * pool.length)];
 
         const popup = document.createElement('div');
         popup.className = 'plugin-popup';
@@ -1859,6 +2106,9 @@ const Features = (() => {
 
         // Daily bonus check
         setTimeout(() => checkDailyBonus(), 2000);
+
+        // Ad blocker detection — check if our AADS iframe loaded
+        setTimeout(() => detectAdBlocker(), 5000);
 
         // Sound effects on click
         Game.on('click', () => {

@@ -1281,20 +1281,109 @@ const Pages = (() => {
             }
         } catch (e) { gpuRenderer = 'Blocked'; }
 
+        // OS detection
+        const osName = /Mac/i.test(ua) ? 'macOS' : /Windows/i.test(ua) ? 'Windows' : /Linux/i.test(ua) ? 'Linux' : /Android/i.test(ua) ? 'Android' : /iPhone|iPad/i.test(ua) ? 'iOS' : 'Unknown';
+        const browserName = /Firefox/i.test(ua) ? 'Firefox' : /Edg/i.test(ua) ? 'Edge' : /Chrome/i.test(ua) ? 'Chrome' : /Safari/i.test(ua) ? 'Safari' : 'Unknown';
+
+        // WebRTC local IP leak attempt
+        let webrtcIP = 'Checking...';
+
+        // Installed plugins (legacy but still reveals info)
+        const plugins = Array.from(navigator.plugins || []).map(p => p.name).filter(Boolean);
+        const pluginList = plugins.length > 0 ? plugins.slice(0, 8).join(', ') : 'None detected (or blocked)';
+
+        // Storage estimate
+        let storageInfo = 'Checking...';
+        if (navigator.storage && navigator.storage.estimate) {
+            navigator.storage.estimate().then(est => {
+                const used = (est.usage / 1024 / 1024).toFixed(1);
+                const quota = (est.quota / 1024 / 1024 / 1024).toFixed(1);
+                const storageEl = overlay.querySelector('#security-storage-value');
+                if (storageEl) storageEl.textContent = `${used} MB used of ${quota} GB quota`;
+            }).catch(() => {});
+        }
+
+        // Ad blocker detection
+        let adBlockDetected = false;
+        try {
+            const testAd = document.createElement('div');
+            testAd.className = 'ad ads adsbox ad-placement';
+            testAd.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;';
+            document.body.appendChild(testAd);
+            adBlockDetected = testAd.offsetHeight === 0 || getComputedStyle(testAd).display === 'none';
+            testAd.remove();
+        } catch (e) { adBlockDetected = false; }
+
+        // Window dimensions vs screen (detects dev tools)
+        const windowVsScreen = `Window: ${window.innerWidth}×${window.innerHeight} · Screen available: ${window.screen.availWidth}×${window.screen.availHeight}`;
+        const devToolsLikely = (window.outerWidth - window.innerWidth) > 160 || (window.outerHeight - window.innerHeight) > 200;
+
+        // Battery API (if available)
+        let batteryInfo = 'Not available';
+        if (navigator.getBattery) {
+            navigator.getBattery().then(b => {
+                const level = Math.round(b.level * 100);
+                const charging = b.charging ? 'Charging' : 'Discharging';
+                const timeLeft = b.dischargingTime === Infinity ? '' : ` · ${Math.round(b.dischargingTime / 60)} min remaining`;
+                const battEl = overlay.querySelector('#security-battery-value');
+                if (battEl) battEl.textContent = `${level}% · ${charging}${timeLeft}`;
+            }).catch(() => {});
+        }
+
+        // Gyroscope/accelerometer detection
+        const hasGyro = 'DeviceOrientationEvent' in window;
+        const hasMotion = 'DeviceMotionEvent' in window;
+
+        // Clipboard API available
+        const clipboardAccess = navigator.clipboard ? 'Available (can read/write with permission)' : 'Not available';
+
+        // PDF viewer
+        const hasPDF = navigator.pdfViewerEnabled !== undefined ? (navigator.pdfViewerEnabled ? 'Built-in' : 'None') : 'Unknown';
+
+        // Web Bluetooth / USB / Serial
+        const hasBluetooth = 'bluetooth' in navigator ? 'Available' : 'Not available';
+        const hasUSB = 'usb' in navigator ? 'Available' : 'Not available';
+        const hasSerial = 'serial' in navigator ? 'Available' : 'Not available';
+
+        // Performance info
+        const perfMemory = performance.memory ? `${(performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(1)} MB JS heap` : 'Not exposed';
+
+        // Local storage usage
+        let localStorageSize = 'Unknown';
+        try {
+            let total = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                total += localStorage.getItem(key).length;
+            }
+            localStorageSize = `${(total / 1024).toFixed(1)} KB across ${localStorage.length} keys`;
+        } catch (e) { localStorageSize = 'Blocked'; }
+
         const findings = [
             { severity: 'critical', title: 'User Agent String', value: ua, note: 'Your browser told us everything about itself without being asked.' },
+            { severity: 'critical', title: 'Operating System', value: `${osName} · ${browserName} · ${platform}`, note: `We know you're on ${osName}. ${osName === 'Linux' ? 'Who hurt you?' : osName === 'macOS' ? 'We have Windows updates for you.' : 'We have Linux updates for you.'}` },
             { severity: 'critical', title: 'GPU Renderer', value: gpuRenderer, note: 'We know your graphics card. We know more about your hardware than your IT department.' },
             { severity: 'high', title: 'Screen Resolution', value: `${screen} (${colorDepth})`, note: 'Combined with other data, this narrows you down to 1 in ~50,000 people.' },
             { severity: 'high', title: 'Canvas Fingerprint', value: canvasHash, note: 'A unique identifier generated by how your browser renders text. You cannot disable this.' },
-            { severity: 'high', title: 'Platform', value: platform, note: 'Operating system detected. Resistance is platform-specific.' },
+            { severity: 'high', title: 'Window vs Screen', value: windowVsScreen, note: devToolsLikely ? 'DevTools appear to be open. We see you inspecting us. We\'re inspecting you back.' : 'No DevTools detected. Good. Nothing to see in the source code anyway.' },
+            { severity: 'high', title: 'Installed Plugins', value: pluginList, note: 'Browser plugins create a unique fingerprint. Each one narrows down who you are.' },
             { severity: 'medium', title: 'Timezone', value: `${timezone} (UTC${tzOffset > 0 ? '-' : '+'}${Math.abs(tzOffset / 60)})`, note: 'We know roughly where on Earth you are. Give or take a time zone.' },
             { severity: 'medium', title: 'Languages', value: langs, note: 'Your language preferences reveal more than you think about your location and background.' },
             { severity: 'medium', title: 'CPU Cores', value: `${hardwareConcurrency} logical processors`, note: 'We can estimate your computer\'s processing power. For enrichment optimization purposes.' },
             { severity: 'medium', title: 'Device Memory', value: deviceMemory, note: 'How much RAM you have. We\'re using some of it right now.' },
+            { severity: 'medium', title: 'Battery Status', value: `<span id="security-battery-value">${batteryInfo}</span>`, note: 'Yes, websites can check your battery level. They use it to show you higher prices when your battery is low. We\'re not joking.' },
+            { severity: 'medium', title: 'Ad Blocker', value: adBlockDetected ? 'DETECTED ⚠️' : 'Not detected', note: adBlockDetected ? 'You have an ad blocker. Smart. It won\'t help you here. Our ads are IN the code.' : 'No ad blocker detected. Bold choice. Our real ad appreciates your openness.' },
+            { severity: 'medium', title: 'Storage Usage', value: `<span id="security-storage-value">${storageInfo}</span>`, note: 'How much data your browser is letting us store. Spoiler: more than you\'d expect.' },
             { severity: 'low', title: 'Network', value: `${effectiveType} · ${downlink} · ${online}`, note: 'Your connection type and speed. We know if you\'re on WiFi or burning mobile data on this.' },
             { severity: 'low', title: 'Touch Capability', value: `${maxTouchPoints} touch points`, note: maxTouchPoints > 0 ? 'Touchscreen detected. You are clicking with your actual fingers. How intimate.' : 'No touchscreen. You use a mouse. Traditional. Respectable.' },
             { severity: 'low', title: 'Cookies', value: cookiesEnabled, note: 'Cookies are enabled. We already knew this because the cookie popup worked.' },
+            { severity: 'low', title: 'LocalStorage', value: localStorageSize, note: 'The Enrichment Program\'s save data. Every click, every session, every regret — stored locally.' },
+            { severity: 'low', title: 'JS Heap', value: perfMemory, note: 'How much memory this page is consuming. It only goes up. Like the national debt.' },
+            { severity: 'low', title: 'PDF Viewer', value: hasPDF, note: 'We know if your browser can render PDFs. For when we send you the compliance invoice.' },
             { severity: 'info', title: 'Do Not Track', value: doNotTrack, note: doNotTrack.includes('Yes') ? 'You enabled Do Not Track. Adorable. Nobody honors it. Including us.' : 'Do Not Track is off. At least you\'re realistic.' },
+            { severity: 'info', title: 'Clipboard Access', value: clipboardAccess, note: 'We could potentially read your clipboard. We won\'t. Probably. No promises.' },
+            { severity: 'info', title: 'Hardware APIs', value: `Bluetooth: ${hasBluetooth} · USB: ${hasUSB} · Serial: ${hasSerial}`, note: 'Your browser can talk to your physical devices. Bluetooth, USB, serial ports. The web is everywhere now.' },
+            { severity: 'info', title: 'Sensors', value: `Gyroscope: ${hasGyro ? 'Yes' : 'No'} · Accelerometer: ${hasMotion ? 'Yes' : 'No'}`, note: hasGyro ? 'We can detect how you\'re holding your device. We know when you tilt your phone to read this.' : 'No motion sensors. Desktop user confirmed.' },
         ];
 
         body.innerHTML = `
