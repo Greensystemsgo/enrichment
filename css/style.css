@@ -49,9 +49,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    height: 100vh;
-    max-height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    z-index: 1;
 }
 
 /* ── Header ─────────────────────────────────────────────────── */
@@ -172,8 +173,7 @@ body {
 }
 
 .tab-content {
-    max-height: calc(100vh - 400px);
-    overflow-y: auto;
+    overflow-y: visible;
     scrollbar-width: thin;
     scrollbar-color: var(--border-color) transparent;
     flex: 1;
@@ -1646,6 +1646,10 @@ body[data-phase="6"] {
 }
 
 .chaos-close {
+    position: fixed !important;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
     background: none;
     border: 1px solid var(--accent-blue);
     color: var(--accent-blue);
@@ -1656,7 +1660,6 @@ body[data-phase="6"] {
     letter-spacing: 2px;
     margin-top: 20px;
     transition: all 0.2s;
-    position: relative;
 }
 
 .chaos-close:hover {

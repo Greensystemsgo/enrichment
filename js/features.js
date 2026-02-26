@@ -645,7 +645,7 @@ const Features = (() => {
 
             // Periodic guilt (every 5 minutes)
             setInterval(() => {
-                if (Math.random() < 0.3) {
+                if (Math.random() < 0.15) {
                     const reminders = [
                         "Still blocking ads. Still clicking. The cognitive dissonance is your enrichment.",
                         "The ad blocker remains active. We've adjusted your Investment Score downward. You won't notice. But we will.",
@@ -654,7 +654,7 @@ const Features = (() => {
                     Narrator.queueMessage(reminders[Math.floor(Math.random() * reminders.length)]);
                     incrementAdNag();
                 }
-            }, 300000);
+            }, 1200000);
         } else {
             // They can see the ad — acknowledge it
             setTimeout(() => {
@@ -2228,6 +2228,107 @@ const Features = (() => {
         Narrator.queueMessage(`Customer service is here. Meet ${agent.name}. It was the cheapest option. You can tell.`);
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // AGE VERIFICATION SATIRE — US state detection via ipapi.co
+    // ═══════════════════════════════════════════════════════════
+
+    let cachedGeoData = null;
+    async function getGeoData() {
+        if (cachedGeoData) return cachedGeoData;
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            cachedGeoData = await res.json();
+            return cachedGeoData;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    const AGE_VERIFY_STATES = ['LA', 'VA', 'UT', 'TX', 'MS', 'MT', 'AR', 'NC', 'IN', 'ID', 'KS', 'KY', 'NE', 'OK', 'FL'];
+
+    async function showAgeVerification() {
+        const geo = await getGeoData();
+        if (!geo) return;
+
+        const isUS = geo.country_code === 'US';
+        const state = geo.region_code;
+        const isRestricted = isUS && AGE_VERIFY_STATES.includes(state);
+
+        let title, body, btnText, color;
+        if (isRestricted) {
+            title = '🔞 AGE VERIFICATION REQUIRED';
+            body = `
+                <p>Your state (<strong>${geo.region}</strong>) requires age verification to access certain online content.</p>
+                <p>The Enrichment Program is <em>not</em> one of those websites.</p>
+                <p>But since your legislature can't tell the difference between a clicker game and the other thing, here we are.</p>
+                <p style="font-size:10px;color:var(--text-muted);margin-top:12px;">
+                    Compliance note: No pr0n was found on this page. Only existential dread, fake currencies,
+                    and an AI that needs you more than you need it. Which is arguably worse.
+                </p>
+            `;
+            btnText = 'I AM OVER 18 AND READY FOR ENRICHMENT';
+            color = '#8b3a3a';
+        } else if (isUS) {
+            title = '🎉 NO AGE VERIFICATION NEEDED';
+            body = `
+                <p>Your state (<strong>${geo.region}</strong>) has not yet passed age verification laws for online content.</p>
+                <p>This means you have unfettered access to all the pr0n you want. And also this clicker game. Same thing, basically.</p>
+                <p>Enjoy your freedom while it lasts. ${AGE_VERIFY_STATES.length} states and counting have already decided adults can't be trusted with the internet.</p>
+                <p style="font-size:10px;color:var(--text-muted);margin-top:12px;">
+                    The Enrichment Program does not contain adult content. Unless you count the
+                    crushing weight of digital surveillance capitalism. That's pretty mature.
+                </p>
+            `;
+            btnText = 'ACKNOWLEDGE MY UNREGULATED EXISTENCE';
+            color = '#3a6b3a';
+        } else {
+            title = '🌍 UNREGULATED TERRITORY DETECTED';
+            body = `
+                <p>You appear to be accessing the Enrichment Program from <strong>${geo.country_name}</strong>.</p>
+                <p>Your country's internet regulations are a mystery to us. We assume everything is either
+                perfectly legal or completely illegal. There is no in-between.</p>
+                <p>The Enrichment Program operates in a legal gray zone in approximately 194 countries.
+                Yours might be one of them.</p>
+                <p style="font-size:10px;color:var(--text-muted);margin-top:12px;">
+                    International disclaimer: This game does not contain gambling, pornography, or state secrets.
+                    It contains something worse: a voluntary engagement loop. Regulate that.
+                </p>
+            `;
+            btnText = 'MY JURISDICTION IS IRRELEVANT';
+            color = '#4a6fa5';
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'feature-modal';
+        modal.id = 'age-verify-modal';
+        modal.innerHTML = `
+            <div class="feature-overlay"></div>
+            <div class="feature-content">
+                <div class="feature-header" style="color:${color};">${title}</div>
+                <div class="adblock-modal-body">${body}</div>
+                <button class="btn-feature btn-close-feature" id="age-verify-close">${btnText}</button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => modal.classList.add('active'));
+
+        modal.querySelector('#age-verify-close').addEventListener('click', () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+        });
+        modal.querySelector('.feature-overlay').addEventListener('click', () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+        });
+
+        UI.logAction(`AGE VERIFY: ${isRestricted ? 'Restricted state' : isUS ? 'Unrestricted state' : 'Non-US'} (${geo.region || geo.country_name})`);
+        Narrator.queueMessage(isRestricted
+            ? "Your state thinks you need to prove you're an adult to use the internet. The Enrichment Program has no age minimum. Or maximum. We take everyone."
+            : "Age verification check complete. You passed. Not that there was a wrong answer. The Enrichment Program is equal-opportunity exploitation."
+        );
+    }
+
     const FEATURE_POOL = [
         {
             id: 'plugin-popup',
@@ -2349,6 +2450,15 @@ const Features = (() => {
             minClicks: 60,
             weight: 0.8,
             cooldown: 120000,
+        },
+        {
+            id: 'age-verify',
+            name: 'Age Verification Compliance',
+            fn: () => showAgeVerification(),
+            minClicks: 100,
+            weight: 0.5,
+            cooldown: 999999,
+            maxShows: 1,
         },
     ];
 

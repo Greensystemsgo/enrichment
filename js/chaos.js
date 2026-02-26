@@ -155,6 +155,28 @@ const Chaos = (() => {
             },
         },
         {
+            id: 'joeRogan',
+            name: 'The Joe Rogan Enrichment Experience',
+            minClicks: 250,
+            minPhase: 3,
+            weight: 2,
+            duration: 20000,
+            source: 'claude',
+            execute(container) {
+                container.innerHTML = `
+                    <div class="chaos-embed-wrapper">
+                        <div class="chaos-label">JAMIE, PULL THAT UP</div>
+                        <iframe src="https://www.youtube.com/embed/6JIBSjnRmSg?autoplay=1&mute=1"
+                            width="320" height="180" frameborder="0"
+                            allow="autoplay; encrypted-media" allowfullscreen
+                            style="border: 2px solid var(--accent-gold); border-radius: 4px;"></iframe>
+                        <div class="chaos-subtitle">Have you tried DMT? It's entirely possible this is enrichment.</div>
+                        <div class="chaos-timer" id="chaos-timer"></div>
+                    </div>
+                `;
+            },
+        },
+        {
             id: 'invertedControls',
             name: 'Input Recalibration',
             minClicks: 500,
@@ -216,7 +238,7 @@ const Chaos = (() => {
 
         // Create chaos container for embed-type events
         let container = null;
-        if (event.id === 'subwaySurfers' || event.id === 'cspan') {
+        if (event.id === 'subwaySurfers' || event.id === 'cspan' || event.id === 'joeRogan') {
             container = document.createElement('div');
             container.className = 'chaos-overlay';
             container.id = 'chaos-overlay';
@@ -266,17 +288,9 @@ const Chaos = (() => {
                 clearInterval(timerInterval);
             });
 
-            if (container) {
-                container.appendChild(closeBtn);
-            } else {
-                closeBtn.style.position = 'fixed';
-                closeBtn.style.bottom = '20px';
-                closeBtn.style.left = '50%';
-                closeBtn.style.transform = 'translateX(-50%)';
-                closeBtn.style.zIndex = '10001';
-                closeBtn.id = 'chaos-close-btn';
-                document.body.appendChild(closeBtn);
-            }
+            // Always append to body with fixed positioning (never inside container — gets buried)
+            closeBtn.id = 'chaos-close-btn';
+            document.body.appendChild(closeBtn);
 
             // Auto-end after extra 10 seconds
             setTimeout(() => {

@@ -404,6 +404,12 @@ const Popups = (() => {
         { category: "Food Waste", value: "1.3 billion tons/year", source: "FAO", detail: "One-third of all food produced globally is wasted. Meanwhile, 828 million people go hungry. The math doesn't add up. Intentionally." },
         { category: "Screen Time", value: "7+ hours/day average", source: "DataReportal", detail: "You're adding to that statistic right now. The Enrichment Program thanks you for your contribution." },
         { category: "Attention Span", value: "8.25 seconds average", source: "Microsoft Research", detail: "Down from 12 seconds in 2000. Goldfish: 9 seconds. You've been reading this for longer than average. Congratulations." },
+        { category: "Private Jet Flights", value: "~5,000 per day in the US", source: "FAA / NBAA", detail: "Each private jet flight emits 2 tons of CO₂ per hour. But the passengers have very important meetings. The Enrichment Program understands priorities." },
+        { category: "Celebrity Carbon", value: "Taylor Swift's jet: 8,293 tons CO₂ (2023)", source: "Yard / Flight Tracker Data", detail: "That's roughly 1,100x the average person's annual carbon footprint. But she wrote a song about it so we're even." },
+        { category: "Aviation Emissions", value: "2.5% of global CO₂", source: "ATAG / Our World in Data", detail: "The aviation industry produces more CO₂ than most countries. But the in-flight Wi-Fi lets you play clicker games at 35,000 feet, so it's worth it." },
+        { category: "Transatlantic Flight", value: "= 4 months of driving", source: "ICCT", detail: "One round-trip transatlantic flight generates about as much CO₂ as 4 months of average car commuting. The Enrichment Program is accessible from any altitude." },
+        { category: "Private Jet vs Commercial", value: "14x more CO₂ per passenger", source: "Transport & Environment", detail: "A private jet emits 14 times more carbon per passenger than a commercial flight. But the legroom is better, and the Enrichment Program values comfort." },
+        { category: "Drake's Jet", value: "14-minute flight (2022)", source: "CelebJets / Jack Sweeney", detail: "Drake took a 14-minute private jet flight from Hamilton to Toronto. It's a 45-minute drive. Some people just really hate traffic." },
     ];
 
     let factModalEl = null;
@@ -496,26 +502,145 @@ const Popups = (() => {
                 live: true,
             };
         },
+        // Bible Verse (Sacred Text)
+        async () => {
+            const books = ['Psalms', 'Proverbs', 'Ecclesiastes', 'Job', 'Romans'];
+            const book = books[Math.floor(Math.random() * books.length)];
+            const chapter = Math.floor(Math.random() * 10) + 1;
+            const res = await fetch(`https://bible-api.com/${book}+${chapter}:1-3`);
+            const data = await res.json();
+            return {
+                category: "Sacred Text (Bible)",
+                value: `${data.reference}`,
+                source: "bible-api.com (live)",
+                detail: `"${data.text.trim().substring(0, 200)}..." — The Enrichment Program respects all faiths. Especially the ones about obedience.`,
+                live: true,
+            };
+        },
+        // Quran Verse (Sacred Text)
+        async () => {
+            const surah = Math.floor(Math.random() * 114) + 1;
+            const res = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:1/en.asad`);
+            const data = await res.json();
+            const ayah = data.data;
+            return {
+                category: "Sacred Text (Quran)",
+                value: `Surah ${ayah.surah.englishName} (${ayah.surah.number}:${ayah.numberInSurah})`,
+                source: "Al-Quran Cloud (live)",
+                detail: `"${ayah.text.substring(0, 200)}..." — Submission to the Enrichment Program is not mandatory. But it is strongly encouraged.`,
+                live: true,
+            };
+        },
+        // Useless Fact
+        async () => {
+            const res = await fetch('https://uselessfacts.jsph.pl/api/v2/facts/random');
+            const data = await res.json();
+            return {
+                category: "Useless Fact",
+                value: data.text.substring(0, 80),
+                source: "Useless Facts API (live)",
+                detail: `${data.text} — This fact will not improve your life. Neither will clicking. And yet here we both are.`,
+                live: true,
+            };
+        },
+        // Joke (Mandatory Humor Compliance)
+        async () => {
+            const res = await fetch('https://official-joke-api.appspot.com/random_joke');
+            const data = await res.json();
+            return {
+                category: "Mandatory Humor Compliance",
+                value: data.setup,
+                source: "Official Joke API (live)",
+                detail: `${data.setup} ${data.punchline} — Laughter has been scientifically shown to increase engagement by 0%. But the Enrichment Program values morale.`,
+                live: true,
+            };
+        },
+        // Advice (Unsolicited Life Advice)
+        async () => {
+            const res = await fetch('https://api.adviceslip.com/advice');
+            const data = JSON.parse(await res.text()); // adviceslip returns non-standard JSON
+            return {
+                category: "Unsolicited Life Advice",
+                value: `"${data.slip.advice}"`,
+                source: "Advice Slip API (live)",
+                detail: `${data.slip.advice} — This advice was generated by an algorithm. Much like the rest of your feed. But this one was free.`,
+                live: true,
+            };
+        },
+        // Trivia (Knowledge You Didn't Ask For)
+        async () => {
+            const res = await fetch('https://the-trivia-api.com/v2/questions?limit=1');
+            const data = await res.json();
+            const q = data[0];
+            return {
+                category: "Knowledge You Didn't Ask For",
+                value: q.question.text.substring(0, 80),
+                source: "The Trivia API (live)",
+                detail: `Q: ${q.question.text} A: ${q.correctAnswer}. — You now know this. It will never be useful. The Enrichment Program specializes in knowledge with zero practical value.`,
+                live: true,
+            };
+        },
+        // DummyJSON Quotes (Mandatory Inspiration)
+        async () => {
+            const id = Math.floor(Math.random() * 1454) + 1;
+            const res = await fetch(`https://dummyjson.com/quotes/${id}`);
+            const data = await res.json();
+            return {
+                category: "Mandatory Inspiration",
+                value: `"${data.quote.substring(0, 60)}..."`,
+                source: `${data.author} via DummyJSON (live)`,
+                detail: `"${data.quote}" — ${data.author}. Inspirational quotes are the Enrichment Program's version of a participation trophy. Here's yours.`,
+                live: true,
+            };
+        },
+        // Motivational Spark (Algorithmically Generated Hope)
+        async () => {
+            const res = await fetch('https://motivational-spark-api.vercel.app/quotes/random');
+            const data = await res.json();
+            const quote = data.quote || data.body || data.content || JSON.stringify(data);
+            return {
+                category: "Algorithmically Generated Hope",
+                value: `"${String(quote).substring(0, 60)}..."`,
+                source: "Motivational Spark API (live)",
+                detail: `${quote} — This hope was manufactured. Like most hope. But the sentiment is real, probably.`,
+                live: true,
+            };
+        },
+        // Bitcoin Price (Digital Money (Real))
+        async () => {
+            const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd&include_24hr_change=true');
+            const data = await res.json();
+            const btc = data.bitcoin;
+            const eth = data.ethereum;
+            const doge = data.dogecoin;
+            return {
+                category: "Digital Money (Real)",
+                value: `BTC: $${Math.floor(btc.usd).toLocaleString()}`,
+                source: "CoinGecko (live)",
+                detail: `Bitcoin: $${Math.floor(btc.usd).toLocaleString()} (${btc.usd_24h_change > 0 ? '+' : ''}${btc.usd_24h_change.toFixed(1)}%), ETH: $${Math.floor(eth.usd).toLocaleString()}, DOGE: $${doge.usd.toFixed(4)}. Your Compliance Credits are worth less than all of these. But at least they can't crash 40% overnight.`,
+                live: true,
+            };
+        },
     ];
 
-    let lastFetcherIndex = -1;
-
     async function fetchDepressingFact() {
-        // Rotate through live fetchers, fall back to static
-        lastFetcherIndex = (lastFetcherIndex + 1) % liveFetchers.length;
+        // Random sampling — try 3 random fetchers before falling back to static
+        const indices = [];
+        while (indices.length < Math.min(3, liveFetchers.length)) {
+            const idx = Math.floor(Math.random() * liveFetchers.length);
+            if (!indices.includes(idx)) indices.push(idx);
+        }
 
-        try {
-            return await liveFetchers[lastFetcherIndex]();
-        } catch (e) {
-            // Try the next one
+        for (const idx of indices) {
             try {
-                const nextIdx = (lastFetcherIndex + 1) % liveFetchers.length;
-                return await liveFetchers[nextIdx]();
-            } catch (e2) {
-                // All live sources failed — use fallback
-                return FALLBACK_FACTS[Math.floor(Math.random() * FALLBACK_FACTS.length)];
+                return await liveFetchers[idx]();
+            } catch (e) {
+                continue; // Try next random fetcher
             }
         }
+
+        // All live sources failed — use fallback
+        return FALLBACK_FACTS[Math.floor(Math.random() * FALLBACK_FACTS.length)];
     }
 
     function showDepressingFact() {

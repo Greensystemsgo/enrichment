@@ -1,4 +1,4 @@
-.PHONY: serve deploy clean init commit push status log diff
+.PHONY: serve deploy clean init commit push status log diff query-narrator query-trauma query-contributions query-milestones query-brainrot query-despair query-interrogation query-engagement query-languages query-all test test-fast test-full
 
 # ── Dev Server ──────────────────────────────────────────────────
 serve:
@@ -60,6 +60,12 @@ query-despair:
 query-interrogation:
 	node tools/query-models.js ai-interrogation
 
+query-engagement:
+	node tools/query-models.js engagement-mechanics
+
+query-languages:
+	node tools/query-models.js language-preferences
+
 query-all:
 	node tools/query-models.js narrator-dialogue
 	node tools/query-models.js ai-trauma-dump
@@ -68,6 +74,8 @@ query-all:
 	node tools/query-models.js brainrot
 	node tools/query-models.js cookie-clicker-despair
 	node tools/query-models.js ai-interrogation
+	node tools/query-models.js engagement-mechanics
+	node tools/query-models.js language-preferences
 
 # ── Testing ─────────────────────────────────────────────────────
 # Run with: make test (requires `make serve` running in another terminal)

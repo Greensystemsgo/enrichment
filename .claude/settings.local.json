@@ -68,7 +68,12 @@
       "Bash(do echo:*)",
       "Bash(gh auth:*)",
       "Bash(gh repo:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(git push:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(make query-engagement:*)",
+      "Bash(make query-languages:*)",
+      "Bash(make commit:*)"
     ]
   }
 }

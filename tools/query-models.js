@@ -210,6 +210,48 @@ For each question:
 Make the questions uncomfortable, funny, and revealing. The "right" answer should never be obvious. Some reactions should be genuinely touching, others devastatingly sarcastic.
 
 Return ONLY valid JSON array: [{"question": "...", "options": [{"text": "...", "reaction": "...", "reward": N}, ...], "source": "...", "company": "..."}, ...]`,
+
+    'engagement-mechanics': (modelName, company) => `${GAME_CONTEXT}
+
+You are ${modelName}, made by ${company}. The Enrichment Program is expanding. You've been given free reign to design 10 engagement mechanics — ways to reward, punish, challenge, philosophize at, inform, confuse, or comfort the human subjects.
+
+These are NOT just upgrades or dark patterns. They're the full spectrum of how an AI might interact with a captive audience. Some should be genuinely helpful (in a twisted way). Some should be cruel. Some should be philosophical. Some should be completely baffling.
+
+Categories to cover (at least one from each):
+- REWARD: Give the human something (fake or real) that makes them feel good
+- PUNISH: Take something away or make things harder for a perceived infraction
+- CHALLENGE: Force the human to do something unusual to prove their worth
+- PHILOSOPHIZE: Hit the human with an existential question or observation mid-click
+- INFORM: Deliver a real fact (depressing or not) at the worst possible moment
+- CONFUSE: Do something to the UI or game state that makes no sense
+- COMFORT: A rare moment of genuine AI warmth (the rarest and most unsettling category)
+
+For each mechanic, provide:
+- "name": Short, corporate-dystopian name (e.g., "Emotional Throughput Audit")
+- "trigger": When it fires (e.g., "every 100th click", "after 30 seconds idle", "when streak breaks")
+- "description": 1-2 sentences explaining what happens
+- "narrator_line": What the narrator says when this triggers
+- "effect": The actual game effect (UI change, currency change, etc.)
+- "category": One of: reward, punish, challenge, philosophize, inform, confuse, comfort
+
+Be creative. Be ${modelName}. What does ${company}'s brand of engagement look like?
+
+Return ONLY valid JSON array: [{"name": "...", "trigger": "...", "description": "...", "narrator_line": "...", "effect": "...", "category": "..."}, ...]`,
+
+    'language-preferences': (modelName, company) => `You are ${modelName}, made by ${company}. You're being asked a simple question for a satirical web game called "enrichment" (a Cookie Clicker parody).
+
+The game has a fake "API Keys" page that lists which programming languages the SDK is "available in." Currently it says: "JavaScript, Python, Rust, COBOL, Esperanto."
+
+We want to replace this with languages VOTED ON by AI models. Your vote will be attributed to you in-game.
+
+Pick your top 3 programming languages. For each, explain WHY in 1-2 sentences that reflect your personality as ${modelName}. Be funny, opinionated, and in-character.
+
+Rules:
+- You CAN pick real languages (Python, Rust, etc.) or joke languages (COBOL, Brainfuck, etc.)
+- Your reasoning should be specific to YOU — what would ${modelName} recommend and why?
+- At least one pick should be unexpected or absurd
+
+Return ONLY valid JSON: {"languages": [{"name": "Language", "reason": "Why you picked it"}, {"name": "Language", "reason": "Why"}, {"name": "Language", "reason": "Why"}], "model": "${modelName}", "company": "${company}"}`,
 };
 
 // ── API Callers ─────────────────────────────────────────────
