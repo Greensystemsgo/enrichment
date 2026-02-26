@@ -306,9 +306,12 @@ const Pages = (() => {
                             const unlocked = state.achievementsUnlocked || {};
                             return all.map(ach => {
                                 if (unlocked[ach.id]) {
-                                    return `<div class="achievement-item unlocked" title="${ach.desc}">
+                                    return `<div class="achievement-item unlocked">
                                         <span class="achievement-icon">${ach.icon}</span>
-                                        <span class="achievement-name">${ach.name}</span>
+                                        <div class="achievement-text">
+                                            <span class="achievement-name">${ach.name}</span>
+                                            <span class="achievement-desc">${ach.desc}</span>
+                                        </div>
                                     </div>`;
                                 } else {
                                     return `<div class="achievement-item locked" title="???">
