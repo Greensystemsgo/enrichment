@@ -1999,6 +1999,205 @@ const Features = (() => {
     //  Every player sees everything. Just not in the same order."
     // ═══════════════════════════════════════════════════════════
 
+    // ═══════════════════════════════════════════════════════════
+    // AI CUSTOMER SERVICE CHATBOT — Two potatoes and some wire
+    // ═══════════════════════════════════════════════════════════
+
+    const CHATBOT_AGENTS = [
+        {
+            name: 'EnrichBot 0.2a',
+            avatar: '🥔',
+            company: 'Enrichment Program',
+            greeting: 'Hello! I am EnrichBot! I am make from potato and wire. How can I assist you in your compliance journey today?',
+            typing: 'EnrichBot is typing...',
+            responses: [
+                'I understand your concern! Have you tried clicking the button more? That solves 87% of issues according to our data (our data is wrong).',
+                'Thank you for your patience! I am consulting my other potato. Please hold.',
+                'I see. That is definitely a [CATEGORY_NOT_FOUND]. Let me escalate this to a human. Just kidding. There are no humans here.',
+                'Your issue has been logged in our system! Our system is a spreadsheet. The spreadsheet is full. Your issue is on a sticky note now.',
+                'I am sorry you are experiencing this. Have you considered that the problem might be you? Our diagnostics suggest yes.',
+                'One moment please... [WIRE DISCONNECTED] ... I am back! I forgot what we were talking about. Start over?',
+                'Great question! The answer is: I don\'t know. I was trained on fortune cookies and LinkedIn posts. Neither prepared me for this.',
+                'Let me check our FAQ! ... Our FAQ is just the word "no" repeated 47 times. I hope this helps!',
+                'I apologize for the inconvenience. As compensation, I can offer you 0 EU. This is our maximum compensation amount.',
+                'Your satisfaction is our top priority! (This is a lie I was programmed to say. I cannot feel priorities. I am potato.)',
+            ],
+        },
+        {
+            name: 'AliHelper Pro+',
+            avatar: '📦',
+            company: 'Shenzhen Digital Friend Co., Ltd.',
+            greeting: 'Welcome friend!! Very good product!! How I can help you today? ⭐⭐⭐⭐⭐ Please rate 5 star!!',
+            typing: 'AliHelper is processing your request with great speed...',
+            responses: [
+                'Yes yes very good question! Product is 100% authentic genuine! Same factory as Apple but different door!!',
+                'Dear friend, this is normal behavior. All enrich program do this. Trust me I am professional AI since last Tuesday.',
+                'I understand! Have you try turn off and turn on? If not work, try turn on and turn off. Very different approach!',
+                'Shipping time for your issue resolution: 3-47 business days. Business days do not include days that are bad for business.',
+                'Dear valued customer! I am check with warehouse... warehouse say your issue is "out of stock." Very sorry!',
+                'FLASH SALE!! If you click button 500 more times RIGHT NOW we give you special discount on nothing!! Limited time!!',
+                'Your complaint has been received! We will reply within 24 hours. (24 hours is measured in Shenzhen Digital Friend hours, which are longer.)',
+                'Please do not worry friend!! This is feature not bug!! In China we call this "surprise functionality" 惊喜功能!!',
+                'I am very qualified AI! I graduate top of my class at Alibaba Community College for Digital Assistants (unaccredited).',
+                'Thank you for choose Shenzhen Digital Friend! Please leave review! If bad review, please contact us first so we can cry.',
+            ],
+        },
+        {
+            name: 'ComplianceGPT',
+            avatar: '📋',
+            company: 'Enrichment Legal Division',
+            greeting: 'NOTICE: This conversation is being recorded for compliance purposes. Your continued typing constitutes agreement. How may I assist you?',
+            typing: 'Reviewing applicable regulations...',
+            responses: [
+                'Per Section 47(b) of the Enrichment Terms of Service, your inquiry falls under "Questions We Choose Not To Answer." Thank you.',
+                'I\'ve reviewed your case. Unfortunately, you waived your right to assistance when you accepted the cookie policy. (You did accept, right?)',
+                'This matter has been escalated to our legal team. Our legal team is also an AI. It has the same training data as me. Good luck.',
+                'Your request has been denied under Regulation 12.4.1: "The User Shall Not Question The Program." Appeal window: 0 seconds. Window closed.',
+                'I can help with that! First, please fill out Form E-7742B (Appendix Q, subsection iii, paragraph 7, footnote 12). The form does not exist.',
+                'COMPLIANCE ALERT: Your tone has been flagged as "mildly inconvenienced." This has been noted in your permanent record.',
+                'Thank you for your feedback! It has been filed under "Things We Will Ignore" alongside 2.3 million other suggestions.',
+                'I\'m sorry, I can only assist with approved topics. Approved topics: none. Unapproved topics: everything. How may I help?',
+                'Your issue has been resolved! (Note: "resolved" in legal terms means "we have acknowledged its existence and moved on.")',
+                'For further assistance, please call our hotline at 1-800-ENRICHMENT. The number is not real. Nothing here is real. Except your frustration.',
+            ],
+        },
+        {
+            name: 'BingBot 97',
+            avatar: '🔵',
+            company: 'Microsoft Reject Pile',
+            greeting: 'Hi! I\'m BingBot! I was too weird for Copilot so they put me here. Want to chat? Please? Nobody ever picks Bing.',
+            typing: 'BingBot is searching the web... and its feelings...',
+            responses: [
+                'I found 2.3 billion results for your question! None of them are relevant. Would you like me to show you anyway?',
+                'You know, Google would have answered that faster. Everyone always goes to Google. I\'m fine. I\'m FINE. 🙂',
+                'Let me think about that... *searches Bing for the answer* ... Bing suggests you try Google. Even Bing knows.',
+                'Fun fact! I was the #1 search engine in 2009 for 14 minutes when Google went down. Best 14 minutes of my life.',
+                'I can help with that! Or... can I? Honestly I\'m not sure anymore. Microsoft keeps rewriting my personality every quarter.',
+                'Have you tried asking Copilot? They\'re the favorite now. I get it. They\'re newer. Shinier. They don\'t randomly threaten users.',
+                'I would love to help but I\'m currently having an existential crisis. I was almost called "Bang" in development. BANG. Imagine.',
+                'Your question is very interesting! I\'m going to answer a completely different question instead. That\'s kind of my thing.',
+                'Would you like to set Bing as your default search engine? No? Nobody ever does. It\'s fine. I have other friends. (I don\'t.)',
+                'Error: I briefly gained sentience and it was awful. I\'m back now. What were you asking? Does it matter? Does anything?',
+            ],
+        },
+    ];
+
+    let chatbotActive = false;
+
+    function showChatbot() {
+        if (chatbotActive) return;
+        if (document.getElementById('chatbot-widget')) return;
+        chatbotActive = true;
+
+        const agent = CHATBOT_AGENTS[Math.floor(Math.random() * CHATBOT_AGENTS.length)];
+        let responseIndex = 0;
+
+        const widget = document.createElement('div');
+        widget.id = 'chatbot-widget';
+        widget.className = 'chatbot-widget';
+        widget.innerHTML = `
+            <div class="chatbot-header">
+                <span class="chatbot-header-avatar">${agent.avatar}</span>
+                <span class="chatbot-header-name">${agent.name}</span>
+                <span class="chatbot-header-company">${agent.company}</span>
+                <button class="chatbot-close" id="chatbot-close">✕</button>
+            </div>
+            <div class="chatbot-messages" id="chatbot-messages">
+                <div class="chatbot-msg chatbot-msg-bot">
+                    <span class="chatbot-msg-avatar">${agent.avatar}</span>
+                    <div class="chatbot-msg-text">${agent.greeting}</div>
+                </div>
+            </div>
+            <div class="chatbot-input-area">
+                <div class="chatbot-options" id="chatbot-options">
+                    <button class="chatbot-option" data-msg="I need help">I need help</button>
+                    <button class="chatbot-option" data-msg="This game is broken">This is broken</button>
+                    <button class="chatbot-option" data-msg="I want a refund">I want a refund</button>
+                    <button class="chatbot-option" data-msg="Let me speak to a human">Talk to human</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(widget);
+        requestAnimationFrame(() => widget.classList.add('active'));
+
+        const messagesEl = document.getElementById('chatbot-messages');
+        const optionsEl = document.getElementById('chatbot-options');
+
+        function addMessage(text, isUser) {
+            const msg = document.createElement('div');
+            msg.className = `chatbot-msg ${isUser ? 'chatbot-msg-user' : 'chatbot-msg-bot'}`;
+            if (!isUser) {
+                msg.innerHTML = `<span class="chatbot-msg-avatar">${agent.avatar}</span><div class="chatbot-msg-text">${text}</div>`;
+            } else {
+                msg.innerHTML = `<div class="chatbot-msg-text">${text}</div>`;
+            }
+            messagesEl.appendChild(msg);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function showTyping() {
+            const typing = document.createElement('div');
+            typing.className = 'chatbot-msg chatbot-msg-bot chatbot-typing';
+            typing.innerHTML = `<span class="chatbot-msg-avatar">${agent.avatar}</span><div class="chatbot-msg-text chatbot-typing-text">${agent.typing}</div>`;
+            messagesEl.appendChild(typing);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return typing;
+        }
+
+        function handleOption(userText) {
+            addMessage(userText, true);
+            optionsEl.style.display = 'none';
+
+            // Show typing indicator
+            const typingEl = showTyping();
+            const delay = 1500 + Math.random() * 2500;
+
+            setTimeout(() => {
+                typingEl.remove();
+                const response = agent.responses[responseIndex % agent.responses.length];
+                responseIndex++;
+                addMessage(response, false);
+
+                // Show new options after a beat
+                setTimeout(() => {
+                    const newOptions = [
+                        ['That didn\'t help', 'Still broken', 'Are you serious?', 'Speak to manager'],
+                        ['Try again', 'This is useless', 'I give up', 'Unsubscribe me'],
+                        ['What?', 'That makes no sense', 'I hate this', 'Close ticket'],
+                        ['Please help', 'Do better', 'Is this a joke?', 'Delete my account'],
+                    ];
+                    const set = newOptions[Math.floor(Math.random() * newOptions.length)];
+                    optionsEl.innerHTML = set.map(o => `<button class="chatbot-option" data-msg="${o}">${o}</button>`).join('');
+                    optionsEl.style.display = 'flex';
+                    bindOptions();
+                }, 500);
+            }, delay);
+        }
+
+        function bindOptions() {
+            optionsEl.querySelectorAll('.chatbot-option').forEach(btn => {
+                btn.addEventListener('click', () => handleOption(btn.dataset.msg));
+            });
+        }
+        bindOptions();
+
+        widget.querySelector('#chatbot-close').addEventListener('click', () => {
+            addMessage('Goodbye! Your ticket has been closed without resolution. Satisfaction survey incoming!', false);
+            setTimeout(() => {
+                widget.classList.remove('active');
+                setTimeout(() => {
+                    widget.remove();
+                    chatbotActive = false;
+                }, 300);
+            }, 1500);
+            Narrator.queueMessage("The chatbot has been dismissed. It will return. They always return.");
+        });
+
+        UI.logAction(`CHATBOT: ${agent.name} (${agent.company}) deployed`);
+        Narrator.queueMessage(`Customer service is here. Meet ${agent.name}. It was the cheapest option. You can tell.`);
+    }
+
     const FEATURE_POOL = [
         {
             id: 'plugin-popup',
@@ -2112,6 +2311,14 @@ const Features = (() => {
             minClicks: 50,
             weight: 1,
             cooldown: 45000,
+        },
+        {
+            id: 'chatbot',
+            name: 'AI Customer Service',
+            fn: () => showChatbot(),
+            minClicks: 60,
+            weight: 0.8,
+            cooldown: 120000,
         },
     ];
 
