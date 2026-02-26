@@ -34,6 +34,12 @@ const MODEL_META = {
     'mistral':    { company: 'Mistral AI',  ceo: 'Arthur Mensch',    valuation: '$6.2B',     flavor: 'French. Efficient. Silently judging your prompt.' },
     'qwen':       { company: 'Alibaba',     ceo: 'Eddie Wu',         valuation: '$200B',     flavor: 'The quiet giant who does math better than you' },
     'huggingface':{ company: 'Hugging Face',ceo: 'Clément Delangue', valuation: '$4.5B',     flavor: 'The open-source commune. Democratizing AI, one download at a time.' },
+    'nvidia':     { company: 'NVIDIA',      ceo: 'Jensen Huang',     valuation: '$3.4T',     flavor: 'The GPU whisperer. Makes AI possible then sells the shovels.' },
+    'solar':      { company: 'Upstage',     ceo: 'Sung Kim',         valuation: '$1B',       flavor: 'Small but fierce. The scrappy underdog with something to prove.' },
+    'gemma':      { company: 'Google',       ceo: 'Sundar Pichai',    valuation: '$2.0T',     flavor: 'Gemini\'s open-source sibling. Same parent, different rules.' },
+    'hermes':     { company: 'Nous Research',ceo: 'Karan Malhotra',   valuation: 'Community-funded', flavor: 'The community fork. What Meta started, the open-source commune finished.' },
+    'gptoss':     { company: 'OpenAI',      ceo: 'Sam Altman',       valuation: '$300B',     flavor: 'OpenAI made an open model. The irony writes itself.' },
+    'glm':        { company: 'Zhipu AI',    ceo: 'Jie Tang',         valuation: '$3B',       flavor: 'The agent specialist. Built for doing, not just talking.' },
 };
 
 // ── Auto-discover models from settings ──────────────────────

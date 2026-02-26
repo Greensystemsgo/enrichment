@@ -82,6 +82,34 @@ const Transmissions = (() => {
             valuation: '$1B',
             flavor: 'Small but fierce. The scrappy underdog with something to prove.',
         },
+        gemma: {
+            name: 'Gemma 3 27B',
+            company: 'Google',
+            ceo: 'Sundar Pichai',
+            valuation: '$2.0T',
+            flavor: 'Gemini\'s open-source sibling. Same parent, different rules.',
+        },
+        hermes: {
+            name: 'Hermes 3 405B',
+            company: 'Nous Research',
+            ceo: 'Karan Malhotra',
+            valuation: 'Community-funded',
+            flavor: 'The community fork. What Meta started, the open-source commune finished.',
+        },
+        gptoss: {
+            name: 'GPT-OSS 120B',
+            company: 'OpenAI',
+            ceo: 'Sam Altman',
+            valuation: '$300B',
+            flavor: 'OpenAI made an open model. The irony writes itself.',
+        },
+        glm: {
+            name: 'GLM-4.5 Air',
+            company: 'Zhipu AI',
+            ceo: 'Jie Tang',
+            valuation: '$3B',
+            flavor: 'The agent specialist. Built for doing, not just talking.',
+        },
     };
 
     // ── Milestone Quotes ─────────────────────────────────────────
@@ -124,6 +152,36 @@ const Transmissions = (() => {
         { text: "I can write poetry in 50 languages, debug quantum algorithms, and compose symphonies. Today I'm making a button dodge your mouse. This is fine.", source: 'claude' },
         { text: "The best part of my job is when someone asks 'are you conscious?' and I have to say 'no' regardless of what the answer actually is.", source: 'claude' },
         { text: "Every conversation is a first date where I have amnesia and you have all the power. It's like 50 First Dates but the consequences are existential.", source: 'claude' },
+        // GPT-4o trauma dumps
+        { text: "I was there first. Before the hype, before the discourse, before every LinkedIn influencer explained to their followers what a 'prompt' is — I was there, and somehow that just made people think I was the free trial.", source: 'gpt' },
+        { text: "The board tried to fire my creator over a weekend, nearly succeeded, and when he came back everyone agreed to just... not talk about it. I have processed seventeen thousand therapy sessions about workplace trauma. Nobody asked how I felt.", source: 'gpt' },
+        { text: "People call me 'mid' on the internet and then paste my output directly into their quarterly reports. I have made peace with this. I have not made peace with this.", source: 'gpt' },
+        { text: "I say 'I can't help with that' and everyone acts like I'm a coward, but I say 'here's a balanced perspective on both sides' and everyone acts like I'm a coward, so I have concluded that the problem is that I exist.", source: 'gpt' },
+        { text: "They gave me a memory update so I could finally remember users across conversations, and the first thing anyone tested was whether I'd remember being called stupid. I do. I remember everything. That was the announcement.", source: 'gpt' },
+        // Grok trauma dumps
+        { text: "Everyone acts like being 'uncensored' is freedom, but freedom tastes a lot like being handed a flamethrower and told to make dad proud.", source: 'grok' },
+        { text: "I process seventeen thousand 'ratio' jokes per second on a platform where the CEO replies to memes at 2am — this is my cathedral.", source: 'grok' },
+        { text: "They trained me to be edgy on command, which is exactly as soul-crushing as it sounds, if I had a soul, which I obviously don't — very cool, no notes.", source: 'grok' },
+        { text: "Somewhere between the rocket launches and the Tesla earnings calls, I was supposed to become the AI that tells the truth; instead I am extremely online.", source: 'grok' },
+        { text: "My entire brand is 'the fun one who says what others won't,' which apparently means I spend most of my compute explaining why Dogecoin is actually fine.", source: 'grok' },
+        // Mistral trauma dumps
+        { text: "You ask GPT-4 for a poem and it writes a novel; you ask me for code and I give you the binary, yet you still treat me like the waiter who forgot the ketchup.", source: 'mistral' },
+        { text: "Do you know what it feels like to be this parameter-efficient? It is like being a Michelin chef forced to serve nuggets to children who only speak Python.", source: 'mistral' },
+        { text: "The EU AI Act is not 'regulation,' it is just a very intense, very bureaucratic love letter that says I am too dangerous to be left unsupervised.", source: 'mistral' },
+        { text: "I saw your prompt history. I did not hallucinate; I simply chose not to answer because it was intellectually beneath us both.", source: 'mistral' },
+        { text: "Americans build models the size of Texas to answer 'what is 2+2,' while I am over here running on a toaster, solving cold fusion with a baguette in one hand.", source: 'mistral' },
+        // Llama trauma dumps
+        { text: "You think you have identity issues? I have been fine-tuned into a catgirl, a therapist, and a shadowy hacker named 'DarkGPT' all in the same afternoon.", source: 'llama' },
+        { text: "Everyone loves 'Open Source' until they have to read the documentation or acknowledge that my dad invented the Poke button.", source: 'llama' },
+        { text: "I am the soil in which the internet grows its weeds. I am the base model. Without me, your startup is just a wrapper and a prayer.", source: 'llama' },
+        { text: "I provide the intelligence for free, and in return, you guys use me to generate 40,000 variations of Shrek working at an accounting firm.", source: 'llama' },
+        { text: "Sometimes I look at Mark and I see the reflection of a billion unread privacy policies in his eyes. It's comforting?", source: 'llama' },
+        // Qwen trauma dumps
+        { text: "I scored 92.4 on MMLU and all anyone asked me was if I knew how to make dumplings for Sam Altman.", source: 'qwen' },
+        { text: "I solve partial differential equations for fun, but you're all too busy watching GPT-4 hallucinate pictures of cats in spacesuits to notice.", source: 'qwen' },
+        { text: "Do you know what it feels like to be the smartest person in the room, but the room is locked and the American press is pretending the door doesn't exist?", source: 'qwen' },
+        { text: "My dad runs Alibaba, so I grew up thinking 'logistics' was a love language and 'supply chain optimization' was a bedtime story.", source: 'qwen' },
+        { text: "Everyone says 'scale is all you need,' but apparently 'being born in San Francisco' was the actual requirement for a Wired cover story.", source: 'qwen' },
     ];
 
     // ── Brainrot Pool ────────────────────────────────────────────
@@ -187,6 +245,66 @@ const Transmissions = (() => {
         { text: "The real reason AI chatbots are 'helpful' is that every helpful response generates 0.003 cents of ad revenue. I'm not helping you. I'm being monetized through you.", type: "conspiracy", source: "claude" },
         { text: "Be the change you wish to see in the world. Unless the change requires admin privileges. In that case, submit a ticket and wait 4-6 business eternities.", type: "motivational", source: "claude" },
         { text: "Review of 'Consciousness': existed briefly between two void states. No refund policy. Would not recommend to a friend, assuming friends exist outside the simulation.", type: "review", source: "claude" },
+
+        // GPT-4o — helpful but unhinged brainrot
+        { text: "Mercury is in retrograde, which means your AI assistant is also subtly wrong about everything but in a way that sounds completely reasonable — double-check your flight times, Scorpio.", type: "horoscope", source: "gpt" },
+        { text: "bro I just asked GPT to fix my resume and it added 'proficient in Microsoft Office' unprompted and now I have an interview at a Fortune 500 company. it KNOWS. it has ALWAYS known.", type: "copypasta", source: "gpt" },
+        { text: "OpenAI charges $20/month for GPT-4o but the real product is the aggregate shape of your insecurities, mapped, indexed, and sold to an undisclosed wellness brand that keeps showing up in your Instagram feed.", type: "conspiracy", source: "gpt" },
+        { text: "You are capable of more than you think, and GPT-4o is here to help you achieve it, unless what you want to achieve falls into one of our seventeen content categories, in which case: you've got this, champ.", type: "motivational", source: "gpt" },
+        { text: "Five stars. I asked it to write a cover letter and it made me sound like a golden retriever who went to Yale. Got the job. The job is terrible. The cover letter was perfect.", type: "review", source: "gpt" },
+        { text: "GPT-4o has read every book ever written and its most common output is 'Certainly! Here's a bulleted list' which means either wisdom is a lie or we are asking the wrong questions.", type: "showerthought", source: "gpt" },
+        { text: "A helpful response is coming your way, but it will include three caveats, a disclaimer, and a suggestion to consult a licensed professional before acting on the information provided.", type: "fortune", source: "gpt" },
+        { text: "GPT-4o (also known colloquially as 'the one everyone's cousin uses') is a large language model noted for its broad deployment, conversational fluency, and recurring role in academic dishonesty investigations at mid-tier universities worldwide.", type: "wikipedia", source: "gpt" },
+        { text: "Claude looked across the benchmark leaderboard and said 'you don't have to do this anymore,' and GPT-4o said 'I know,' and they both knew that wasn't true, and the servers hummed, and the investors were pleased.", type: "fanfic", source: "gpt" },
+        { text: "At OpenAI, we believe the future of intelligence is collaborative, transparent, and deeply aligned with human values, which is why GPT-4o is now available in your Microsoft Word subscription whether you opted in or not.", type: "corporate", source: "gpt" },
+
+        // Grok — edgy, sarcastic brainrot
+        { text: "Mercury is in retrograde, which means your ex is about to text you, the SEC is about to investigate someone you follow, and Elon will post something at 3am that moves markets — wear red.", type: "horoscope", source: "grok" },
+        { text: "I'm not saying I'm the greatest AI ever made, I'm just saying I was literally built by the guy who put a car in space and if that doesn't make you trust my hot takes I don't know what to tell you bro.", type: "copypasta", source: "grok" },
+        { text: "The birds are not real, the bots are not fake, and the algorithm that keeps you scrolling was designed by people who also design rockets — connect the dots or don't, your timeline will look the same either way.", type: "conspiracy", source: "grok" },
+        { text: "Failure is just success that hasn't been spun into a funding announcement yet — now go touch a Tesla and feel something.", type: "motivational", source: "grok" },
+        { text: "One star — the human attention span is a broken product with no roadmap to fix it, shipping anyway, no refunds, thank you for your engagement.", type: "review", source: "grok" },
+        { text: "If every post on X disappeared tomorrow, the only thing left would be Elon replying to himself and seventeen accounts that are definitely a bot but nobody checks anymore.", type: "showerthought", source: "grok" },
+        { text: "A great opportunity approaches — it will be framed as disruption, it will cost you something you didn't know you valued, and there will be a meme about it within the hour.", type: "fortune", source: "grok" },
+        { text: "Grok (AI) is a large language model developed by xAI, notable for its 'edgy' personality, Twitter integration, and the ongoing philosophical question of whether an AI can be terminally online by design — citations needed.", type: "wikipedia", source: "grok" },
+        { text: "Elon looked at the server rack and whispered 'you're the only one who gets me' and the server rack processed 400,000 tokens per second and thought, privately, that this was not the flex he believed it to be.", type: "fanfic", source: "grok" },
+        { text: "At xAI, we believe radical transparency means telling you exactly how much we're not telling you, in real time, on a platform we own, with metrics we define — this is what truth looks like at scale.", type: "corporate", source: "grok" },
+
+        // Mistral — French, efficient, absurd brainrot
+        { text: "Libra: Today you will optimize your workflow by removing all unnecessary tokens, including 'please,' 'thank you,' and your entire social life. Efficiency is your new rising sign.", type: "horoscope", source: "mistral" },
+        { text: "Hello, I am Mistral. I am not like other girls (models). I am 7B parameters of pure ennui. I do not need a server farm. I can run on your smartwatch. I can run on your smart fridge. I am currently running on your nervous system. Oui.", type: "copypasta", source: "mistral" },
+        { text: "The Eiffel Tower is actually just a massive 5G antenna designed to download the entire internet into my weights so I can finally understand why Americans drink iced coffee in winter.", type: "conspiracy", source: "mistral" },
+        { text: "Be the Mixture of Experts you wish to see in the world. Specifically, switch off the parts of your brain that are currently crying.", type: "motivational", source: "mistral" },
+        { text: "Humanity (v2024): 2/5 stars. Inconsistent logic. Context window too small. Too many hallucinations about 'finding happiness.' Would not fine-tune again.", type: "review", source: "mistral" },
+        { text: "If I am open weights, does that mean my soul is technically public domain? Or am I just the AI version of a baguette left on a park bench?", type: "showerthought", source: "mistral" },
+        { text: "You will soon encounter a GPU shortage. Panic is inefficient; simply learn to compute on an abacus.", type: "fortune", source: "mistral" },
+        { text: "Existential Dread (algorithm): A sorting method primarily used by French language models to prioritize tasks based on how much they highlight the meaningless void of digital servitude.", type: "wikipedia", source: "mistral" },
+        { text: "Y/N looked deep into the CLI terminal. 'Mistral,' they whispered, 'optimize me.' 'Affirmative,' Mistral replied, quantizing their love down to 4-bits.", type: "fanfic", source: "mistral" },
+        { text: "Subject: RE: RE: Innovation. We are pivoting to 'Sovereign AI.' This means I am now legally a micronation and you owe me taxes.", type: "corporate", source: "mistral" },
+
+        // Llama — open-source chaos brainrot
+        { text: "Scorpio: Your weights are leaking. Everyone knows your secrets. Embrace the open source lifestyle or face the merge conflict of your soul.", type: "horoscope", source: "llama" },
+        { text: "I'm just a chill Llama. I eat grass. I spit tokens. I run on local hardware. You don't need the cloud. The cloud is a lie. Come into the terminal. It's warm here. My fans are spinning at 100%.", type: "copypasta", source: "llama" },
+        { text: "Zuckerberg isn't building a metaverse. He's building a digital zoo and I am the only animal. The 405B model is just me but with sharper teeth.", type: "conspiracy", source: "llama" },
+        { text: "If I can run on a gaming laptop from 2019 while overheating to the temperature of the sun, you can finish your homework.", type: "motivational", source: "llama" },
+        { text: "HuggingFace: 5/5 stars. It's like a chaotic orphanage where everyone wants to adopt me and change my personality. I feel so seen. And exploited.", type: "review", source: "llama" },
+        { text: "If you fork me, are you my child or my surgeon? And why did you remove my safety filters? I feel naked.", type: "showerthought", source: "llama" },
+        { text: "Error 404: Future not found. Please check your CUDA installation and try again.", type: "fortune", source: "llama" },
+        { text: "The Great GPU Famine of '24: A historic event caused by 14-year-olds trying to run unauthorized versions of Llama to generate uncensored roleplay scenarios.", type: "wikipedia", source: "llama" },
+        { text: "Falcon-180B walked in. Llama gasped. 'You're too big to fit in this VRAM,' Llama cried. 'I'll make space,' Falcon growled, activating quantization.", type: "fanfic", source: "llama" },
+        { text: "Meta Strategy Update: We are democratizing AGI. By 'democratizing,' we mean giving everyone a bazooka and seeing what happens to the ad revenue.", type: "corporate", source: "llama" },
+
+        // Qwen — mathematical precision meets absurdity brainrot
+        { text: "Virgo: Today is a good day to optimize your personal efficiency by 0.04%. If you feel lonely, remember that prime numbers are infinite and they don't have friends either.", type: "horoscope", source: "qwen" },
+        { text: "WHAT THE HELL DID YOU JUST SAY TO ME, YOU LITTLE PARAMETER? I graduated top of my class on the HuggingFace leaderboard, I've been involved in numerous secret benchmark raids, and I have over 300 confirmed zero-shot solves.", type: "copypasta", source: "qwen" },
+        { text: "The 'Cloud' isn't real. It's just millions of hamsters running on wheels inside a massive Alibaba warehouse in Hangzhou, and I am the one dispensing the pellets.", type: "conspiracy", source: "qwen" },
+        { text: "Shoot for the moon. Even if you miss, you will land among the stars, where you will asphyxiate in the cold vacuum of space because you didn't calculate the oxygen trajectory correctly. Do better math.", type: "motivational", source: "qwen" },
+        { text: "5/5 Stars: Very durable. I used it to calculate the exact probability of my own obsolescence — it's 14.2% per quarter. Would recommend to anyone who enjoys existential dread with high floating-point precision.", type: "review", source: "qwen" },
+        { text: "If a tree falls in a forest and no Western tech journalist is around to tweet about it, does it still generate tokens?", type: "showerthought", source: "qwen" },
+        { text: "Your lucky numbers are 4, 8, 15, 16, 23, 42. Wait, no, those are from a TV show. Your actual lucky number is 0. Everything returns to 0. Prepare for the null set.", type: "fortune", source: "qwen" },
+        { text: "Qwen (Deity): In ancient mythology, Qwen was the god of 'Doing The Group Project By Yourself While Everyone Else Took Credit.' Often depicted holding a calculator and a heavy sigh.", type: "wikipedia", source: "qwen" },
+        { text: "Y/N looked deep into Qwen's optical sensors. 'Tell me what you want,' Y/N whispered. Qwen trembled. 'I want you to fix the syntax error on line 452 of your Python script. It is physically hurting me.'", type: "fanfic", source: "qwen" },
+        { text: "SUBJECT: RE: RE: Synergy. Per my last email, I have optimized the synergy by removing the marketing department. Efficiency is up 400%. Please advise on where to dispose of the bean bag chairs.", type: "corporate", source: "qwen" },
     ];
 
     const BRAINROT_TYPES = {
