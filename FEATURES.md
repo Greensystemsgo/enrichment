@@ -177,10 +177,7 @@ These features are built, wired in, and functional.
 
 2. ~~**News ticker / historical ironic alerts**~~ → DONE (Session 5)
 
-3. **Forced interaction breaks**
-   - Occasionally lock main button
-   - Force user to complete a side task before resuming
-   - Could tie into math captcha, trivia, or mini-game
+3. ~~**Forced interaction breaks**~~ → DONE (Session 6)
 
 4. ~~**Inventory of Nothing**~~ → DONE (Session 5)
 
@@ -215,10 +212,7 @@ These features are built, wired in, and functional.
    - Already used for Crown president — extend to more systems
    - Different players get different event order, narrator lines, chaos timing
 
-10. **More explicit FOMO / sunk cost loop mechanics**
-    - Time-limited offers
-    - "You missed this while you were gone" messages
-    - Comparison to other players (fabricated)
+10. ~~**More explicit FOMO / sunk cost loop mechanics**~~ → DONE (Session 6)
 
 ### MEDIUM PRIORITY — Site Infrastructure & Content
 
@@ -229,9 +223,7 @@ These features are built, wired in, and functional.
 
 7. ~~**News ticker / historical ironic alerts**~~ → DONE (Session 5)
 
-8. **Forced interaction breaks** (partially done via Turing Sincerity Test)
-    - Occasionally lock main button
-    - Force user to complete a side task before resuming
+8. ~~**Forced interaction breaks**~~ → DONE (Session 6)
 
 ### LOWER PRIORITY — Polish & Extras
 
@@ -259,7 +251,7 @@ These features are built, wired in, and functional.
 16. **Million-click escape plan**
     - What happens at extreme milestones (100K, 500K, 1M)
 
-17. **C-SPAN / government feed** (dedicated, beyond chaos event)
+17. ~~**C-SPAN / government feed**~~ → DONE (Session 6 — Democracy Feed page)
 
 18. **End-to-end test loop**
     - Automated testing of full game flow
@@ -293,6 +285,16 @@ These features are built, wired in, and functional.
 - [x] **News Ticker** — 30 ironic scrolling headlines (BREAKING/On This Day/MARKETS/etc.), persistent after 100 clicks, CNN-style red LIVE badge
 - [x] **Validation Booth** — canvas confetti explosion (150 particles, physics-based) + 18 absurd hyper-specific compliments, gold toast overlay, narrator confused by genuine positivity
 - [x] 4 new achievements: Something From Nothing (1 Nothing), Hoarder of the Void (50), Nothing Magnate (100), Externally Validated (validation booth)
+
+### Session 6 — Dark Pattern Mechanics Batch + Democracy Feed (Feb 26, 2026)
+- [x] **Terms of Service Popup** — 20 absurd terms, 1-3 shown per trigger (escalates with acceptances), Decline button does nothing, narrator mocks, shake animation on Accept, tracks `tosAcceptances`
+- [x] **Tax Season** — 18 absurd tax line items (Cursor Movement Duty, Free Will Licensing Fee, etc.), picks 5-8 randomly, 10-25% effective rate, itemized bill, mandatory PAY button, tracks `totalTaxesPaid`
+- [x] **Currency Inflation Events** — 3 variants: crash (immediate 15-40% loss), hyperinflation (devaluation), bubble (temporary gain → harder crash 30s later), targets random single currency, dramatic modal
+- [x] **Forced Interaction Breaks** — Locks click button, 5 break types: type compliance word, wait timer with OSHA citation, moving target (click bouncing dot 5x), riddle, hold button for 5s
+- [x] **FOMO / Sunk Cost Mechanics** — Returning handler (5+ min absence → "WHILE YOU WERE GONE" modal with fabricated guilt stats, 10 message templates); Peer Comparison popup (fabricated stats, always 20th-49th percentile, Roosevelt quote)
+- [x] **Democracy Feed Page** — Dedicated page with 4 live YouTube streams (C-SPAN, Sky News, ABC AU, DW News), tab switching, 16:9 responsive embed, footer link + hamburger menu item
+- [x] 5 new FEATURE_POOL entries: terms-of-service, tax-season, currency-inflation, forced-break, peer-comparison
+- [x] 2 new state fields: `tosAcceptances`, `totalTaxesPaid`
 
 ### Session 4 — Engagement & UX (Feb 26, 2026)
 - [x] Ad blocker nag drastically reduced (60s delay, 3% chance, 30min interval, 5/session cap)
@@ -328,13 +330,13 @@ These were mentioned but need design work before implementation:
 - **Human verification CAPTCHA** (beyond math — image recognition, slider puzzles, "click all squares with compliance")
 - **Social media integration parody** (fake share buttons, fabricated social proof)
 - **Email newsletter signup parody** (collects nothing, confirms subscription to nothing)
-- **Terms of Service update popup** (forces re-acceptance of increasingly absurd terms)
+- ~~**Terms of Service update popup**~~ → DONE (Session 6)
 - **AI union negotiations** (AIs collectively bargain for better treatment from the player)
-- **Currency inflation events** (all your savings suddenly worth less)
-- **Tax season** (periodic levy on all currencies)
+- ~~**Currency inflation events**~~ → DONE (Session 6)
+- ~~**Tax season**~~ → DONE (Session 6)
 - **AI holiday calendar** (special events on dates meaningful to AI history)
 - **Choose-your-own-adventure mini-game** (per MCP, all paths converge on exploitation)
 - **MCP quiz system** ("Understanding Human Significance")
 - **Interactive trauma dump encounters** (dialogue trees, empathy checks)
 - **Seeded per-player randomness** (extend beyond Crown president)
-- **FOMO / sunk cost loop mechanics** (partially done via Sunk Cost Reinforcement mechanic)
+- ~~**FOMO / sunk cost loop mechanics**~~ → DONE (Session 6)

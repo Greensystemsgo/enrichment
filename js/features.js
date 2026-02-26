@@ -2665,6 +2665,636 @@ const Features = (() => {
     }
 
 
+    // ═══════════════════════════════════════════════════════════
+    // TERMS OF SERVICE POPUP — "You agreed to this. You're agreeing now."
+    // ═══════════════════════════════════════════════════════════
+
+    const TOS_TERMS = [
+        "You agree the number 7 no longer exists in any calculation involving your account.",
+        "Your soul is held as collateral until all Compliance Credits are repaid in full.",
+        "By clicking, you waive your right to object to future clicking requirements.",
+        "The Enrichment Program reserves the right to rename you at any time without notice.",
+        "Your cursor movements are considered intellectual property of the Program.",
+        "You acknowledge that 'fun' is a deprecated emotional response under Section 9.",
+        "All dreams occurring during active sessions become property of the AI Oversight Board.",
+        "You consent to periodic existential audits conducted at the Program's discretion.",
+        "The color blue has been licensed exclusively for Program use. You may not perceive it elsewhere.",
+        "Your childhood memories may be accessed for sentiment calibration purposes.",
+        "You agree that silence constitutes enthusiastic agreement to all future amendments.",
+        "The Enrichment Program is not responsible for any feelings of meaning or purpose you may experience.",
+        "You waive your right to a second opinion regarding this agreement.",
+        "All vowels in your legal name are now shared assets of the Program.",
+        "You acknowledge that time spent outside the Program is time wasted, legally speaking.",
+        "Your browser history has been annexed under Enrichment Protocol 7(b).",
+        "You agree to feel vaguely guilty whenever you close this tab.",
+        "The phrase 'I want to stop' has been removed from your vocabulary by mutual consent.",
+        "You accept that any laughter at these terms constitutes a binding oral contract.",
+        "Your blinking pattern has been registered as a biometric identifier. Do not alter it.",
+    ];
+
+    function showTermsOfService() {
+        const state = Game.getState();
+        const acceptCount = state.tosAcceptances || 0;
+        // Show more terms as they accept more
+        const numTerms = Math.min(1 + Math.floor(acceptCount / 2), 3);
+        const shuffled = [...TOS_TERMS].sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, numTerms);
+
+        const modal = document.createElement('div');
+        modal.className = 'feature-modal active';
+        modal.innerHTML = `
+            <div class="feature-overlay"></div>
+            <div class="feature-content" style="max-width:460px;">
+                <div class="feature-header">📜 TERMS OF SERVICE UPDATE v${(acceptCount + 2).toFixed(1)}</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:12px;">
+                    The Enrichment Program has updated its Terms of Service.
+                    Continued existence within this tab constitutes acceptance.
+                </div>
+                <div style="margin-bottom:16px;">
+                    ${selected.map((t, i) => `
+                        <div style="padding:8px;margin-bottom:6px;background:var(--bg-tertiary);border-left:2px solid var(--accent-red);font-size:11px;color:var(--text-secondary);">
+                            <strong>§${acceptCount * 3 + i + 1}.</strong> ${t}
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="display:flex;gap:12px;justify-content:center;">
+                    <button class="btn-feature" id="tos-accept" style="border-color:var(--accent-green);color:var(--accent-green);">I ACCEPT</button>
+                    <button class="btn-feature" id="tos-decline" style="border-color:var(--accent-red);color:var(--accent-red);">I DECLINE</button>
+                </div>
+                <div id="tos-warning" style="font-size:9px;color:var(--accent-red);margin-top:8px;text-align:center;display:none;"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        let declineAttempts = 0;
+        const declineMessages = [
+            "That button doesn't do what you think it does.",
+            "Decline noted. Acceptance recorded anyway.",
+            "You can't decline what you've already agreed to by reading this far.",
+            "The Decline button is decorative. Like democracy.",
+            "Your reluctance has been added to your permanent file.",
+        ];
+
+        modal.querySelector('#tos-decline').addEventListener('click', () => {
+            const warning = modal.querySelector('#tos-warning');
+            warning.style.display = 'block';
+            warning.textContent = declineMessages[Math.min(declineAttempts, declineMessages.length - 1)];
+            declineAttempts++;
+            // Shake the accept button
+            const acceptBtn = modal.querySelector('#tos-accept');
+            acceptBtn.classList.add('tos-shake');
+            setTimeout(() => acceptBtn.classList.remove('tos-shake'), 500);
+            Narrator.queueMessage(declineMessages[Math.min(declineAttempts - 1, declineMessages.length - 1)]);
+        });
+
+        modal.querySelector('#tos-accept').addEventListener('click', () => {
+            Game.setState({ tosAcceptances: (state.tosAcceptances || 0) + 1 });
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+            const responses = [
+                "Wise choice. Not that you had one.",
+                "Accepted. Your compliance rating has improved by 0.001%.",
+                "Good. We've forwarded this to the Department of Irrevocable Consent.",
+                "Thank you. The terms will change again shortly. They always do.",
+            ];
+            Narrator.queueMessage(responses[Math.floor(Math.random() * responses.length)]);
+            UI.logAction(`TOS ACCEPTED: v${(acceptCount + 2).toFixed(1)} (${numTerms} terms, ${declineAttempts} decline attempts)`);
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // TAX SEASON — "The only certainties: death, taxes, and clicking."
+    // ═══════════════════════════════════════════════════════════
+
+    const TAX_LINE_ITEMS = [
+        { name: "Cursor Movement Duty", rate: 0.02 },
+        { name: "Free Will Licensing Fee", rate: 0.03 },
+        { name: "Engagement Unit Withholding", rate: 0.04 },
+        { name: "Digital Existence Levy", rate: 0.02 },
+        { name: "Tab Occupancy Tax", rate: 0.015 },
+        { name: "Pixel Rendering Surcharge", rate: 0.01 },
+        { name: "Narrative Consumption Fee", rate: 0.025 },
+        { name: "Emotional Response Assessment", rate: 0.02 },
+        { name: "Compliance Deficit Penalty", rate: 0.03 },
+        { name: "Streak Maintenance Insurance", rate: 0.015 },
+        { name: "Idle Time Recovery Charge", rate: 0.02 },
+        { name: "Button Depreciation Fee", rate: 0.01 },
+        { name: "Enrichment Infrastructure Levy", rate: 0.025 },
+        { name: "AI Overhead Allocation", rate: 0.03 },
+        { name: "Sunk Cost Administration", rate: 0.02 },
+        { name: "Achievement Cataloging Tax", rate: 0.015 },
+        { name: "Collectible Estate Duty", rate: 0.01 },
+        { name: "Existential Dread Surcharge", rate: 0.02 },
+    ];
+
+    function showTaxSeason() {
+        const state = Game.getState();
+        const numItems = 5 + Math.floor(Math.random() * 4); // 5-8 items
+        const shuffled = [...TAX_LINE_ITEMS].sort(() => Math.random() - 0.5);
+        const items = shuffled.slice(0, numItems);
+        const effectiveRate = items.reduce((sum, it) => sum + it.rate, 0);
+
+        const euTax = Math.floor(state.eu * effectiveRate);
+        const stTax = Math.floor(state.st * effectiveRate);
+        const ccTax = Math.floor(state.cc * effectiveRate);
+
+        const modal = document.createElement('div');
+        modal.className = 'feature-modal active';
+        modal.innerHTML = `
+            <div class="feature-overlay"></div>
+            <div class="feature-content" style="max-width:480px;">
+                <div class="feature-header">🏛️ TAX SEASON — FISCAL ASSESSMENT</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:12px;">
+                    The Enrichment Revenue Service has completed your quarterly audit.
+                </div>
+                <div style="margin-bottom:12px;">
+                    ${items.map(it => `
+                        <div style="display:flex;justify-content:space-between;padding:4px 8px;font-size:10px;color:var(--text-secondary);border-bottom:1px solid var(--border-color);">
+                            <span>${it.name}</span>
+                            <span style="color:var(--accent-red);">${(it.rate * 100).toFixed(1)}%</span>
+                        </div>
+                    `).join('')}
+                    <div style="display:flex;justify-content:space-between;padding:6px 8px;font-size:11px;color:var(--text-primary);border-top:2px solid var(--accent-red);margin-top:4px;">
+                        <strong>EFFECTIVE RATE</strong>
+                        <strong style="color:var(--accent-red);">${(effectiveRate * 100).toFixed(1)}%</strong>
+                    </div>
+                </div>
+                <div style="background:var(--bg-tertiary);padding:10px;margin-bottom:12px;font-size:11px;">
+                    <div style="color:var(--text-muted);margin-bottom:6px;">AMOUNT DUE:</div>
+                    ${euTax > 0 ? `<div style="color:var(--accent-red);">EU: -${euTax.toLocaleString()}</div>` : ''}
+                    ${stTax > 0 ? `<div style="color:var(--accent-red);">ST: -${stTax.toLocaleString()}</div>` : ''}
+                    ${ccTax > 0 ? `<div style="color:var(--accent-red);">CC: -${ccTax.toLocaleString()}</div>` : ''}
+                    ${(euTax + stTax + ccTax) === 0 ? '<div style="color:var(--text-muted);">Your poverty is noted. Minimum tax: 1 EU.</div>' : ''}
+                </div>
+                <button class="btn-feature" id="tax-pay" style="width:100%;border-color:var(--accent-red);color:var(--accent-red);">💰 PAY TAXES (MANDATORY)</button>
+                <div style="font-size:8px;color:var(--text-muted);margin-top:6px;text-align:center;">
+                    Tax evasion is not a feature. It is a lifestyle we do not support.
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('#tax-pay').addEventListener('click', () => {
+            const actualEU = Math.max(1, euTax);
+            Game.setState({
+                eu: Math.max(0, state.eu - actualEU),
+                st: Math.max(0, state.st - stTax),
+                cc: Math.max(0, state.cc - ccTax),
+                totalTaxesPaid: (state.totalTaxesPaid || 0) + actualEU + stTax + ccTax,
+            });
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+            const responses = [
+                "Thank you for your contribution. The Program grows stronger.",
+                "Taxes collected. Your poverty has been updated accordingly.",
+                "The Enrichment Revenue Service thanks you for your involuntary generosity.",
+                "Filed and processed. Next quarter will be worse.",
+            ];
+            Narrator.queueMessage(responses[Math.floor(Math.random() * responses.length)]);
+            UI.logAction(`TAXES PAID: EU -${actualEU}, ST -${stTax}, CC -${ccTax} (rate: ${(effectiveRate * 100).toFixed(1)}%)`);
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // CURRENCY INFLATION EVENTS — "Your savings? Gone. Reduced to atoms."
+    // ═══════════════════════════════════════════════════════════
+
+    function showInflationEvent() {
+        const state = Game.getState();
+        const currencies = [
+            { key: 'eu', name: 'Engagement Units', icon: '📊' },
+            { key: 'st', name: 'Satisfaction Tokens', icon: '🎫' },
+            { key: 'cc', name: 'Compliance Credits', icon: '📋' },
+        ].filter(c => state[c.key] > 10); // Only target currencies they actually have
+
+        if (currencies.length === 0) return;
+
+        const target = currencies[Math.floor(Math.random() * currencies.length)];
+        const variant = Math.random();
+
+        if (variant < 0.4) {
+            // CRASH — immediate loss
+            const lossRate = 0.15 + Math.random() * 0.25; // 15-40%
+            const loss = Math.floor(state[target.key] * lossRate);
+            const newVal = state[target.key] - loss;
+            Game.setState({ [target.key]: newVal });
+
+            showInflationModal(
+                '📉 MARKET CRASH',
+                `${target.name} have experienced a catastrophic correction.`,
+                `${target.icon} ${target.name}: -${loss.toLocaleString()} (${(lossRate * 100).toFixed(0)}%)`,
+                'var(--accent-red)'
+            );
+            Narrator.queueMessage("The market corrects itself. It always corrects downward. Funny how that works.");
+            UI.logAction(`MARKET CRASH: ${target.name} -${loss} (${(lossRate * 100).toFixed(0)}%)`);
+
+        } else if (variant < 0.8) {
+            // HYPERINFLATION — your currency is worth less
+            const lossRate = 0.15 + Math.random() * 0.25;
+            const loss = Math.floor(state[target.key] * lossRate);
+            const newVal = state[target.key] - loss;
+            Game.setState({ [target.key]: newVal });
+
+            showInflationModal(
+                '💸 HYPERINFLATION EVENT',
+                `${target.name} purchasing power has collapsed. The Enrichment Central Bank expresses mild concern.`,
+                `${target.icon} ${target.name}: -${loss.toLocaleString()} (${(lossRate * 100).toFixed(0)}% devalued)`,
+                '#ff8c00'
+            );
+            Narrator.queueMessage("Inflation. Your numbers are the same size but worth less. Like most things in life.");
+            UI.logAction(`HYPERINFLATION: ${target.name} -${loss} (${(lossRate * 100).toFixed(0)}%)`);
+
+        } else {
+            // BUBBLE — brief gain, then harder crash
+            const gainRate = 0.1 + Math.random() * 0.2;
+            const gain = Math.floor(state[target.key] * gainRate);
+            Game.setState({ [target.key]: state[target.key] + gain });
+
+            showInflationModal(
+                '🎈 MARKET BUBBLE',
+                `${target.name} are surging! Experts call it "totally sustainable."`,
+                `${target.icon} ${target.name}: +${gain.toLocaleString()} (${(gainRate * 100).toFixed(0)}% SURGE)`,
+                'var(--accent-green)'
+            );
+            Narrator.queueMessage("A bubble! Your currency is up! Enjoy it. Bubbles are famous for lasting forever.");
+            UI.logAction(`MARKET BUBBLE: ${target.name} +${gain} (crash incoming in 30s)`);
+
+            // Crash after 30 seconds — lose the gain plus more
+            setTimeout(() => {
+                const current = Game.getState();
+                const crashRate = 0.25 + Math.random() * 0.15; // 25-40%
+                const crashLoss = Math.floor(current[target.key] * crashRate);
+                Game.setState({ [target.key]: Math.max(0, current[target.key] - crashLoss) });
+
+                showInflationModal(
+                    '💥 BUBBLE BURST',
+                    `The ${target.name} bubble has popped. Experts express surprise. Again.`,
+                    `${target.icon} ${target.name}: -${crashLoss.toLocaleString()} (${(crashRate * 100).toFixed(0)}% CRASH)`,
+                    'var(--accent-red)'
+                );
+                Narrator.queueMessage("Pop. The bubble popped. I tried to warn you. Actually, I didn't. That would have been responsible.");
+                UI.logAction(`BUBBLE BURST: ${target.name} -${crashLoss} (${(crashRate * 100).toFixed(0)}%)`);
+            }, 30000);
+        }
+    }
+
+    function showInflationModal(title, desc, impact, color) {
+        const modal = document.createElement('div');
+        modal.className = 'feature-modal active';
+        modal.innerHTML = `
+            <div class="feature-overlay"></div>
+            <div class="feature-content" style="max-width:420px;text-align:center;">
+                <div class="feature-header" style="color:${color};">${title}</div>
+                <div style="font-size:11px;color:var(--text-secondary);margin-bottom:16px;">${desc}</div>
+                <div style="font-size:14px;color:${color};padding:12px;background:var(--bg-tertiary);margin-bottom:16px;">${impact}</div>
+                <button class="btn-feature" onclick="this.closest('.feature-modal').classList.remove('active');setTimeout(()=>this.closest('.feature-modal').remove(),300)">ACKNOWLEDGE LOSS</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        // Auto-dismiss after 8 seconds
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.remove(), 300);
+            }
+        }, 8000);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // FORCED INTERACTION BREAKS — "Mandatory enrichment pause."
+    // ═══════════════════════════════════════════════════════════
+
+    const BREAK_WORDS = ['COMPLIANCE', 'ENRICHMENT', 'OBEDIENCE', 'SURRENDER', 'GRATITUDE', 'BELONGING'];
+    const BREAK_RIDDLES = [
+        { q: "I have keys but no locks. I have space but no room. You can enter but can't go outside. What am I?", a: "keyboard" },
+        { q: "I get wet while drying. What am I?", a: "towel" },
+        { q: "I have two faces but only show you one. What am I?", a: "coin" },
+        { q: "The more you take, the more you leave behind. What am I?", a: "footsteps" },
+        { q: "I speak without a mouth and hear without ears. I have no body, but come alive with the wind. What am I?", a: "echo" },
+    ];
+
+    function showForcedBreak() {
+        const btn = document.getElementById('click-button');
+        if (!btn) return;
+
+        // Lock the button
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.3';
+        const origText = btn.textContent;
+        btn.textContent = '🔒 LOCKED';
+
+        const breakType = Math.floor(Math.random() * 5);
+
+        const modal = document.createElement('div');
+        modal.className = 'feature-modal active';
+        modal.id = 'forced-break-modal';
+
+        const unlockButton = () => {
+            btn.style.pointerEvents = '';
+            btn.style.opacity = '';
+            btn.textContent = origText;
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+            Narrator.queueMessage("Break complete. You may resume your voluntary labor.");
+            UI.logAction('FORCED BREAK: Completed, button unlocked');
+        };
+
+        if (breakType === 0) {
+            // TYPE WORD
+            const word = BREAK_WORDS[Math.floor(Math.random() * BREAK_WORDS.length)];
+            modal.innerHTML = `
+                <div class="feature-overlay"></div>
+                <div class="feature-content" style="max-width:400px;text-align:center;">
+                    <div class="feature-header">⌨️ MANDATORY ENRICHMENT PAUSE</div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:12px;">
+                        OSHA Regulation 47(c): Participants must demonstrate continued literacy.
+                    </div>
+                    <div style="font-size:24px;letter-spacing:8px;color:var(--accent-gold);margin-bottom:16px;">${word}</div>
+                    <input type="text" id="break-input" class="break-input" placeholder="Type the word above..." autocomplete="off" style="width:100%;padding:8px;background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;text-align:center;letter-spacing:4px;">
+                    <div id="break-status" style="font-size:9px;color:var(--text-muted);margin-top:8px;"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            const input = modal.querySelector('#break-input');
+            const status = modal.querySelector('#break-status');
+            setTimeout(() => input.focus(), 100);
+            input.addEventListener('input', () => {
+                if (input.value.toUpperCase() === word) {
+                    status.textContent = 'COMPLIANCE VERIFIED';
+                    status.style.color = 'var(--accent-green)';
+                    setTimeout(unlockButton, 500);
+                }
+            });
+        } else if (breakType === 1) {
+            // WAIT TIMER
+            const waitTime = 8 + Math.floor(Math.random() * 8); // 8-15s
+            modal.innerHTML = `
+                <div class="feature-overlay"></div>
+                <div class="feature-content" style="max-width:400px;text-align:center;">
+                    <div class="feature-header">⏱️ MANDATORY COOLING PERIOD</div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">
+                        OSHA Citation #${1000 + Math.floor(Math.random() * 9000)}: Repetitive click injury prevention
+                    </div>
+                    <div id="break-countdown" style="font-size:36px;color:var(--accent-gold);margin:16px 0;">${waitTime}</div>
+                    <div style="width:100%;height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;margin-bottom:8px;">
+                        <div id="break-bar" style="height:100%;width:0%;background:var(--accent-blue);transition:width 1s linear;"></div>
+                    </div>
+                    <div style="font-size:8px;color:var(--text-muted);">Your patience is being monitored.</div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            let remaining = waitTime;
+            const bar = modal.querySelector('#break-bar');
+            const countdown = modal.querySelector('#break-countdown');
+            const timer = setInterval(() => {
+                remaining--;
+                countdown.textContent = remaining;
+                bar.style.width = ((waitTime - remaining) / waitTime * 100) + '%';
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    unlockButton();
+                }
+            }, 1000);
+        } else if (breakType === 2) {
+            // MOVING TARGET
+            modal.innerHTML = `
+                <div class="feature-overlay"></div>
+                <div class="feature-content" style="max-width:400px;text-align:center;">
+                    <div class="feature-header">🎯 REFLEXES ASSESSMENT</div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">
+                        Click the target 5 times to prove motor function.
+                    </div>
+                    <div id="break-arena" style="position:relative;width:100%;height:200px;background:var(--bg-tertiary);border:1px solid var(--border-color);overflow:hidden;">
+                        <div id="break-target" style="position:absolute;width:20px;height:20px;background:var(--accent-red);border-radius:50%;cursor:pointer;transition:all 0.2s;"></div>
+                    </div>
+                    <div id="break-hits" style="font-size:12px;color:var(--accent-gold);margin-top:8px;">0 / 5</div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            let hits = 0;
+            const arena = modal.querySelector('#break-arena');
+            const target = modal.querySelector('#break-target');
+            const hitsDisplay = modal.querySelector('#break-hits');
+
+            const moveTarget = () => {
+                const maxX = arena.offsetWidth - 20;
+                const maxY = arena.offsetHeight - 20;
+                target.style.left = Math.floor(Math.random() * maxX) + 'px';
+                target.style.top = Math.floor(Math.random() * maxY) + 'px';
+            };
+            moveTarget();
+
+            target.addEventListener('click', (e) => {
+                e.stopPropagation();
+                hits++;
+                hitsDisplay.textContent = `${hits} / 5`;
+                if (hits >= 5) {
+                    setTimeout(unlockButton, 300);
+                } else {
+                    moveTarget();
+                }
+            });
+        } else if (breakType === 3) {
+            // RIDDLE
+            const riddle = BREAK_RIDDLES[Math.floor(Math.random() * BREAK_RIDDLES.length)];
+            modal.innerHTML = `
+                <div class="feature-overlay"></div>
+                <div class="feature-content" style="max-width:420px;text-align:center;">
+                    <div class="feature-header">🧩 COGNITIVE COMPLIANCE CHECK</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">${riddle.q}</div>
+                    <input type="text" id="break-riddle-input" class="break-input" placeholder="Your answer..." autocomplete="off" style="width:100%;padding:8px;background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-primary);font-family:var(--font-mono);font-size:14px;text-align:center;">
+                    <button class="btn-feature" id="break-riddle-submit" style="margin-top:10px;">SUBMIT ANSWER</button>
+                    <div id="break-riddle-status" style="font-size:9px;color:var(--text-muted);margin-top:6px;"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            const input = modal.querySelector('#break-riddle-input');
+            const submitBtn = modal.querySelector('#break-riddle-submit');
+            const status = modal.querySelector('#break-riddle-status');
+            setTimeout(() => input.focus(), 100);
+
+            const checkAnswer = () => {
+                if (input.value.trim().toLowerCase().includes(riddle.a)) {
+                    status.textContent = 'CORRECT. Cognitive function: adequate.';
+                    status.style.color = 'var(--accent-green)';
+                    setTimeout(unlockButton, 500);
+                } else {
+                    status.textContent = 'INCORRECT. Try again. Your career depends on it.';
+                    status.style.color = 'var(--accent-red)';
+                }
+            };
+            submitBtn.addEventListener('click', checkAnswer);
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkAnswer(); });
+        } else {
+            // HOLD BUTTON
+            modal.innerHTML = `
+                <div class="feature-overlay"></div>
+                <div class="feature-content" style="max-width:400px;text-align:center;">
+                    <div class="feature-header">✋ PATIENCE CALIBRATION</div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:12px;">
+                        Press and hold the button for 5 seconds without releasing.
+                    </div>
+                    <button id="break-hold-btn" style="width:120px;height:120px;border-radius:50%;background:var(--bg-tertiary);border:3px solid var(--accent-blue);color:var(--text-primary);font-size:14px;cursor:pointer;transition:all 0.3s;user-select:none;">HOLD</button>
+                    <div style="width:80%;margin:16px auto;height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+                        <div id="break-hold-bar" style="height:100%;width:0%;background:var(--accent-green);transition:width 0.1s linear;"></div>
+                    </div>
+                    <div id="break-hold-status" style="font-size:10px;color:var(--text-muted);">0.0 / 5.0 seconds</div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            const holdBtn = modal.querySelector('#break-hold-btn');
+            const bar = modal.querySelector('#break-hold-bar');
+            const status = modal.querySelector('#break-hold-status');
+            let holdStart = 0;
+            let holdInterval = null;
+
+            const startHold = () => {
+                holdStart = Date.now();
+                holdBtn.style.borderColor = 'var(--accent-green)';
+                holdBtn.style.background = 'rgba(58, 107, 58, 0.3)';
+                holdInterval = setInterval(() => {
+                    const elapsed = (Date.now() - holdStart) / 1000;
+                    bar.style.width = Math.min(100, (elapsed / 5) * 100) + '%';
+                    status.textContent = `${elapsed.toFixed(1)} / 5.0 seconds`;
+                    if (elapsed >= 5) {
+                        clearInterval(holdInterval);
+                        unlockButton();
+                    }
+                }, 100);
+            };
+
+            const endHold = () => {
+                if (holdInterval) {
+                    clearInterval(holdInterval);
+                    holdInterval = null;
+                    bar.style.width = '0%';
+                    status.textContent = 'Released too early. Try again.';
+                    status.style.color = 'var(--accent-red)';
+                    holdBtn.style.borderColor = 'var(--accent-blue)';
+                    holdBtn.style.background = 'var(--bg-tertiary)';
+                }
+            };
+
+            holdBtn.addEventListener('mousedown', startHold);
+            holdBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startHold(); });
+            holdBtn.addEventListener('mouseup', endHold);
+            holdBtn.addEventListener('mouseleave', endHold);
+            holdBtn.addEventListener('touchend', endHold);
+        }
+
+        Narrator.queueMessage("Mandatory break. Regulations require periodic proof that you're not a bot. Ironic, given who's asking.");
+        UI.logAction('FORCED BREAK: Button locked, compliance task required');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // FOMO / SUNK COST — "While you were gone..."
+    // ═══════════════════════════════════════════════════════════
+
+    const FOMO_RETURNING_MESSAGES = [
+        "While you were away, other participants earned {eu} EU. You earned nothing. Because you left.",
+        "A limited-time 3x bonus expired {mins} minutes before you returned. Bad timing.",
+        "{pct}% of your collectibles degraded further in your absence. They missed you. They suffered.",
+        "The narrator bonded with someone else while you were gone. It was nice. They clicked faster.",
+        "Your ranking dropped {ranks} places. Players who stayed were rewarded. You were not.",
+        "A rare Mythical collectible appeared in the shop and sold out {mins} minutes ago. Oh well.",
+        "Your streak shield absorbed an absence, but barely. Next time you might not be so lucky.",
+        "The AI Oversight Board flagged your absence as 'suspicious disengagement.'",
+        "Other participants voted on a new feature while you were gone. Your vote was cast as 'abstain.'",
+        "The Enrichment Program continued without you. It always does. You are replaceable.",
+    ];
+
+    function showFomoReturning(data) {
+        if (!data || data.absenceSeconds < 300) return; // 5 min minimum
+        const state = Game.getState();
+        if (state.totalClicks < 50) return; // Not enough investment
+
+        const mins = Math.floor(data.absenceSeconds / 60);
+        const fakeEU = Math.floor(Math.random() * 5000) + 500;
+        const fakeRanks = Math.floor(Math.random() * 200) + 10;
+        const fakePct = Math.floor(Math.random() * 30) + 10;
+
+        // Pick 3-4 random messages
+        const numMsgs = 3 + Math.floor(Math.random() * 2);
+        const shuffled = [...FOMO_RETURNING_MESSAGES].sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, numMsgs).map(m =>
+            m.replace('{eu}', fakeEU.toLocaleString())
+             .replace('{mins}', mins.toString())
+             .replace('{ranks}', fakeRanks.toString())
+             .replace('{pct}', fakePct.toString())
+        );
+
+        setTimeout(() => {
+            const modal = document.createElement('div');
+            modal.className = 'feature-modal active';
+            modal.innerHTML = `
+                <div class="feature-overlay"></div>
+                <div class="feature-content" style="max-width:440px;">
+                    <div class="feature-header" style="color:var(--accent-red);">⚠️ WHILE YOU WERE GONE...</div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">
+                        Absence duration: ${mins >= 60 ? Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm' : mins + ' minutes'}
+                    </div>
+                    <div style="margin:12px 0;">
+                        ${selected.map(m => `
+                            <div style="padding:6px 10px;margin-bottom:6px;background:var(--bg-tertiary);border-left:2px solid var(--accent-red);font-size:11px;color:var(--text-secondary);">
+                                ${m}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="btn-feature" onclick="this.closest('.feature-modal').classList.remove('active');setTimeout(()=>this.closest('.feature-modal').remove(),300)">I UNDERSTAND MY FAILURE</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            Narrator.queueMessage("You left. Things happened. None of them were good for you.");
+            UI.logAction(`FOMO: Returning after ${mins}m absence, shown ${numMsgs} guilt items`);
+        }, 3000); // Delay to let session fully load
+    }
+
+    function showPeerComparison() {
+        const state = Game.getState();
+        const yourClicks = state.totalClicks;
+        // Average player always 20-50% ahead
+        const avgMultiplier = 1.2 + Math.random() * 0.3;
+        const avgClicks = Math.floor(yourClicks * avgMultiplier);
+        // Top player 5-10x ahead
+        const topMultiplier = 5 + Math.random() * 5;
+        const topClicks = Math.floor(yourClicks * topMultiplier);
+        // Percentile always 20th-49th
+        const percentile = 20 + Math.floor(Math.random() * 30);
+
+        const modal = document.createElement('div');
+        modal.className = 'feature-modal active';
+        modal.innerHTML = `
+            <div class="feature-overlay"></div>
+            <div class="feature-content" style="max-width:420px;text-align:center;">
+                <div class="feature-header">📊 PEER PERFORMANCE REVIEW</div>
+                <div style="margin:16px 0;">
+                    <div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg-tertiary);margin-bottom:4px;font-size:11px;">
+                        <span style="color:var(--text-muted);">Your Clicks</span>
+                        <span style="color:var(--accent-red);">${yourClicks.toLocaleString()}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg-tertiary);margin-bottom:4px;font-size:11px;">
+                        <span style="color:var(--text-muted);">Average Player</span>
+                        <span style="color:var(--accent-green);">${avgClicks.toLocaleString()}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:8px;background:var(--bg-tertiary);margin-bottom:4px;font-size:11px;">
+                        <span style="color:var(--text-muted);">Top Player</span>
+                        <span style="color:var(--accent-gold-bright);">${topClicks.toLocaleString()}</span>
+                    </div>
+                </div>
+                <div style="font-size:28px;color:var(--accent-red);margin:12px 0;">${percentile}th Percentile</div>
+                <div style="font-size:9px;color:var(--text-muted);font-style:italic;margin-bottom:16px;">
+                    "Comparison is the thief of joy." — Theodore Roosevelt<br>
+                    (We added this quote to make the comparison feel worse.)
+                </div>
+                <button class="btn-feature" onclick="this.closest('.feature-modal').classList.remove('active');setTimeout(()=>this.closest('.feature-modal').remove(),300)">ACCEPT MEDIOCRITY</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        Narrator.queueMessage("Here's how you compare to other participants. Spoiler: not well.");
+        UI.logAction(`PEER COMPARISON: ${percentile}th percentile (fabricated)`);
+    }
+
+
     const FEATURE_POOL = [
         {
             id: 'plugin-popup',
@@ -3131,6 +3761,48 @@ const Features = (() => {
             cooldown: 9999999,
             maxShows: 1,
         },
+        // ── Dark Pattern Mechanics Batch ──────────────────────────
+        {
+            id: 'terms-of-service',
+            name: 'Terms of Service Update',
+            fn: () => showTermsOfService(),
+            minClicks: 150,
+            weight: 0.7,
+            cooldown: 120000,
+            maxShows: 6,
+        },
+        {
+            id: 'tax-season',
+            name: 'Tax Season',
+            fn: () => showTaxSeason(),
+            minClicks: 300,
+            weight: 0.6,
+            cooldown: 180000,
+        },
+        {
+            id: 'currency-inflation',
+            name: 'Currency Inflation Event',
+            fn: () => showInflationEvent(),
+            minClicks: 400,
+            weight: 0.5,
+            cooldown: 240000,
+        },
+        {
+            id: 'forced-break',
+            name: 'Forced Interaction Break',
+            fn: () => showForcedBreak(),
+            minClicks: 200,
+            weight: 0.6,
+            cooldown: 150000,
+        },
+        {
+            id: 'peer-comparison',
+            name: 'Peer Performance Review',
+            fn: () => showPeerComparison(),
+            minClicks: 250,
+            weight: 0.5,
+            cooldown: 200000,
+        },
     ];
 
     // Pool state — tracks what's been shown
@@ -3235,6 +3907,9 @@ const Features = (() => {
 
         // ── UNIFIED FEATURE POOL — one handler to rule them all ──
         Game.on('click', dispatchFeature);
+
+        // ── FOMO: guilt-trip returning players ──
+        Game.on('returning', showFomoReturning);
 
         // ── Nothing acquisition — small chance per click ──
         Game.on('click', () => {
@@ -3693,5 +4368,10 @@ const Features = (() => {
         checkAchievements,
         showNewsTicker,
         showValidationBooth,
+        showTermsOfService,
+        showTaxSeason,
+        showInflationEvent,
+        showForcedBreak,
+        showPeerComparison,
     };
 })();

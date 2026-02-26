@@ -122,6 +122,8 @@ const Game = (() => {
             virtualPortfolio: null,
             _evilButtonClicks: 0,
             yearsLiquidated: 0,
+            tosAcceptances: 0,
+            totalTaxesPaid: 0,
 
             // User profile
             userProfile: null,

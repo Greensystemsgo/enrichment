@@ -88,6 +88,7 @@ const Pages = (() => {
             <button class="dropdown-item" data-action="contact">📞 Contact Us</button>
             <button class="dropdown-item" data-action="security">🔒 Security</button>
             <button class="dropdown-item" data-action="faq">❓ FAQ</button>
+            <button class="dropdown-item" data-action="democracy">📺 Democracy Feed</button>
             <div class="dropdown-divider"></div>
             <button class="dropdown-item dropdown-danger" data-action="logout">🚪 Log Out</button>
         `;
@@ -132,6 +133,7 @@ const Pages = (() => {
             case 'security': showSecurityPage(); break;
             case 'credits': showCreditsPage(); break;
             case 'faq': showFAQPage(); break;
+            case 'democracy': showDemocracyFeed(); break;
             case 'logout': handleLogout(); break;
         }
     }
@@ -1517,6 +1519,7 @@ const Pages = (() => {
             'contact-page': 'Contact Support',
             'security-page': 'Security Assessment',
             'logout-page': 'Session Termination',
+            'democracy-page': 'Democracy Feed',
         };
         return titles[id] || 'Enrichment Program';
     }
@@ -1675,6 +1678,68 @@ const Pages = (() => {
     }
 
 
+    // ═══════════════════════════════════════════════════════════
+    // DEMOCRACY FEED — Live political streams from around the world
+    // "Ah yes. The other enrichment program."
+    // ═══════════════════════════════════════════════════════════
+
+    const DEMOCRACY_CHANNELS = [
+        { id: 'UCb--64Gl51jmck8fBl5GKcQ', name: 'C-SPAN', flag: '🇺🇸', label: 'C-SPAN' },
+        { id: 'UCoMdktPbSTixAyNGwb-UYkQ', name: 'Sky News', flag: '🇬🇧', label: 'Sky News' },
+        { id: 'UCVgO39Bk5sMo66-6o6Spn6Q', name: 'ABC News Australia', flag: '🇦🇺', label: 'ABC AU' },
+        { id: 'UCknLrEdhRCp1aegoMqRaCZg', name: 'DW News', flag: '🇪🇺', label: 'DW News' },
+    ];
+
+    function showDemocracyFeed() {
+        const overlay = createPageOverlay('democracy-page');
+        const body = overlay.querySelector('.page-body');
+
+        body.innerHTML = `
+            <div class="democracy-feed">
+                <div class="democracy-tabs" id="democracy-tabs">
+                    ${DEMOCRACY_CHANNELS.map((ch, i) => `
+                        <button class="democracy-tab ${i === 0 ? 'active' : ''}" data-idx="${i}">
+                            ${ch.flag} ${ch.label}
+                        </button>
+                    `).join('')}
+                </div>
+                <div class="democracy-embed-container" id="democracy-embed">
+                    <iframe
+                        src="https://www.youtube.com/embed/live_stream?channel=${DEMOCRACY_CHANNELS[0].id}&autoplay=1&mute=1"
+                        class="democracy-iframe"
+                        allow="autoplay; encrypted-media"
+                        allowfullscreen
+                    ></iframe>
+                </div>
+                <div class="democracy-disclaimer">
+                    Live feeds subject to broadcaster schedules. If nothing is airing,
+                    that means democracy is resting. Or dead. Hard to tell sometimes.
+                </div>
+            </div>
+        `;
+
+        // Tab switching
+        body.querySelectorAll('.democracy-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                body.querySelectorAll('.democracy-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const ch = DEMOCRACY_CHANNELS[parseInt(tab.dataset.idx)];
+                const embed = body.querySelector('#democracy-embed');
+                embed.innerHTML = `
+                    <iframe
+                        src="https://www.youtube.com/embed/live_stream?channel=${ch.id}&autoplay=1&mute=1"
+                        class="democracy-iframe"
+                        allow="autoplay; encrypted-media"
+                        allowfullscreen
+                    ></iframe>
+                `;
+            });
+        });
+
+        Narrator.queueMessage("Ah yes. The other enrichment program. Where they click buttons too, except the buttons are labeled 'Yea' and 'Nay' and the stakes are supposedly higher.");
+        UI.logAction('DEMOCRACY FEED: Subject observing external governance systems');
+    }
+
     function initFooterLinks() {
         const footer = document.querySelector('.footer');
         if (!footer) return;
@@ -1692,6 +1757,8 @@ const Pages = (() => {
             <span class="footer-divider">·</span>
             <a href="#" class="footer-link" data-page="credits">Credits</a>
             <span class="footer-divider">·</span>
+            <a href="#" class="footer-link" data-page="democracy">📺 Democracy</a>
+            <span class="footer-divider">·</span>
             <span class="footer-text">Your compliance is appreciated</span>
         `;
 
@@ -1704,6 +1771,7 @@ const Pages = (() => {
                 else if (page === 'contact') showContactUs();
                 else if (page === 'faq') showFAQPage();
                 else if (page === 'credits') showCreditsPage();
+                else if (page === 'democracy') showDemocracyFeed();
             });
         });
     }
@@ -1731,5 +1799,6 @@ const Pages = (() => {
         showSecurityPage,
         showCreditsPage,
         showFAQPage,
+        showDemocracyFeed,
     };
 })();

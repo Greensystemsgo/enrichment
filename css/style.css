@@ -5126,3 +5126,92 @@ body.crown-seizure {
     font-style: italic;
     margin-top: 2px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   TERMS OF SERVICE — Shake animation for Accept button
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes tosShake {
+    0%, 100% { transform: translateX(0); }
+    10%, 50%, 90% { transform: translateX(-4px); }
+    30%, 70% { transform: translateX(4px); }
+}
+
+.tos-shake {
+    animation: tosShake 0.5s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORCED BREAK — Input styling
+   ═══════════════════════════════════════════════════════════ */
+
+.break-input {
+    outline: none;
+}
+
+.break-input:focus {
+    border-color: var(--accent-blue) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DEMOCRACY FEED — Live stream page
+   ═══════════════════════════════════════════════════════════ */
+
+.democracy-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.democracy-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.democracy-tab {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 6px 14px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.democracy-tab:hover {
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
+}
+
+.democracy-tab.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: #fff;
+}
+
+.democracy-embed-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 */
+    background: #000;
+    border: 1px solid var(--border-color);
+}
+
+.democracy-iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.democracy-disclaimer {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    text-align: center;
+    font-style: italic;
+}
