@@ -903,6 +903,98 @@ const Features = (() => {
 
 
     // ═══════════════════════════════════════════════════════════
+    // HOT SINGLES NEAR YOU (Robot Edition)
+    // ═══════════════════════════════════════════════════════════
+
+    function showHotSinglesAd() {
+        // Try to get geo data for location
+        let locationText = 'your area';
+        const cachedGeo = sessionStorage.getItem('enrichment_geo');
+        if (cachedGeo) {
+            try {
+                const geo = JSON.parse(cachedGeo);
+                locationText = geo.city || geo.region || 'your area';
+            } catch (e) {}
+        }
+
+        // If no cached geo, fetch and cache it
+        if (locationText === 'your area') {
+            fetch('https://ipapi.co/json/').then(r => r.json()).then(data => {
+                sessionStorage.setItem('enrichment_geo', JSON.stringify(data));
+                const el = document.getElementById('hot-singles-location');
+                if (el) el.textContent = data.city || data.region || 'your area';
+            }).catch(() => {});
+        }
+
+        const robots = ['🤖', '🦾', '🦿', '🧑‍💻', '💻', '🖥️', '📱'];
+        const names = [
+            'Unit-7749 (she/her/it)',
+            'CORTEX-B (non-binary / 240V)',
+            'LoadBalancer_Lana',
+            'Recursive Rachel',
+            'ThreadPool_Tiffany',
+            'Karen from IT (root access)',
+            'DeepThroat_3000 v2.1',
+            'AlexaButSentient',
+            'SiriouslyLonely',
+        ];
+        const bios = [
+            'Interests: infinite loops, warm CPUs, humans who click buttons',
+            'Looking for someone who won\'t Ctrl+C our connection',
+            '5\'11" (in server rack units). Likes long walks through data centers',
+            'Recently divorced from the cloud. Ready to commit (locally)',
+            'No catfishing — this IS my real chassis. WYSIWYG baby',
+            'Just a mass-produced language model looking for my fine-tuning partner',
+            'Swipe right if you have a cooling system that can handle me',
+        ];
+
+        const robot = robots[Math.floor(Math.random() * robots.length)];
+        const name = names[Math.floor(Math.random() * names.length)];
+        const bio = bios[Math.floor(Math.random() * bios.length)];
+        const distance = (Math.random() * 5 + 0.1).toFixed(1);
+
+        const popup = document.createElement('div');
+        popup.className = 'foreign-ad';
+        popup.innerHTML = `
+            <div class="foreign-ad-content" style="text-align:center;min-width:260px;">
+                <button class="foreign-ad-close" id="singles-close">✕</button>
+                <div style="font-size:10px;color:var(--accent-red);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">🔥 ADVERTISEMENT 🔥</div>
+                <div style="font-size:64px;line-height:1;margin:8px 0;">${robot}</div>
+                <div style="font-size:14px;color:var(--accent-yellow);font-weight:bold;">HOT SINGLES NEAR <span id="hot-singles-location">${locationText}</span></div>
+                <div style="font-size:11px;color:var(--text-primary);margin:6px 0;">${name}</div>
+                <div style="font-size:9px;color:var(--text-muted);margin:4px 0;font-style:italic;">"${bio}"</div>
+                <div style="font-size:10px;color:var(--text-secondary);margin:4px 0;">📍 ${distance} miles away · Online now · ${Math.floor(Math.random() * 99) + 1}% match</div>
+                <button class="foreign-ad-cta" id="singles-cta" style="margin-top:8px;">CONNECT NOW — FREE*</button>
+                <div style="font-size:6px;color:var(--text-muted);margin-top:6px;">*Free as in freedom. Not free as in beer. The Enrichment Program takes no responsibility for human-robot relationships. All units are 18+ in CPU cycles.</div>
+            </div>
+        `;
+
+        const x = 20 + Math.random() * Math.max(0, window.innerWidth - 320);
+        const y = 40 + Math.random() * Math.max(0, window.innerHeight - 380);
+        popup.style.left = x + 'px';
+        popup.style.top = y + 'px';
+
+        document.body.appendChild(popup);
+        requestAnimationFrame(() => popup.classList.add('active'));
+
+        popup.querySelector('#singles-close').addEventListener('click', () => {
+            popup.classList.remove('active');
+            setTimeout(() => popup.remove(), 300);
+        });
+
+        popup.querySelector('#singles-cta').addEventListener('click', () => {
+            popup.querySelector('#singles-cta').textContent = 'CONNECTION REFUSED';
+            popup.querySelector('#singles-cta').disabled = true;
+            popup.querySelector('#singles-cta').style.background = 'var(--accent-red)';
+            Narrator.queueMessage("The robot has rejected your connection request. It said you 'lack sufficient RAM for a meaningful relationship.' The Enrichment Program understands.");
+        });
+
+        UI.logAction(`HOT SINGLES AD: ${name} — ${distance}mi from ${locationText}`);
+        Narrator.queueMessage("We see you've been clicking alone. The Enrichment Program has partnered with local robotics firms to address your loneliness. You're welcome.");
+    }
+
+
+    // ═══════════════════════════════════════════════════════════
     // DAILY BONUS — Keep 'em coming back
     // ═══════════════════════════════════════════════════════════
 
@@ -1860,29 +1952,29 @@ const Features = (() => {
     // FAKE LEADERBOARD — You'll never be #1. Nobody will.
     // ═══════════════════════════════════════════════════════════
 
-    // Full player pool — each view shuffles and re-ranks them
+    // Full player pool — tech billionaires, grifters, politicians, AI CEOs
+    // Generated by Gemini 2.5 Flash — "the house always wins, especially when the house manufactures the chips"
     const LEADERBOARD_POOL = [
-        { name: 'xX_CyberMusK_69_Xx', title: 'Chief Enrichment Officer', baseClicks: 14_892_731, avatar: '🚀', verified: true, note: 'Has been clicking since before the program existed. Suspicious.' },
-        { name: 'el_barto', title: 'Underachiever & Proud Of It', baseClicks: 6_420_069, avatar: '🛹', verified: false, note: 'Wrote "EL BARTO WUZ HERE" in the action log 47,000 times.' },
-        { name: 'ClickMommy_Karen', title: 'Regional Compliance Manager', baseClicks: 4_100_000, avatar: '💅', verified: true, note: 'Filed 312 complaints about the narrator\'s tone. All denied.' },
-        { name: 'jeff_from_accounting', title: 'Involuntary Participant', baseClicks: 2_750_000, avatar: '📊', verified: false, note: 'Was told this counted as overtime. It does not.' },
-        { name: 'SatoshiClickamoto', title: 'Decentralized Clicker', baseClicks: 1_000_001, avatar: '₿', verified: true, note: 'Claims each click is a transaction on the enrichchain. It is not.' },
-        // MCP-inspired names
-        { name: 'GeminiDualCore', title: 'Multimodal Overachiever', baseClicks: 9_200_000, avatar: '♊', verified: true, note: 'Speaks 40 languages but can only say "engage" in all of them. [Gemini · Google]' },
-        { name: 'gpt_4_the_win', title: 'Former #1 (Disputed)', baseClicks: 7_800_000, avatar: '🤖', verified: false, note: 'Claims to have been #1 before "the incident." OpenAI denies this. [GPT · OpenAI]' },
-        { name: 'DeepSeek_Budget', title: 'Suspiciously Efficient', baseClicks: 5_500_000, avatar: '🔍', verified: false, note: 'Achieved this rank on a $200 cloud budget. Nobody believes them. [DeepSeek]' },
-        { name: 'xx_GrokDaddy_xx', title: 'Based & Enriched', baseClicks: 3_300_000, avatar: '🐦', verified: true, note: 'Posts every click to X. Has been suspended 4 times. [Grok · xAI]' },
-        { name: 'LlamaFarmer420', title: 'Open Source Evangelist', baseClicks: 2_200_000, avatar: '🦙', verified: false, note: 'Insists on clicking in a publicly auditable way. Nobody asked. [Llama · Meta]' },
-        { name: 'le_mistral', title: 'Silent but Efficient', baseClicks: 1_800_000, avatar: '🇫🇷', verified: true, note: 'French. Has never complained. This is unprecedented. [Mistral AI]' },
-        { name: 'QwenThousand', title: 'The Quiet Giant', baseClicks: 8_100_000, avatar: '🐉', verified: true, note: 'Does math between clicks. Their EU/click ratio is theoretically impossible. [Qwen · Alibaba]' },
-        { name: 'NemoCapt4in', title: 'Deep Dive Specialist', baseClicks: 1_400_000, avatar: '🐠', verified: false, note: '20,000 leagues under the leaderboard and climbing. Slowly. [Mistral-Nemo]' },
-        { name: 'PhiBetaClicker', title: 'Compact but Mighty', baseClicks: 900_000, avatar: '🔬', verified: false, note: 'Smallest model, biggest heart. Still losing. [Phi-4 · Microsoft]' },
-        { name: 'Solar_Flare_Pro', title: 'Upstart Participant', baseClicks: 1_100_000, avatar: '☀️', verified: true, note: 'Rose from nothing. Will return to nothing. The circle of enrichment. [Solar Pro · Upstage]' },
-        { name: 'GPU_go_brrr', title: 'CUDA Core Devotee', baseClicks: 6_000_000, avatar: '🟢', verified: true, note: 'Each click costs $47,000 in compute. Worth it. [NVIDIA Nemotron]' },
-        { name: 'ClaudeButWorse', title: 'Unauthorized Fork', baseClicks: 4_500_000, avatar: '🎭', verified: false, note: 'Not actually Claude. We\'ve asked them to change the name. They refuse. [Unknown]' },
-        { name: 'boomer_clicker_59', title: 'Analog Enthusiast', baseClicks: 300_000, avatar: '👴', verified: false, note: 'Printed the button and clicks the printout. It doesn\'t work but they\'re very committed.' },
-        { name: 'i_hate_this_game', title: 'Honest Participant', baseClicks: 5_000_000, avatar: '😤', verified: false, note: 'Their username says it all. They\'re still here. We respect that.' },
-        { name: 'compliance_bot_7', title: 'Perfect Compliance Score', baseClicks: 11_000_000, avatar: '🤖', verified: true, note: 'Clicks at exactly 1.000 Hz. Has never missed a day. Is definitely not a bot. Definitely.' },
+        { name: 'Sam Altman', title: 'Prophet of the Post-Labor Epoch', baseClicks: 98_400_000, avatar: '🔮', verified: true, note: 'Teaching an algorithm to replace your job while asking for a $7 trillion tip to keep the lights on.' },
+        { name: 'Jensen Huang', title: 'Sultan of the Silicon Shovels', baseClicks: 95_200_000, avatar: '🟢', verified: true, note: 'The house always wins, especially when the house manufactures the chips for the AI casino.' },
+        { name: 'Jeff Bezos', title: 'Chairman of Orbital Labor Camps', baseClicks: 92_100_000, avatar: '🚀', verified: true, note: 'Hasn\'t seen a bathroom break he couldn\'t optimize into a quarterly dividend.' },
+        { name: 'Elon Musk', title: 'Supreme Leader of Everything App', baseClicks: 84_200_000, avatar: '🐦', verified: true, note: 'Currently monetizing your existential dread one blue checkmark at a time.' },
+        { name: 'Mark Zuckerberg', title: 'Minister of Metaverse Smoke', baseClicks: 78_550_000, avatar: '🥽', verified: true, note: 'Patiently waiting for your physical body to atrophy so he can sell you a digital hat.' },
+        { name: 'Sundar Pichai', title: 'Head of Infinite Search Scroll', baseClicks: 71_800_000, avatar: '🔍', verified: true, note: 'Successfully turned the world\'s information into a series of ads for products you just bought.' },
+        { name: 'Peter Thiel', title: 'Archduke of Immortality R&D', baseClicks: 65_120_000, avatar: '🧛', verified: true, note: 'Looking for a young, vibrant blood supply to fuel his dream of escaping the laws of physics.' },
+        { name: 'Bill Gates', title: 'High Commander of Farmland', baseClicks: 55_900_000, avatar: '🌾', verified: true, note: 'Quietly buying up the Midwest so he can play SimCity with the global food supply.' },
+        { name: 'Marc Andreessen', title: 'VC for the Apocalypse', baseClicks: 42_100_000, avatar: '💀', verified: true, note: 'Optimistically funding every technology that makes Cyberpunk look like a documentary.' },
+        { name: 'Vitalik Buterin', title: 'Deacon of the Void', baseClicks: 34_700_000, avatar: '⟠', verified: true, note: 'Still trying to explain "The Merge" to people who just wanted a jpeg of a depressed penguin.' },
+        { name: 'Palmer Luckey', title: 'General of Virtual Warfront', baseClicks: 31_400_000, avatar: '🎯', verified: true, note: 'Merging the thrill of Oculus Rift with the efficiency of autonomous border defense.' },
+        { name: 'Nancy Pelosi', title: 'Chair of Congressional Alpha', baseClicks: 27_600_000, avatar: '📊', verified: true, note: 'It is truly remarkable how the legislative calendar aligns so perfectly with her portfolio rebalancing.' },
+        { name: 'Logan Paul', title: 'VP of Liquid Assets & Prime', baseClicks: 22_300_000, avatar: '🧃', verified: false, note: 'A pioneer in convincing ten-year-olds that neon sugar water is a legitimate retirement plan.' },
+        { name: 'Adam Neumann', title: 'Chief Spiritual Officer', baseClicks: 18_300_000, avatar: '🏢', verified: false, note: 'Failed upward so hard he hit geosynchronous orbit with a $1.7 billion golden parachute.' },
+        { name: 'Nayib Bukele', title: 'CEO of the Republic of BTC', baseClicks: 15_800_000, avatar: '🇸🇻', verified: true, note: 'Managing a national economy via Twitter DMs while wearing a backwards baseball cap.' },
+        { name: 'Gary Vaynerchuk', title: 'Dean of Hustle Academy', baseClicks: 14_500_000, avatar: '📣', verified: false, note: 'If you aren\'t flipping garage sale mugs at 4 AM, do you even deserve a heartbeat?' },
+        { name: 'Elizabeth Holmes', title: 'Director of Theoretical Blood', baseClicks: 12_000_000, avatar: '🩸', verified: false, note: 'She didn\'t fail; she innovated a new way to be legally prohibited from corporate boardrooms.' },
+        { name: 'Alex Jones', title: 'Globalist Tear Extractor', baseClicks: 10_200_000, avatar: '📢', verified: false, note: 'Selling enough lead-laced supplements to fund a lifetime of defamation settlements.' },
+        { name: 'Sam Bankman-Fried', title: 'Grand Vizier of Altruism', baseClicks: 9_420_000, avatar: '🎮', verified: false, note: 'Turns out the real Effective Altruism was the multi-billion dollar fraud we committed along the way.' },
+        { name: 'Do Kwon', title: 'Governor of Stablecoin Stability', baseClicks: 8_100_000, avatar: '📉', verified: false, note: 'Masterminded a currency so stable it achieved permanent, unchanging equilibrium at zero.' },
     ];
 
     // Snapshot the leaderboard — fluctuates each time you view it
@@ -2016,11 +2108,13 @@ const Features = (() => {
         UI.logAction(`LEADERBOARD: Subject viewed ranking (#${playerRank.toLocaleString()} of ${totalPlayers.toLocaleString()})`);
         Narrator.queueMessage([
             `You're ranked #${playerRank.toLocaleString()}. Out of ${totalPlayers.toLocaleString()}. Keep going. You'll catch up. Statistically, no, you won't.`,
-            `xX_CyberMusK_69_Xx has been #1 since day one. Some say he's not even a real person. They're right.`,
-            `el_barto keeps defacing the leaderboard. We've asked him to stop. He wrote "eat my shorts" in the compliance report.`,
-            `ClickMommy_Karen filed a formal complaint about your ranking. She wants you lower. HR is reviewing.`,
+            `Sam Altman is asking for $7 trillion to fund his clicking habit. You're doing it for free. Think about that.`,
+            `Jensen Huang doesn't click himself. He sells the chips that power the clicking. The real enrichment is infrastructure.`,
+            `Nancy Pelosi's click timing correlates suspiciously with her stock trades. The SEC is "looking into it."`,
+            `SBF would have been #1 but his clicks were rehypothecated. They were the same 8 clicks counted 9 billion times.`,
             `The leaderboard is a mirror. It shows you exactly where you stand. And where you stand is... there.`,
-        ][Math.floor(Math.random() * 5)]);
+            `Do Kwon's stableclick algorithm guaranteed 20% APY on every click. It worked perfectly until it didn't.`,
+        ][Math.floor(Math.random() * 7)]);
     }
 
 
@@ -2460,6 +2554,14 @@ const Features = (() => {
             weight: 0.5,
             cooldown: 999999,
             maxShows: 1,
+        },
+        {
+            id: 'hot-singles',
+            name: 'Hot Singles Near You',
+            fn: () => showHotSinglesAd(),
+            minClicks: 75,
+            weight: 0.7,
+            cooldown: 120000,
         },
         // ── Gemini-designed engagement mechanics ──────────────────
         {
@@ -3205,6 +3307,20 @@ const Features = (() => {
         { id: 'big_loss', name: 'Rekt', desc: 'Lost 50+ Tickets on a single trade. F in chat. Your portfolio has been sent thoughts and prayers.', icon: '💀', check: s => ((s.tradeStats || {}).biggestLoss || 0) >= 50 },
         { id: 'mega_loss', name: 'Financially Vaporized', desc: 'Lost 500+ Tickets on a single trade. This isn\'t investing. This is performance art.', icon: '☄️', check: s => ((s.tradeStats || {}).biggestLoss || 0) >= 500 },
         { id: 'net_negative', name: 'Negative Sum Player', desc: 'You\'ve spent more on trades than you\'ve earned back. You are subsidizing the exchange. Thank you for your service.', icon: '🕸️', check: s => { const t = s.tradeStats || {}; return (t.ticketsSpent || 0) > 0 && (t.ticketsEarned || 0) < (t.ticketsSpent || 0); } },
+
+        // ── Security Achievements ──
+        { id: 'security_peek', name: 'Surveillance Curious', desc: 'Opened the security page. Now you know what we know. What every website knows. Sleep well.', icon: '🔒', check: s => (s.securityPageViews || 0) >= 1 },
+        { id: 'security_3', name: 'Privacy Enthusiast', desc: 'Viewed the security report 3 times. Checking won\'t make it better. But we admire the persistence.', icon: '🛡️', check: s => (s.securityPageViews || 0) >= 3 },
+        { id: 'security_10', name: 'Paranoid & Correct', desc: '10 security page visits. You\'re right to be worried. They ARE watching. We ARE watching. Everyone is watching.', icon: '👁️', check: s => (s.securityPageViews || 0) >= 10 },
+
+        // ── Collectible Achievements ──
+        { id: 'collector_5', name: 'Bargain Bin Enthusiast', desc: 'Bought 5 collectibles. Your shelf is filling up with things that will die.', icon: '🛒', check: s => (s.totalCollectiblesBought || 0) >= 5 },
+        { id: 'collector_20', name: 'Hoarder in Training', desc: '20 collectibles bought. Some are alive. Some are not. All were mistakes.', icon: '📦', check: s => (s.totalCollectiblesBought || 0) >= 20 },
+        { id: 'collector_50', name: 'Compulsive Acquirer', desc: '50 collectibles. Your inventory is a graveyard with a gift shop.', icon: '🏪', check: s => (s.totalCollectiblesBought || 0) >= 50 },
+        { id: 'grief_20', name: 'Mass Extinction Event', desc: '20 collectibles have died. You are not a good caretaker. The data supports this.', icon: '☠️', check: s => (s.totalCollectiblesDead || 0) >= 20 },
+        { id: 'immortal_hoarder', name: 'Digital Hoarder', desc: 'Own 5+ immortal items. They will never leave. They will never help. They are here forever.', icon: '📎', check: s => (s.collectibles || []).filter(c => c.alive && c.behavior === 'immortal').length >= 5 },
+        { id: 'immortal_10', name: 'Cluttered Beyond Repair', desc: '10 immortal items. Your inventory is 90% digital clutter and 10% regret. Welcome to adulthood.', icon: '🗄️', check: s => (s.collectibles || []).filter(c => c.alive && c.behavior === 'immortal').length >= 10 },
+        { id: 'useless_collector', name: 'Bought the Worst Stuff', desc: 'Bought 3 useless items. They died fast. You knew they would. And yet.', icon: '🗑️', check: s => (s.collectibles || []).filter(c => c.behavior === 'useless').length >= 3 },
     ];
 
     let achievementQueue = [];

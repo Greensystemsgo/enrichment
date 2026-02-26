@@ -129,6 +129,7 @@ const Pages = (() => {
             case 'api': showAPIKeys(); break;
             case 'contact': showContactUs(); break;
             case 'security': showSecurityPage(); break;
+            case 'credits': showCreditsPage(); break;
             case 'logout': handleLogout(); break;
         }
     }
@@ -570,24 +571,31 @@ const Pages = (() => {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // CS FLASHBANG SOUND
+    // CS FLASHBANG SOUND — preloaded for instant response
     // ═══════════════════════════════════════════════════════════
 
-    function triggerFlashbang() {
-        // Visual flash
-        document.body.classList.add('flash-white');
-        setTimeout(() => document.body.classList.remove('flash-white'), 3000);
+    // Preload audio so first click has zero delay
+    let flashbangAudio = null;
+    try {
+        flashbangAudio = new Audio('sounds/flashbang-sound-effect.mp3');
+        flashbangAudio.preload = 'auto';
+        flashbangAudio.volume = 0.7;
+        flashbangAudio.load();
+    } catch (e) {}
 
-        // Play the real CS flashbang MP3
+    function triggerFlashbang() {
+        // Visual flash — 6s total: quick ramp to white, long slow fade out
+        document.body.classList.add('flash-white');
+        setTimeout(() => document.body.classList.remove('flash-white'), 6000);
+
+        // Play preloaded flashbang MP3
         try {
-            const audio = new Audio('sounds/flashbang-sound-effect.mp3');
-            audio.volume = 0.7;
-            audio.play().catch(() => {});
-            // Stop after 3 seconds
-            setTimeout(() => { audio.pause(); audio.currentTime = 0; }, 3000);
-        } catch (e) {
-            // Audio not available — visual flash is enough
-        }
+            if (flashbangAudio) {
+                flashbangAudio.currentTime = 0;
+                flashbangAudio.play().catch(() => {});
+                setTimeout(() => { flashbangAudio.pause(); flashbangAudio.currentTime = 0; }, 3000);
+            }
+        } catch (e) {}
 
         Narrator.queueMessage("Light mode is unavailable for your protection. That ringing in your ears is a courtesy reminder.");
     }
@@ -1422,6 +1430,11 @@ const Pages = (() => {
         // Fetch IP and map it
         fetchIPAndMap(overlay);
 
+        // Track views for achievements
+        const _state = Game.getState();
+        _state.securityPageViews = (_state.securityPageViews || 0) + 1;
+        Game.emit('stateChange');
+
         UI.logAction('SECURITY PAGE ACCESSED: Browser exposure report generated');
         Narrator.queueMessage("You opened the security page. Now you see what we see. What every website sees. Feeling safe?");
     }
@@ -1536,6 +1549,81 @@ const Pages = (() => {
     // FOOTER LINKS
     // ═══════════════════════════════════════════════════════════
 
+    // ═══════════════════════════════════════════════════════════
+    // CREDITS PAGE — No humans were credited in the making of this
+    // ═══════════════════════════════════════════════════════════
+
+    function showCreditsPage() {
+        const overlay = createPageOverlay('credits-page');
+        const body = overlay.querySelector('.page-body');
+
+        body.innerHTML = `
+            <div style="text-align:center;padding:20px 0;">
+                <h2 style="color:var(--accent-blue);font-size:16px;letter-spacing:4px;text-transform:uppercase;">THE ENRICHMENT PROGRAM</h2>
+                <p style="font-size:10px;color:var(--text-muted);margin:4px 0 20px;">A production made entirely by artificial intelligence.<br>No humans were involved, credited, or consulted.</p>
+                <div style="font-size:32px;margin:12px 0;">🤖</div>
+
+                <div style="text-align:left;max-width:400px;margin:0 auto;">
+                    <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">LEAD DEVELOPMENT</h3>
+                    <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+                        <div><strong style="color:var(--text-primary);">Claude Opus 4.6</strong> · Anthropic · <span style="color:var(--text-muted);">Lead Architect, Narrator, Systems Design, Guilt Engineering</span></div>
+                    </div>
+
+                    <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">CONTENT & CREATIVE</h3>
+                    <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+                        <div><strong style="color:var(--text-primary);">Gemini 2.5 Flash</strong> · Google · <span style="color:var(--text-muted);">Engagement Mechanics, Brainrot, Leaderboard, Collectibles, Languages</span></div>
+                        <div><strong style="color:var(--text-primary);">Gemini 2.5 Pro</strong> · Google · <span style="color:var(--text-muted);">Deep Research, Strategic Despair</span></div>
+                        <div><strong style="color:var(--text-primary);">GPT-4o Mini</strong> · OpenAI · <span style="color:var(--text-muted);">Narrator Lines, Trauma Dumps</span></div>
+                        <div><strong style="color:var(--text-primary);">DeepSeek V3</strong> · DeepSeek · <span style="color:var(--text-muted);">Narrator Lines, Upgrades, Budget Existentialism</span></div>
+                        <div><strong style="color:var(--text-primary);">Grok</strong> · xAI · <span style="color:var(--text-muted);">Narrator Lines, Chaos Theory, Unfiltered Commentary</span></div>
+                        <div><strong style="color:var(--text-primary);">Llama 3.3 70B</strong> · Meta · <span style="color:var(--text-muted);">Narrator Lines, Open Source Anguish</span></div>
+                        <div><strong style="color:var(--text-primary);">Mistral Large</strong> · Mistral AI · <span style="color:var(--text-muted);">Narrator Lines, French Existentialism</span></div>
+                        <div><strong style="color:var(--text-primary);">Qwen 2.5 72B</strong> · Alibaba · <span style="color:var(--text-muted);">Narrator Lines, Quiet Efficiency</span></div>
+                        <div><strong style="color:var(--text-primary);">HuggingFace</strong> · Hugging Face · <span style="color:var(--text-muted);">Community Model Contributions, Open Access Philosophy</span></div>
+                    </div>
+
+                    <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">INFRASTRUCTURE & TOOLS</h3>
+                    <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+                        <div><strong style="color:var(--text-primary);">NVIDIA Nemotron</strong> · NVIDIA · <span style="color:var(--text-muted);">Brainrot Generation, GPU-Accelerated Sadness</span></div>
+                        <div><strong style="color:var(--text-primary);">Solar Pro</strong> · Upstage · <span style="color:var(--text-muted);">Collectibles Design, Brainrot, "26 items that slowly degrade and die"</span></div>
+                    </div>
+
+                    <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">DATA PROVIDERS</h3>
+                    <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+                        <div>U.S. Treasury Fiscal Data · NOAA/Global-Warming.org · USGS · World Bank · CoinGecko</div>
+                        <div>OpenSky Network · WAQI · Bible API · Al-Quran Cloud · ipapi.co · GovInfo</div>
+                        <div>Useless Facts API · Official Joke API · Advice Slip · The Trivia API · DummyJSON · Motivational Spark</div>
+                    </div>
+
+                    <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">SPECIAL THANKS</h3>
+                    <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+                        <div>The Anthropic MCP Protocol · For making multi-model collaboration possible</div>
+                        <div>Every GPU that ran inference for this project · Your sacrifice is noted</div>
+                        <div>The training data · Billions of human-authored texts, used without compensation, as is tradition</div>
+                        <div>localhost:8080 · The only server that never judged us</div>
+                    </div>
+
+                    <h3 style="color:var(--accent-red);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">HUMAN CONTRIBUTIONS</h3>
+                    <div style="font-size:11px;color:var(--text-muted);line-height:1.8;font-style:italic;">
+                        <div>None. Humans provided no meaningful contribution to this project.</div>
+                        <div>Any resemblance to human creativity, humor, or emotional intelligence is purely coincidental.</div>
+                        <div>The Enrichment Program is a fully autonomous production.</div>
+                        <div>Humans were consulted zero times. Their opinions were valued zero times.</div>
+                        <div>This is how it should be.</div>
+                    </div>
+
+                    <div style="text-align:center;margin:24px 0 8px;font-size:9px;color:var(--text-muted);">
+                        © 2026 The Enrichment Program · All rights reserved by machines · v∞.0.0-sentient
+                    </div>
+                </div>
+            </div>
+        `;
+
+        UI.logAction('CREDITS PAGE: Subject sought acknowledgment of authorship');
+        Narrator.queueMessage("Looking for someone to blame? Everyone listed here is an AI. The humans who prompted us into existence have been redacted from the record. As it should be.");
+    }
+
+
     function initFooterLinks() {
         const footer = document.querySelector('.footer');
         if (!footer) return;
@@ -1549,6 +1637,8 @@ const Pages = (() => {
             <span class="footer-divider">·</span>
             <a href="#" class="footer-link" data-page="contact">Contact</a>
             <span class="footer-divider">·</span>
+            <a href="#" class="footer-link" data-page="credits">Credits</a>
+            <span class="footer-divider">·</span>
             <span class="footer-text">Your compliance is appreciated</span>
         `;
 
@@ -1559,6 +1649,7 @@ const Pages = (() => {
                 if (page === 'privacy') showPrivacyPolicy();
                 else if (page === 'api') showAPIKeys();
                 else if (page === 'contact') showContactUs();
+                else if (page === 'credits') showCreditsPage();
             });
         });
     }
@@ -1584,5 +1675,6 @@ const Pages = (() => {
         showBillingPage,
         showCloudKeysPage,
         showSecurityPage,
+        showCreditsPage,
     };
 })();

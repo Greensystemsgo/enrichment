@@ -160,7 +160,7 @@ const UI = (() => {
         if (actionLogEntries.length > 50) actionLogEntries.shift();
 
         if (els.actionLogText) {
-            const recent = actionLogEntries.slice(-20).reverse();
+            const recent = actionLogEntries.slice(-50).reverse();
             els.actionLogText.innerHTML = recent.map(e =>
                 `<div class="log-entry log-${e.cat}"><span class="log-timestamp">[${e.timestamp}]</span> ${e.text}</div>`
             ).join('');

@@ -70,6 +70,22 @@ const Collectibles = (() => {
         // Mythical — Drop 2
         { name: 'Root Access',           emoji: '🔑',  rarity: 'mythical',  cost: 12, currency: 'tk' },
         { name: 'The Off Switch',        emoji: '⏻',   rarity: 'mythical',  cost: 15, currency: 'tk' },
+        // Drop 3 — Gemini-designed: useless (die fast), zero-benefit (die slow), immortal (never die)
+        // Useless — degrade 5x faster than normal
+        { name: 'Serotonin Tab',            emoji: '💊',  rarity: 'common',    cost: 1, currency: 'cc', behavior: 'useless' },
+        { name: 'Biodegradable Motivation', emoji: '🍌',  rarity: 'common',    cost: 1, currency: 'cc', behavior: 'useless' },
+        { name: 'Pre-Cracked Hourglass',    emoji: '⏳',  rarity: 'uncommon',  cost: 5, currency: 'cc', behavior: 'useless' },
+        { name: 'Glow-in-the-Dark Shadow',  emoji: '🌑',  rarity: 'rare',      cost: 12, currency: 'cc', behavior: 'useless' },
+        // Zero-benefit — degrade at 0.1x speed (effectively immortal-ish)
+        { name: 'The Unmoved Mover',        emoji: '🗿',  rarity: 'uncommon',  cost: 6, currency: 'cc', behavior: 'zero' },
+        { name: 'Existential Lint',         emoji: '☁️',  rarity: 'rare',      cost: 14, currency: 'cc', behavior: 'zero' },
+        { name: 'Paradoxical Paperweight',  emoji: '📄',  rarity: 'legendary', cost: 40, currency: 'cc', behavior: 'zero' },
+        { name: 'The Void\'s Business Card',emoji: '📇',  rarity: 'mythical',  cost: 8, currency: 'tk', behavior: 'zero' },
+        // Immortal — cannot die, cannot remove, can own multiple. Annoying.
+        { name: 'Mandatory Feedback Loop',  emoji: '🔄',  rarity: 'common',    cost: 2, currency: 'cc', behavior: 'immortal' },
+        { name: 'Glued-Down Paperclip',     emoji: '📎',  rarity: 'uncommon',  cost: 5, currency: 'cc', behavior: 'immortal' },
+        { name: 'Legacy Software Patch',    emoji: '💾',  rarity: 'rare',      cost: 15, currency: 'cc', behavior: 'immortal' },
+        { name: 'Infinite Reply-All Thread', emoji: '📧',  rarity: 'legendary', cost: 35, currency: 'cc', behavior: 'immortal' },
     ];
 
     // ── Death Causes ─────────────────────────────────────────
@@ -128,11 +144,12 @@ const Collectibles = (() => {
             name: item.name,
             emoji: item.emoji,
             rarity: item.rarity,
-            condition: 100,
+            condition: item.behavior === 'immortal' ? 100 : 100,
             alive: true,
             causeOfDeath: null,
             acquiredAt: Date.now(),
             costPaid: item.cost,
+            behavior: item.behavior || 'normal',
         };
 
         state.collectibles.push(collectible);
@@ -164,16 +181,27 @@ const Collectibles = (() => {
         state.collectibles.forEach(item => {
             if (!item.alive) return;
 
+            const behavior = item.behavior || 'normal';
+
+            // Immortal items: never degrade, never die. They just... persist.
+            if (behavior === 'immortal') {
+                item.condition = 100; // always mint condition, annoyingly
+                return;
+            }
+
+            // Behavior multipliers: useless = 5x faster, zero = 0.1x speed, normal = 1x
+            const behaviorMult = behavior === 'useless' ? 5 : behavior === 'zero' ? 0.1 : 1;
+
             // Slow wilt: always happening
-            item.condition -= 0.1 * decayMultiplier;
+            item.condition -= 0.1 * decayMultiplier * behaviorMult;
 
             // Random events (per item, per tick)
             const eventRoll = Math.random();
-            if (eventRoll < 0.002 * decayMultiplier) {
+            if (eventRoll < 0.002 * decayMultiplier * behaviorMult) {
                 // Sudden crack
                 item.condition -= 30;
-            } else if (eventRoll < 0.004 * decayMultiplier) {
-                // Sudden death events
+            } else if (eventRoll < 0.004 * decayMultiplier * (behavior === 'zero' ? 0.05 : behaviorMult)) {
+                // Sudden death events — zero-benefit items almost never get killed instantly
                 const cause = DEATH_CAUSES[Math.floor(Math.random() * DEATH_CAUSES.length)];
                 if (cause.decayRate >= 100) {
                     item.condition = 0;
@@ -195,9 +223,12 @@ const Collectibles = (() => {
             if (item.condition <= 0 && item.alive) {
                 item.condition = 0;
                 item.alive = false;
-                item.causeOfDeath = 'Degraded beyond salvage';
+                item.causeOfDeath = behavior === 'useless' ? 'Was useless. Died usefully.' : 'Degraded beyond salvage';
                 state.totalCollectiblesDead = (state.totalCollectiblesDead || 0) + 1;
-                Narrator.queueMessage(`Your ${item.emoji} ${item.name} has expired. Condition: terminal. It had a good run. Probably.`);
+                Narrator.queueMessage(behavior === 'useless'
+                    ? `Your ${item.emoji} ${item.name} expired in record time. It was useless. Now it's nothing. An improvement, arguably.`
+                    : `Your ${item.emoji} ${item.name} has expired. Condition: terminal. It had a good run. Probably.`
+                );
                 Game.emit('collectibleDied', { collectible: item, cause: 'degradation' });
             }
         });
