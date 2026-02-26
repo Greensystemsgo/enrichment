@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"\\(Get-Item ''C:\\\\Users\\\\NCorriveau\\\\dev\\\\evil-game\\\\screaming-sun-rick-and-morty.mp3''\\).Length\")",
+      "Bash(git add:*)"
+    ]
+  }
+}

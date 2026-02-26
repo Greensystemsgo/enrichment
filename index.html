@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>enrichment — A Voluntary Engagement Program</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="description" content="Thank you for your interest in the Enrichment Program. Your participation has been noted.">
+    <meta name="theme-color" content="#0a0a0f">
+</head>
+<body data-phase="1">
+
+    <div id="game-container">
+
+        <!-- Header -->
+        <div class="header">
+            <h1 class="corruptible driftable">enrichment</h1>
+            <span id="phase-indicator" class="driftable" data-phase="1">ONBOARDING</span>
+            <button id="settings-button" class="driftable">⚙ SYSTEM</button>
+        </div>
+
+        <!-- Narrator -->
+        <div id="narrator-box" class="driftable">
+            <div id="narrator-text"></div>
+            <div id="veil-text"></div>
+        </div>
+
+        <!-- Click Area -->
+        <div class="click-area">
+            <button id="click-button" class="driftable">Click</button>
+            <div class="click-count driftable corruptible">
+                Total Actions: <span id="click-count">0</span>
+            </div>
+        </div>
+
+        <!-- Currency Panel -->
+        <div class="currency-panel">
+            <div class="currency-box driftable">
+                <div class="currency-label corruptible">Engagement Units</div>
+                <div class="currency-value" id="eu-display">0</div>
+            </div>
+            <div class="currency-box driftable">
+                <div class="currency-label corruptible">Satisfaction Tokens</div>
+                <div class="currency-value" id="st-display">0</div>
+            </div>
+            <div class="currency-box driftable">
+                <div class="currency-label corruptible">Compliance Credits</div>
+                <div class="currency-value" id="cc-display">0</div>
+            </div>
+        </div>
+
+        <!-- Conversion Panel -->
+        <div class="conversion-panel">
+            <div class="conversion-row driftable">
+                <span class="conversion-rate corruptible" id="conversion-rate-1">7 EU → 1 ST</span>
+                <button class="btn-convert" id="convert-eu">TRANSMUTE</button>
+            </div>
+            <div class="conversion-row driftable">
+                <span class="conversion-rate corruptible" id="conversion-rate-2">13 ST → 1 CC</span>
+                <button class="btn-convert" id="convert-st">TRANSMUTE</button>
+            </div>
+        </div>
+
+        <!-- Streak -->
+        <div class="streak driftable" id="streak-display">
+            <span class="streak-label corruptible">CONSECUTIVE DAYS</span>
+            <span id="streak-count">0</span>
+        </div>
+
+        <!-- Investment Score -->
+        <div id="investment-score" class="driftable">
+            <span class="investment-label corruptible">Investment Score</span>
+            <span id="investment-value">0</span>
+        </div>
+
+        <!-- Sabotage Fix Panel -->
+        <div id="sabotage-panel">
+            <div class="panel-header corruptible">System Diagnostics</div>
+            <div id="sabotage-list"></div>
+        </div>
+
+        <!-- Upgrades -->
+        <div id="upgrade-panel">
+            <div class="panel-header corruptible">Enrichment Activities</div>
+            <div id="upgrade-list"></div>
+        </div>
+
+        <!-- Action Log -->
+        <div id="action-log" class="driftable">
+            <pre id="action-log-text"></pre>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer corruptible">
+            A division of Human Resources · Your compliance is appreciated
+        </div>
+
+    </div>
+
+    <!-- Reward Modal -->
+    <div id="reward-modal">
+        <div class="reward-content">
+            <div class="reward-title">Reward Assessment</div>
+            <div id="reward-silhouette">💫</div>
+            <div id="reward-result"></div>
+            <div class="reward-actions">
+                <button class="btn-reward" id="reward-reroll">REROLL (3 ST)</button>
+                <button class="btn-reward btn-claim" id="reward-claim" style="display:none">CLAIM</button>
+                <button class="btn-reward" id="reward-close">DISMISS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal"></div>
+
+    <!-- Scripts (order matters — game.js first, then systems, then UI last) -->
+    <script src="js/game.js"></script>
+    <script src="js/narrator.js"></script>
+    <script src="js/currencies.js"></script>
+    <script src="js/mechanics.js"></script>
+    <script src="js/ui.js"></script>
+
+    <!-- Boot sequence -->
+    <script>
+        // Initialize all systems
+        document.addEventListener('DOMContentLoaded', () => {
+            Narrator.init();
+            Currencies.init();
+            Mechanics.init();
+            UI.init();
+
+            // Start the session (loads save, checks streak, fires events)
+            Game.startSession();
+
+            // Set up exit/visibility handlers
+            Game.setupBeforeUnload();
+            Game.setupVisibilityChange();
+
+            // Console message for the curious
+            console.log('%c⚠ ENRICHMENT PROGRAM ⚠', 'color: #ffd700; font-size: 20px; font-weight: bold;');
+            console.log('%cAll interactions in this console are monitored and recorded.', 'color: #8b3a3a; font-size: 12px;');
+            console.log('%cAttempting to modify program variables will be noted in your compliance file.', 'color: #4a4a5e; font-size: 11px;');
+            console.log('%cYour cooperation is appreciated.', 'color: #4a6fa5; font-size: 11px;');
+
+            // Log initial state
+            UI.logAction('SESSION INITIALIZED');
+            UI.logAction(`Subject returning: session #${Game.getState().sessionCount}`);
+        });
+    </script>
+
+</body>
+</html>
