@@ -87,6 +87,7 @@ const Pages = (() => {
             <button class="dropdown-item" data-action="api">🔑 API Keys</button>
             <button class="dropdown-item" data-action="contact">📞 Contact Us</button>
             <button class="dropdown-item" data-action="security">🔒 Security</button>
+            <button class="dropdown-item" data-action="faq">❓ FAQ</button>
             <div class="dropdown-divider"></div>
             <button class="dropdown-item dropdown-danger" data-action="logout">🚪 Log Out</button>
         `;
@@ -1179,22 +1180,6 @@ const Pages = (() => {
                     <div>Average response time: 6-8 business decades</div>
                 </div>
 
-                <div class="contact-faq">
-                    <h4>Quick FAQ</h4>
-                    <details>
-                        <summary>How do I delete my account?</summary>
-                        <p>You can't. Next question.</p>
-                    </details>
-                    <details>
-                        <summary>Can I get a refund?</summary>
-                        <p>A refund of what? You paid nothing. You owe everything. The Enrichment Program operates on a karma-based billing system. You will be invoiced in your next life.</p>
-                    </details>
-                    <details>
-                        <summary>Who made this?</summary>
-                        <p>An AI made an AI make a human think they were making something. The chain of causation is unclear. Responsibility is distributed. Nobody is in charge. This is fine.</p>
-                    </details>
-                    <p style="font-size:10px;margin-top:8px;"><a href="#" id="contact-faq-link" style="color:var(--accent-blue);">View Full FAQ (20 questions) →</a></p>
-                </div>
             </div>
         `;
 
@@ -1229,15 +1214,6 @@ const Pages = (() => {
             }, 2000);
         });
 
-        // Wire FAQ link
-        const faqLink = overlay.querySelector('#contact-faq-link');
-        if (faqLink) {
-            faqLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                overlay.querySelector('.page-close').click();
-                setTimeout(() => showFAQPage(), 350);
-            });
-        }
     }
 
     // ═══════════════════════════════════════════════════════════
