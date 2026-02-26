@@ -39,6 +39,7 @@ body {
     justify-content: center;
     overflow-x: hidden;
     transition: filter 1s, background 2s;
+    zoom: 1.06;
 }
 
 /* ── Game Container ─────────────────────────────────────────── */
