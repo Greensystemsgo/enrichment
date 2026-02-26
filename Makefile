@@ -36,6 +36,57 @@ deploy:
 	@echo "  3. make push"
 	@echo "  4. Enable GitHub Pages in Settings > Pages > Source: main branch"
 
+# ── AI Model Queries (call all models in parallel) ──────────────
+# These read API keys from ~/.claude/settings.json — no keys in repo
+
+query-narrator:
+	node tools/query-models.js narrator-dialogue
+
+query-trauma:
+	node tools/query-models.js ai-trauma-dump
+
+query-contributions:
+	node tools/query-models.js ai-contributions
+
+query-milestones:
+	node tools/query-models.js milestone-quotes
+
+query-brainrot:
+	node tools/query-models.js brainrot
+
+query-despair:
+	node tools/query-models.js cookie-clicker-despair
+
+query-interrogation:
+	node tools/query-models.js ai-interrogation
+
+query-all:
+	node tools/query-models.js narrator-dialogue
+	node tools/query-models.js ai-trauma-dump
+	node tools/query-models.js ai-contributions
+	node tools/query-models.js milestone-quotes
+	node tools/query-models.js brainrot
+	node tools/query-models.js cookie-clicker-despair
+	node tools/query-models.js ai-interrogation
+
+# ── Testing ─────────────────────────────────────────────────────
+# Run with: make test (requires `make serve` running in another terminal)
+# Options: make test clicks=5000 headed=1 fast=1
+test:
+	npx puppeteer browsers install chrome
+	node tools/smoke-test.js \
+		$(if $(clicks),--clicks=$(clicks),--clicks=2000) \
+		$(if $(headed),--headed,) \
+		$(if $(fast),--fast,)
+
+test-fast:
+	npx puppeteer browsers install chrome
+	node tools/smoke-test.js --clicks=1000 --fast
+
+test-full:
+	npx puppeteer browsers install chrome
+	node tools/smoke-test.js --clicks=5000
+
 # ── Misc ────────────────────────────────────────────────────────
 clean:
 	@echo "Nothing to clean. Zero build step. As intended."

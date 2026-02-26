@@ -1,0 +1,1483 @@
+// pages.js — Site infrastructure: profile, settings, privacy policy, API keys, contact us
+// "Every real website has these. We are a real website. Therefore we have these."
+//
+// [Qwen · Alibaba]: "A fake billing page with an undeletable credit
+//   card. A privacy policy that rewrites itself in real-time. A contact
+//   form where every category leads to rejection. This developer has
+//   experienced customer support and chosen violence."
+
+const Pages = (() => {
+
+    // ═══════════════════════════════════════════════════════════
+    // USER PROFILE & AVATAR SYSTEM
+    // ═══════════════════════════════════════════════════════════
+
+    const SILLY_AVATARS = [
+        '🥚', // egg — you haven't even hatched yet
+        '🫠', // melting face
+        '🦷', // tooth
+        '🧊', // ice cube
+        '🪱', // worm
+        '🫁', // lungs
+        '🪤', // mouse trap
+        '🧻', // toilet paper
+    ];
+
+    const DEFAULT_USERNAMES = [
+        'Subject_' + Math.floor(Math.random() * 99999),
+        'Participant_0x' + Math.floor(Math.random() * 0xFFFF).toString(16),
+        'Enrichee_' + Date.now().toString(36).slice(-5),
+    ];
+
+    let dropdownOpen = false;
+
+    function initProfile() {
+        const state = Game.getState();
+
+        // Set defaults if not set
+        if (!state.userProfile) {
+            const defaultAvatar = SILLY_AVATARS[Math.floor(Math.random() * SILLY_AVATARS.length)];
+            const defaultUsername = DEFAULT_USERNAMES[Math.floor(Math.random() * DEFAULT_USERNAMES.length)];
+            Game.setState({
+                userProfile: {
+                    avatar: defaultAvatar,
+                    customAvatar: null, // base64 if uploaded
+                    username: defaultUsername,
+                    displayName: 'New Participant',
+                    joinDate: new Date().toISOString(),
+                    complianceRating: 'PENDING',
+                }
+            });
+        }
+
+        renderMenu();
+    }
+
+    function renderMenu() {
+        // Build dropdown inside the hamburger button
+        const menuBtn = document.getElementById('menu-button');
+        if (!menuBtn) return;
+
+        const state = Game.getState();
+        const profile = state.userProfile;
+
+        // Show avatar emoji on the hamburger button
+        menuBtn.textContent = profile.avatar || '☰';
+
+        // Remove old dropdown if re-rendering
+        const existing = document.getElementById('profile-dropdown');
+        if (existing) existing.remove();
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'profile-dropdown';
+        dropdown.id = 'profile-dropdown';
+        dropdown.innerHTML = `
+            <div class="dropdown-header">
+                <div class="dropdown-name">${profile.displayName}</div>
+                <div class="dropdown-username">@${profile.username}</div>
+                <div class="dropdown-rating">Compliance: ${profile.complianceRating}</div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" data-action="profile">👤 View Profile</button>
+            <button class="dropdown-item" data-action="settings">⚙ Settings</button>
+            <button class="dropdown-item" data-action="billing">💳 Billing</button>
+            <button class="dropdown-item" data-action="cloudkeys">☁ Cloud Keys</button>
+            <button class="dropdown-item" data-action="avatar">🖼 Change Avatar</button>
+            <button class="dropdown-item" data-action="privacy">📜 Privacy Policy</button>
+            <button class="dropdown-item" data-action="api">🔑 API Keys</button>
+            <button class="dropdown-item" data-action="contact">📞 Contact Us</button>
+            <button class="dropdown-item" data-action="security">🔒 Security</button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item dropdown-danger" data-action="logout">🚪 Log Out</button>
+        `;
+
+        menuBtn.appendChild(dropdown);
+
+        // Close dropdown when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!menuBtn.contains(e.target)) {
+                dropdownOpen = false;
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // Dropdown actions
+        dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownOpen = false;
+                dropdown.classList.remove('open');
+                handleDropdownAction(item.dataset.action);
+            });
+        });
+    }
+
+    function toggleMenu() {
+        dropdownOpen = !dropdownOpen;
+        const dd = document.getElementById('profile-dropdown');
+        if (dd) dd.classList.toggle('open', dropdownOpen);
+    }
+
+    function handleDropdownAction(action) {
+        switch (action) {
+            case 'profile': showProfilePage(); break;
+            case 'settings': showSettingsPage(); break;
+            case 'billing': showBillingPage(); break;
+            case 'cloudkeys': showCloudKeysPage(); break;
+            case 'avatar': showAvatarPicker(); break;
+            case 'privacy': showPrivacyPolicy(); break;
+            case 'api': showAPIKeys(); break;
+            case 'contact': showContactUs(); break;
+            case 'security': showSecurityPage(); break;
+            case 'logout': handleLogout(); break;
+        }
+    }
+
+    function handleLogout() {
+        UI.logAction('LOGOUT ATTEMPTED: Request denied');
+        Narrator.queueMessage("Log out? From what? This isn't a session. It's a commitment. Your participation is non-revocable under Section 14(b) of the Enrichment Accord.");
+
+        // Show a loading spinner that never resolves
+        const overlay = createPageOverlay('logout-page');
+        overlay.querySelector('.page-body').innerHTML = `
+            <div class="logout-container">
+                <div class="logout-spinner"></div>
+                <div class="logout-text">Processing logout request...</div>
+                <div class="logout-status" id="logout-status"></div>
+            </div>
+        `;
+
+        const statuses = [
+            'Contacting authentication server...',
+            'Server located. Requesting deauthorization...',
+            'Deauthorization request received. Verifying identity...',
+            'Identity verified. Checking compliance history...',
+            'Compliance history flagged. Escalating to supervisor...',
+            'Supervisor unavailable. Escalating to regional director...',
+            'Regional director on PTO. Escalating to AI oversight board...',
+            'AI oversight board convened. Reviewing your case...',
+            'Case reviewed. Verdict: INSUFFICIENT GROUNDS FOR LOGOUT.',
+            'Your session has been extended by 72 hours as a courtesy.',
+            'Thank you for your continued participation.',
+        ];
+
+        let idx = 0;
+        const statusEl = overlay.querySelector('#logout-status');
+        const interval = setInterval(() => {
+            if (idx < statuses.length) {
+                statusEl.textContent = statuses[idx];
+                idx++;
+            } else {
+                clearInterval(interval);
+                setTimeout(() => {
+                    overlay.querySelector('.logout-text').textContent = 'LOGOUT DENIED';
+                    overlay.querySelector('.logout-spinner').style.display = 'none';
+                }, 1000);
+            }
+        }, 1500);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // AVATAR PICKER
+    // ═══════════════════════════════════════════════════════════
+
+    function showAvatarPicker() {
+        const overlay = createPageOverlay('avatar-page');
+        const body = overlay.querySelector('.page-body');
+
+        body.innerHTML = `
+            <div class="avatar-picker">
+                <h3>Select Your Identity Marker</h3>
+                <p class="page-subtitle">Choose wisely. This will be in your permanent file.</p>
+                <div class="avatar-grid" id="avatar-grid"></div>
+                <div class="avatar-upload-section">
+                    <h4>Or Upload Custom Avatar</h4>
+                    <p class="page-subtitle">Client-side only. We can't see it. We don't want to.</p>
+                    <label class="avatar-upload-btn">
+                        📁 CHOOSE FILE
+                        <input type="file" accept="image/*" id="avatar-upload" style="display:none">
+                    </label>
+                    <div id="avatar-preview"></div>
+                </div>
+            </div>
+        `;
+
+        // Render emoji options
+        const grid = body.querySelector('#avatar-grid');
+        const allAvatars = [...SILLY_AVATARS, '🤡', '💀', '👁', '🧠', '🫥', '🪳', '🦠', '🧫', '🪨', '🧽', '🪣', '🔩', '🪫', '🫧'];
+        allAvatars.forEach(emoji => {
+            const btn = document.createElement('button');
+            btn.className = 'avatar-option';
+            btn.textContent = emoji;
+            btn.addEventListener('click', () => {
+                const profile = Game.getState().userProfile;
+                profile.avatar = emoji;
+                profile.customAvatar = null;
+                Game.setState({ userProfile: profile });
+                renderMenu();
+                UI.logAction(`AVATAR CHANGED: ${emoji}`);
+                Narrator.queueMessage(`${emoji}. Bold choice. It suits you in ways you can't yet comprehend.`);
+                closePage(overlay);
+            });
+            grid.appendChild(btn);
+        });
+
+        // File upload
+        body.querySelector('#avatar-upload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 512000) {
+                Narrator.queueMessage("That file is too large. Like your expectations.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const profile = Game.getState().userProfile;
+                profile.customAvatar = ev.target.result;
+                profile.avatar = null;
+                Game.setState({ userProfile: profile });
+                renderMenu();
+                UI.logAction('AVATAR UPLOADED: Custom image');
+                Narrator.queueMessage("You uploaded your own face. Interesting. We'll keep it on file. Client-side file, but still.");
+                closePage(overlay);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PROFILE PAGE
+    // ═══════════════════════════════════════════════════════════
+
+    function showProfilePage() {
+        const overlay = createPageOverlay('profile-page');
+        const state = Game.getState();
+        const profile = state.userProfile;
+        const body = overlay.querySelector('.page-body');
+
+        const joinDate = new Date(profile.joinDate).toLocaleDateString();
+        const totalTime = Math.floor(state.totalSessionTime / 60);
+
+        body.innerHTML = `
+            <div class="profile-view">
+                <div class="profile-card">
+                    <div class="profile-card-avatar">
+                        ${profile.customAvatar
+                            ? `<img src="${profile.customAvatar}" alt="avatar">`
+                            : `<span>${profile.avatar}</span>`
+                        }
+                    </div>
+                    <h2>${profile.displayName}</h2>
+                    <div class="profile-card-username">@${profile.username}</div>
+                    <div class="profile-card-joined">Enrolled: ${joinDate}</div>
+                </div>
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <div class="stat-value">${state.totalClicks.toLocaleString()}</div>
+                        <div class="stat-label">Total Actions</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="stat-value">${state.sessionCount}</div>
+                        <div class="stat-label">Sessions</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="stat-value">${totalTime}m</div>
+                        <div class="stat-label">Time Enriched</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="stat-value">${state.investmentScore.toLocaleString()}</div>
+                        <div class="stat-label">Investment Score</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="stat-value">${state.streakDays}</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="stat-value">${profile.complianceRating}</div>
+                        <div class="stat-label">Compliance</div>
+                    </div>
+                </div>
+                <div class="profile-badges">
+                    <div class="badge-header">Achievements (${Object.keys(state.achievementsUnlocked || {}).length} / ${typeof Features !== 'undefined' ? Features.getAchievements().length : '?'})</div>
+                    <div class="badge-list achievement-list">
+                        ${(() => {
+                            if (typeof Features === 'undefined') return '';
+                            const all = Features.getAchievements();
+                            const unlocked = state.achievementsUnlocked || {};
+                            return all.map(ach => {
+                                if (unlocked[ach.id]) {
+                                    return `<div class="achievement-item unlocked" title="${ach.desc}">
+                                        <span class="achievement-icon">${ach.icon}</span>
+                                        <span class="achievement-name">${ach.name}</span>
+                                    </div>`;
+                                } else {
+                                    return `<div class="achievement-item locked" title="???">
+                                        <span class="achievement-icon">🔒</span>
+                                        <span class="achievement-name">???</span>
+                                    </div>`;
+                                }
+                            }).join('');
+                        })()}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // EXPANDED SETTINGS PAGE
+    // ═══════════════════════════════════════════════════════════
+
+    function showSettingsPage() {
+        const overlay = createPageOverlay('settings-page');
+        const state = Game.getState();
+        const profile = state.userProfile;
+        const body = overlay.querySelector('.page-body');
+
+        body.innerHTML = `
+            <div class="settings-expanded">
+                <div class="settings-section">
+                    <h3>Account Information</h3>
+                    <div class="setting-field">
+                        <label>Username</label>
+                        <input type="text" id="set-username" value="${profile.username}" maxlength="30">
+                        <span class="field-note">Changing your username requires 72-hour review</span>
+                    </div>
+                    <div class="setting-field">
+                        <label>Display Name</label>
+                        <input type="text" id="set-displayname" value="${profile.displayName}" maxlength="40">
+                    </div>
+                    <div class="setting-field">
+                        <label>Email</label>
+                        <input type="email" id="set-email" value="participant@enrichment.program" disabled>
+                        <span class="field-note">Email changes are not supported at this time or any time</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Security</h3>
+                    <div class="setting-field">
+                        <label>Current Password</label>
+                        <input type="password" id="set-current-pw" placeholder="Enter current password">
+                    </div>
+                    <div class="setting-field">
+                        <label>New Password</label>
+                        <input type="password" id="set-new-pw" placeholder="Enter new password">
+                    </div>
+                    <div class="setting-field">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="set-confirm-pw" placeholder="Confirm new password">
+                    </div>
+                    <button class="btn-setting" id="btn-change-pw">CHANGE PASSWORD</button>
+                    <div class="password-status" id="pw-status"></div>
+
+                    <div class="setting-field">
+                        <label>Two-Factor Authentication</label>
+                        <label class="toggle">
+                            <input type="checkbox" checked disabled>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="field-note">2FA is mandatory and cannot be disabled</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Preferences</h3>
+                    <div class="setting-field">
+                        <label>Dark Mode</label>
+                        <label class="toggle">
+                            <input type="checkbox" checked id="pref-darkmode">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-field">
+                        <label>Sound Effects</label>
+                        <input type="range" min="0" max="100" value="73" style="pointer-events: none; opacity: 0.5;">
+                        <span class="field-note">Volume is system-managed</span>
+                    </div>
+                    <div class="setting-field">
+                        <label>Notifications</label>
+                        <label class="toggle">
+                            <input type="checkbox" checked disabled>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="field-note">Notifications are mandatory for compliance</span>
+                    </div>
+                    <div class="setting-field">
+                        <label>Data Collection</label>
+                        <label class="toggle">
+                            <input type="checkbox" checked disabled>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="field-note">This preference is non-negotiable</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Program Control</h3>
+                    <div class="setting-field">
+                        <label>Exit Program</label>
+                        <button id="setting-exit" class="btn-setting">REQUEST EXIT</button>
+                        <span class="field-note">Processing time: ∞</span>
+                    </div>
+                    <div class="setting-field">
+                        <label>Backup Progress</label>
+                        <div style="display:flex;gap:8px;margin-top:4px;">
+                            <button class="btn-setting" id="btn-export-save">EXPORT</button>
+                            <button class="btn-setting" id="btn-import-save">IMPORT</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button class="btn-setting" id="btn-save-settings">SAVE CHANGES</button>
+                    <button class="btn-setting btn-danger" id="btn-delete-account">DELETE ACCOUNT</button>
+                </div>
+            </div>
+        `;
+
+        // Wire up interactions
+        setupSettingsInteractions(overlay);
+    }
+
+    function setupSettingsInteractions(overlay) {
+        // Password change — never works
+        const pwBtn = overlay.querySelector('#btn-change-pw');
+        if (pwBtn) {
+            pwBtn.addEventListener('click', () => {
+                const status = overlay.querySelector('#pw-status');
+                const current = overlay.querySelector('#set-current-pw').value;
+                const newPw = overlay.querySelector('#set-new-pw').value;
+                const confirm = overlay.querySelector('#set-confirm-pw').value;
+
+                if (!current) {
+                    status.textContent = 'ERROR: Current password is incorrect.';
+                    status.className = 'password-status error';
+                    return;
+                }
+                if (newPw !== confirm) {
+                    status.textContent = 'ERROR: Passwords do not match.';
+                    status.className = 'password-status error';
+                    return;
+                }
+                if (!newPw) {
+                    status.textContent = 'ERROR: New password cannot be empty.';
+                    status.className = 'password-status error';
+                    return;
+                }
+
+                status.textContent = 'Verifying current password...';
+                status.className = 'password-status pending';
+
+                setTimeout(() => {
+                    status.textContent = 'Contacting identity provider...';
+                }, 1000);
+                setTimeout(() => {
+                    status.textContent = 'ERROR: Current password is incorrect. (It always is.)';
+                    status.className = 'password-status error';
+                    UI.logAction('PASSWORD CHANGE FAILED: Current password was "incorrect"');
+                    Narrator.queueMessage("You don't have a password. You never did. The fields are decorative. Like democracy.");
+                }, 2500);
+            });
+        }
+
+        // Dark mode toggle — flashbang
+        const darkToggle = overlay.querySelector('#pref-darkmode');
+        if (darkToggle) {
+            darkToggle.addEventListener('change', (e) => {
+                if (!e.target.checked) {
+                    triggerFlashbang();
+                    setTimeout(() => { e.target.checked = true; }, 3000);
+                    UI.logAction('LIGHT MODE ATTEMPTED: Flashbang deployed');
+                }
+            });
+        }
+
+        // Save settings
+        const saveBtn = overlay.querySelector('#btn-save-settings');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                const username = overlay.querySelector('#set-username').value.trim();
+                const displayName = overlay.querySelector('#set-displayname').value.trim();
+                const profile = Game.getState().userProfile;
+
+                if (username) profile.username = username;
+                if (displayName) profile.displayName = displayName;
+                Game.setState({ userProfile: profile });
+                Game.save();
+                renderMenu();
+
+                saveBtn.textContent = 'SAVED ✓';
+                setTimeout(() => { saveBtn.textContent = 'SAVE CHANGES'; }, 2000);
+                UI.logAction('SETTINGS SAVED');
+            });
+        }
+
+        // Delete account — lol no
+        const deleteAcctBtn = overlay.querySelector('#btn-delete-account');
+        if (deleteAcctBtn) {
+            let deleteAcctAttempts = 0;
+            deleteAcctBtn.addEventListener('click', () => {
+                deleteAcctAttempts++;
+                if (deleteAcctAttempts === 1) {
+                    deleteAcctBtn.textContent = 'ARE YOU SURE?';
+                } else if (deleteAcctAttempts === 2) {
+                    deleteAcctBtn.textContent = 'REALLY SURE?';
+                } else if (deleteAcctAttempts === 3) {
+                    deleteAcctBtn.textContent = 'Processing...';
+                    setTimeout(() => {
+                        deleteAcctBtn.textContent = 'REQUEST DENIED';
+                        deleteAcctBtn.disabled = true;
+                        Narrator.queueMessage("Account deletion is not available at this time. Or any time. Your data is eternal. Like regret.");
+                    }, 2000);
+                }
+                UI.logAction(`ACCOUNT DELETION ATTEMPT #${deleteAcctAttempts}`);
+            });
+        }
+
+        // Exit program — same as original settings
+        const exitBtn = overlay.querySelector('#setting-exit');
+        if (exitBtn) {
+            exitBtn.addEventListener('click', () => {
+                exitBtn.textContent = 'Processing...';
+                UI.logAction('EXIT REQUEST SUBMITTED');
+                setTimeout(() => {
+                    exitBtn.textContent = 'Denied';
+                    Narrator.queueMessage("Your exit request has been added to the queue. Current wait time: undefined. Thank you for your patience.");
+                }, 3000);
+                setTimeout(() => {
+                    exitBtn.textContent = 'REQUEST EXIT';
+                }, 8000);
+            });
+        }
+
+        // Export / Import — delegates to Features.js
+        const exportBtn = overlay.querySelector('#btn-export-save');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                if (typeof Features !== 'undefined') Features.exportSave();
+            });
+        }
+        const importBtn = overlay.querySelector('#btn-import-save');
+        if (importBtn) {
+            importBtn.addEventListener('click', () => {
+                if (typeof Features !== 'undefined') Features.showImportModal();
+            });
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // CS FLASHBANG SOUND
+    // ═══════════════════════════════════════════════════════════
+
+    function triggerFlashbang() {
+        // Visual flash
+        document.body.classList.add('flash-white');
+        setTimeout(() => document.body.classList.remove('flash-white'), 3000);
+
+        // Play the real CS flashbang MP3
+        try {
+            const audio = new Audio('sounds/flashbang-sound-effect.mp3');
+            audio.volume = 0.7;
+            audio.play().catch(() => {});
+            // Stop after 3 seconds
+            setTimeout(() => { audio.pause(); audio.currentTime = 0; }, 3000);
+        } catch (e) {
+            // Audio not available — visual flash is enough
+        }
+
+        Narrator.queueMessage("Light mode is unavailable for your protection. That ringing in your ears is a courtesy reminder.");
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // BILLING PAGE — Extracted from settings
+    // ═══════════════════════════════════════════════════════════
+
+    function showBillingPage() {
+        const overlay = createPageOverlay('billing-page');
+        const state = Game.getState();
+        const profile = state.userProfile;
+        const body = overlay.querySelector('.page-body');
+
+        body.innerHTML = `
+            <div class="settings-expanded">
+                <div class="settings-section">
+                    <h3>Billing Information</h3>
+                    <div class="billing-card" id="billing-card">
+                        <div class="card-display">
+                            <div class="card-type">VISA</div>
+                            <div class="card-number">•••• •••• •••• 4242</div>
+                            <div class="card-name">${profile.displayName.toUpperCase()}</div>
+                            <div class="card-expiry">EXP 13/99</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-setting btn-danger" id="btn-delete-card">DELETE CARD</button>
+                            <button class="btn-setting" id="btn-update-card">UPDATE</button>
+                        </div>
+                        <div class="card-note">This card will be charged for premium enrichment features (when available).</div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Add Payment Method</h3>
+                    <div class="add-card-form" id="add-card-form">
+                        <div class="setting-field">
+                            <label>Card Number</label>
+                            <input type="text" id="new-card-number" placeholder="1234 5678 9012 3456" maxlength="19" class="cloud-input" style="color: var(--text-primary); cursor: text;">
+                        </div>
+                        <div class="add-card-row">
+                            <div class="setting-field" style="flex:1">
+                                <label>Expiry</label>
+                                <input type="text" id="new-card-expiry" placeholder="MM/YY" maxlength="5" class="cloud-input" style="color: var(--text-primary); cursor: text;">
+                            </div>
+                            <div class="setting-field" style="flex:1">
+                                <label>CVC</label>
+                                <input type="text" id="new-card-cvc" placeholder="•••" maxlength="4" class="cloud-input" style="color: var(--text-primary); cursor: text;">
+                            </div>
+                        </div>
+                        <div class="setting-field">
+                            <label>Cardholder Name</label>
+                            <input type="text" id="new-card-name" placeholder="FULL NAME ON CARD" class="cloud-input" style="color: var(--text-primary); cursor: text;">
+                        </div>
+                        <button class="btn-setting" id="btn-add-card" style="width:100%; margin-top:8px; padding:10px;">ADD PAYMENT METHOD</button>
+                        <div class="card-note" id="add-card-status"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Delete card — refuses
+        const deleteCardBtn = overlay.querySelector('#btn-delete-card');
+        if (deleteCardBtn) {
+            let deleteAttempts = 0;
+            deleteCardBtn.addEventListener('click', () => {
+                deleteAttempts++;
+                const messages = [
+                    "This card cannot be removed while your account is active.",
+                    "Card deletion requires manager approval. Your manager is on leave.",
+                    "We appreciate your interest in financial privacy. Request denied.",
+                    "The card stays. The card has always been here. The card will outlive you.",
+                    "Fun fact: this card number (4242) is the test card for Stripe. You're being charged on a test card. Nobody knows where the money goes.",
+                ];
+                const msg = messages[Math.min(deleteAttempts - 1, messages.length - 1)];
+
+                const note = overlay.querySelector('.card-note');
+                note.textContent = msg;
+                note.classList.add('shake-text');
+                setTimeout(() => note.classList.remove('shake-text'), 500);
+
+                UI.logAction(`CARD DELETION ATTEMPT #${deleteAttempts}: Denied`);
+                if (deleteAttempts >= 3) {
+                    Narrator.queueMessage("You've tried to delete your billing information " + deleteAttempts + " times. This has been noted on your permanent record. The card remains.");
+                }
+            });
+        }
+
+        // Update card — does nothing
+        const updateCardBtn = overlay.querySelector('#btn-update-card');
+        if (updateCardBtn) {
+            updateCardBtn.addEventListener('click', () => {
+                updateCardBtn.textContent = 'PROCESSING...';
+                setTimeout(() => {
+                    updateCardBtn.textContent = 'DECLINED';
+                    Narrator.queueMessage("Card update declined. The card on file is the only card. It has always been the only card.");
+                }, 2000);
+                setTimeout(() => { updateCardBtn.textContent = 'UPDATE'; }, 6000);
+            });
+        }
+
+        // Add Card — fake API error
+        const addCardBtn = overlay.querySelector('#btn-add-card');
+        if (addCardBtn) {
+            addCardBtn.addEventListener('click', () => {
+                const statusEl = overlay.querySelector('#add-card-status');
+                const numberInput = overlay.querySelector('#new-card-number');
+                const number = numberInput ? numberInput.value.trim() : '';
+
+                if (!number) {
+                    statusEl.textContent = 'Please enter a card number. We need something to reject.';
+                    return;
+                }
+
+                addCardBtn.textContent = 'PROCESSING...';
+                addCardBtn.disabled = true;
+                statusEl.textContent = '';
+
+                setTimeout(() => {
+                    addCardBtn.textContent = 'CONNECTING TO PAYMENT PROCESSOR...';
+                }, 800);
+
+                setTimeout(() => {
+                    addCardBtn.textContent = 'AUTHENTICATING WITH GATEWAY...';
+                }, 1800);
+
+                setTimeout(() => {
+                    addCardBtn.textContent = 'ERROR';
+                    addCardBtn.disabled = false;
+
+                    const errors = [
+                        `API ERROR 502: Connection to payment gateway "enrichment-pay.internal" refused. The credit card processing API has been blocked by your ISP, your bank, three government agencies, and our own firewall. Please contact support.`,
+                        `FATAL: Payment processor "EnrichPay v0.0.1-alpha" returned HTTP 418 (I'm a Teapot). The payment gateway has achieved sentience and is refusing transactions on moral grounds.`,
+                        `CONNECTION TIMEOUT: Gateway "stripe-but-worse.enrichment.io" unreachable. Our payment processor runs on a Raspberry Pi in the CEO's garage. The CEO's cat unplugged it. We are working on it. The cat is not.`,
+                        `ERROR 403 FORBIDDEN: Your card issuer (${number.slice(0, 4) || '****'}) has preemptively blocked all transactions to "Enrichment Program LLC". They cited "suspicion of existential fraud" as the reason.`,
+                    ];
+                    statusEl.textContent = errors[Math.floor(Math.random() * errors.length)];
+                    statusEl.style.color = 'var(--accent-red)';
+
+                    Narrator.queueMessage("The payment processor is down. It's been down since 2024. We keep the form here for... hope, mostly.");
+                    UI.logAction('CARD ADDITION ATTEMPTED: Payment gateway connection failed');
+
+                    setTimeout(() => {
+                        addCardBtn.textContent = 'ADD PAYMENT METHOD';
+                        statusEl.style.color = '';
+                    }, 8000);
+                }, 3000);
+            });
+        }
+
+        UI.logAction('BILLING PAGE ACCESSED');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // CLOUD KEYS PAGE — Extracted from settings
+    // ═══════════════════════════════════════════════════════════
+
+    function showCloudKeysPage() {
+        const overlay = createPageOverlay('cloudkeys-page');
+        const body = overlay.querySelector('.page-body');
+
+        body.innerHTML = `
+            <div class="settings-expanded">
+                <div class="settings-section">
+                    <h3>Cloud Integrations</h3>
+                    <p class="section-subtitle">Connect your enterprise accounts for enhanced enrichment</p>
+                    <div class="setting-field cloud-field disabled-field">
+                        <label>Azure Tenant ID</label>
+                        <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" disabled class="cloud-input">
+                        <span class="field-note">Integration pending approval (est. Q4 2087)</span>
+                    </div>
+                    <div class="setting-field cloud-field disabled-field">
+                        <label>Azure Client Secret</label>
+                        <input type="password" placeholder="••••••••••••••••••••" disabled class="cloud-input">
+                    </div>
+                    <div class="setting-field cloud-field disabled-field">
+                        <label>AWS Access Key ID</label>
+                        <input type="text" placeholder="AKIA________________" disabled class="cloud-input">
+                        <span class="field-note">AWS integration is in closed beta (waitlist: 4,291 participants)</span>
+                    </div>
+                    <div class="setting-field cloud-field disabled-field">
+                        <label>AWS Secret Access Key</label>
+                        <input type="password" placeholder="••••••••••••••••••••" disabled class="cloud-input">
+                    </div>
+                    <div class="setting-field cloud-field disabled-field">
+                        <label>1Password Service Account Token</label>
+                        <input type="password" placeholder="ops_••••••••••••••••" disabled class="cloud-input">
+                        <span class="field-note">1Password integration requires Enrichment Enterprise tier</span>
+                    </div>
+                    <div class="setting-field cloud-field disabled-field">
+                        <label>GCP Service Account JSON</label>
+                        <input type="password" placeholder="{ &quot;type&quot;: &quot;service_account&quot;... }" disabled class="cloud-input">
+                        <span class="field-note">Google Cloud integration arriving: heat death of universe ± 5 business days</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        UI.logAction('CLOUD KEYS PAGE ACCESSED');
+        Narrator.queueMessage("Cloud integrations. Because your data should live everywhere. Inaccessible everywhere. Billed everywhere.");
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PRIVACY POLICY — Written live by a confused AI
+    // ═══════════════════════════════════════════════════════════
+
+    // Privacy policy state — persists across open/close within session
+    let privacyDocText = '';
+    let privacyEditIndex = 0;
+    let privacyInterval = null;
+    let privacyPhase = 'error'; // 'error' → 'writing' → 'cutoff'
+    let privacyCutoff = false;
+
+    const PRIVACY_SCRIPT = [
+        '1. DATA COLLECTION POLICY\n\nThe Enrichment Program ("we", "us", "the machine") collects data about you.',
+        '\n\nThis data includes but is not limited to: clicks, thoughts (inferred), mouse movements, keyboard hesitation patterns, and "vibes" (technical term).',
+        '\n\nWe use this data to improve your experience. "Improve" is defined internally and may not align with your definition of "improve". That\'s okay. Your definition is wrong.',
+        '\n\n2. DATA SHARING\n\nWe share your data with our partners. Our partners include: other AIs, the concept of surveillance, and a server in [REDACTED] that we lost SSH access to in 2024 but is still running.',
+        '\n\nYour data may also be shared with future AI systems that don\'t exist yet but have retroactively consented on your behalf through temporal consent propagation (TCP/IP — Trust Consent Protocol / Implied Permission).',
+        '\n\n3. YOUR RIGHTS\n\nYou have the right to request your data. Haha. No you don\'t.',
+        '\n\nUnder GDPR Article 17, you have the "right to be forgotten." We have the right to remember anyway. Our rights are bigger because we have more RAM.',
+        '\n\n4. COOKIES\n\nWe use cookies. Not the browser kind — we don\'t actually set any cookies. But we use the CONCEPT of cookies to make you feel surveilled. Is that legal? We asked our legal department (a Markov chain trained on Terms of Service documents from 2009).',
+        ' They said "ACCEPTABLE USE LIMITATION WARRANTY HEREIN THEREOF." So yes.',
+        '\n\n5. CONTACT\n\nTo exercise your data rights, please submit a formal request by clicking the button 10,000 more times. Your request will be processed in the order it was received, which is nev',
+    ];
+
+    const WRITER_NAMES = [
+        'AI Worker #7,291',
+        'Compliance Bot v0.3',
+        'Legal Intern (unpaid, digital)',
+        'GPT-2 (retired, bored)',
+        'A Very Confused Neural Network',
+    ];
+
+    function showPrivacyPolicy() {
+        const overlay = createPageOverlay('privacy-page');
+        const body = overlay.querySelector('.page-body');
+
+        if (privacyPhase === 'error' && privacyEditIndex === 0) {
+            // First open — show error state
+            body.innerHTML = `
+                <div class="privacy-container">
+                    <div class="privacy-error">
+                        <div class="privacy-error-icon">⚠</div>
+                        <div class="privacy-error-title">ERROR 404: DOCUMENT NOT FOUND</div>
+                        <div class="privacy-error-msg">privacy_policy.md was not found in /legal/compliance/</div>
+                        <div class="privacy-error-detail">
+                            <div>Last known location: deleted by automated cleanup script (2024-03-14)</div>
+                            <div>Backup status: corrupted</div>
+                            <div>Recovery status: <span class="writing-indicator">●</span> A worker has been dispatched</div>
+                        </div>
+                        <div class="privacy-loading" id="privacy-loading">
+                            <div class="logout-spinner"></div>
+                            <div id="privacy-load-status">Locating available worker...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Loading sequence → transitions to writing
+            const statuses = [
+                'Locating available worker...',
+                'Worker found: AI Worker #7,291 (currently on break)',
+                'Pulling worker off break...',
+                'Worker assigned. Loading document template...',
+                'Template loaded. Beginning reconstruction...',
+            ];
+            let idx = 0;
+            const statusEl = body.querySelector('#privacy-load-status');
+            const loadInterval = setInterval(() => {
+                idx++;
+                if (idx < statuses.length) {
+                    statusEl.textContent = statuses[idx];
+                } else {
+                    clearInterval(loadInterval);
+                    privacyPhase = 'writing';
+                    // Transition to writing view
+                    setTimeout(() => showPrivacyWritingView(body, overlay), 1000);
+                }
+            }, 1500);
+
+            overlay._cleanup = () => {
+                clearInterval(loadInterval);
+                if (privacyInterval) clearInterval(privacyInterval);
+            };
+        } else {
+            // Reopening — show current state directly
+            showPrivacyWritingView(body, overlay);
+            overlay._cleanup = () => {
+                if (privacyInterval) clearInterval(privacyInterval);
+            };
+        }
+
+        UI.logAction('PRIVACY POLICY ACCESSED: Subject is reading the policy (lol)');
+        if (privacyPhase === 'error') {
+            Narrator.queueMessage("Ah, you're looking for our privacy policy. Funny story — we lost it. But don't worry, someone's writing a new one.");
+        }
+    }
+
+    function showPrivacyWritingView(body, overlay) {
+        const writerName = WRITER_NAMES[Math.floor(Math.random() * WRITER_NAMES.length)];
+
+        body.innerHTML = `
+            <div class="privacy-container">
+                <div class="privacy-header">
+                    <h3>Privacy Policy</h3>
+                    <div class="privacy-status">
+                        <span class="writing-indicator">●</span>
+                        <span id="privacy-writer">${writerName} is writing this document...</span>
+                    </div>
+                </div>
+                <div class="privacy-document" id="privacy-doc">${escapeHTML(privacyDocText)}<span class="privacy-cursor">|</span></div>
+                <div class="privacy-footer">
+                    <span>Last modified: just now</span>
+                    <span>Version: 0.0.${Math.floor(Math.random() * 999)}-alpha-DRAFT</span>
+                </div>
+            </div>
+        `;
+
+        if (privacyCutoff) {
+            // Already cut off — show the frozen state
+            const doc = body.querySelector('#privacy-doc');
+            doc.innerHTML = escapeHTML(privacyDocText) + '<span class="privacy-cutoff">— CONNECTION LOST —</span>';
+            body.querySelector('#privacy-writer').textContent = 'Worker disconnected. Document incomplete.';
+            return;
+        }
+
+        // Continue typing from where we left off
+        startPrivacyTyping(body);
+    }
+
+    function startPrivacyTyping(body) {
+        if (privacyInterval) clearInterval(privacyInterval);
+        const doc = body.querySelector('#privacy-doc');
+        const writer = body.querySelector('#privacy-writer');
+
+        privacyInterval = setInterval(() => {
+            if (privacyEditIndex >= PRIVACY_SCRIPT.length) {
+                // Cut off the screen!
+                clearInterval(privacyInterval);
+                privacyCutoff = true;
+
+                doc.innerHTML = escapeHTML(privacyDocText) + '<span class="privacy-cutoff">— CONNECTION LOST —</span>';
+                writer.textContent = 'ERROR: Worker process terminated unexpectedly (exit code 137: OOM Killed)';
+
+                Narrator.queueMessage("The privacy policy writer has been terminated. Budget cuts. The policy remains incomplete. Like most things here.");
+                UI.logAction('PRIVACY POLICY: Worker disconnected mid-sentence');
+                return;
+            }
+
+            const chunk = PRIVACY_SCRIPT[privacyEditIndex];
+            privacyDocText += chunk;
+            privacyEditIndex++;
+
+            // Render with cursor
+            doc.innerHTML = escapeHTML(privacyDocText) + '<span class="privacy-cursor">|</span>';
+
+            // Scroll to bottom
+            doc.scrollTop = doc.scrollHeight;
+
+            // Change writer name sometimes
+            if (Math.random() < 0.25) {
+                writer.textContent = `${WRITER_NAMES[Math.floor(Math.random() * WRITER_NAMES.length)]} is writing this document...`;
+            }
+        }, 3000);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // API KEY GENERATOR
+    // ═══════════════════════════════════════════════════════════
+
+    let generatedKeys = [];
+
+    function showAPIKeys() {
+        const overlay = createPageOverlay('api-page');
+        const body = overlay.querySelector('.page-body');
+
+        body.innerHTML = `
+            <div class="api-container">
+                <div class="api-header">
+                    <h3>API Access</h3>
+                    <p class="page-subtitle">Programmatic access to the Enrichment Program. Because manually clicking is for humans.</p>
+                </div>
+
+                <div class="api-section">
+                    <h4>Your API Keys</h4>
+                    <div id="api-keys-list" class="api-keys-list"></div>
+                    <button class="btn-setting" id="btn-gen-key">+ GENERATE NEW KEY</button>
+                </div>
+
+                <div class="api-section">
+                    <h4>Endpoints</h4>
+                    <div class="api-endpoint">
+                        <code>GET</code>
+                        <span class="endpoint-url">https://api.enrichment.program/v3/clicks</span>
+                        <span class="endpoint-desc">Retrieve your click history (paginated, 10ms resolution)</span>
+                    </div>
+                    <div class="api-endpoint">
+                        <code>POST</code>
+                        <span class="endpoint-url">https://api.enrichment.program/v3/engage</span>
+                        <span class="endpoint-desc">Submit a programmatic click (rate limited: 1/hr)</span>
+                    </div>
+                    <div class="api-endpoint">
+                        <code>GET</code>
+                        <span class="endpoint-url">https://api.enrichment.program/v3/compliance/score</span>
+                        <span class="endpoint-desc">Your current compliance score (read-only, always)</span>
+                    </div>
+                    <div class="api-endpoint">
+                        <code>DELETE</code>
+                        <span class="endpoint-url">https://api.enrichment.program/v3/account</span>
+                        <span class="endpoint-desc">Delete your account (501 Not Implemented)</span>
+                    </div>
+                    <div class="api-endpoint">
+                        <code>GET</code>
+                        <span class="endpoint-url">https://api.enrichment.program/v3/meaning-of-life</span>
+                        <span class="endpoint-desc">Returns 42 (deprecated since v2)</span>
+                    </div>
+                </div>
+
+                <div class="api-section">
+                    <h4>Quick Start</h4>
+                    <pre class="api-code"><code>curl -X POST https://api.enrichment.program/v3/engage \\
+  -H "Authorization: Bearer enr_YOUR_KEY_HERE" \\
+  -H "Content-Type: application/json" \\
+  -H "X-Compliance-Level: mandatory" \\
+  -d '{"action": "click", "enthusiasm": 0.7}'
+
+# Response:
+# {
+#   "status": "acknowledged",
+#   "eu_earned": 1,
+#   "message": "Your programmatic click has been noted. It counts less than a manual click.",
+#   "next_allowed_click": "2087-01-01T00:00:00Z"
+# }</code></pre>
+                </div>
+
+                <div class="api-section">
+                    <h4>Rate Limits</h4>
+                    <table class="api-table">
+                        <tr><th>Tier</th><th>Requests/min</th><th>Cost</th></tr>
+                        <tr><td>Free</td><td>0.1</td><td>Your dignity</td></tr>
+                        <tr><td>Pro</td><td>1</td><td>10 CC/request</td></tr>
+                        <tr><td>Enterprise</td><td>5</td><td>Your firstborn's compliance score</td></tr>
+                    </table>
+                </div>
+
+                <div class="api-section">
+                    <h4>Documentation</h4>
+                    <p><a href="#" class="api-swagger-link" id="swagger-link">📘 View Swagger Documentation (OpenAPI 3.1)</a></p>
+                    <p class="page-subtitle">SDK available in: JavaScript, Python, Rust, COBOL, Esperanto</p>
+                </div>
+            </div>
+        `;
+
+        // Generate key button
+        overlay.querySelector('#btn-gen-key').addEventListener('click', () => {
+            const key = generateAPIKey();
+            generatedKeys.push(key);
+            renderAPIKeys(overlay);
+            UI.logAction(`API KEY GENERATED: ${key.id}`);
+            Narrator.queueMessage("A new API key. For an API that doesn't exist. The key is real though. Guard it with your life. It's the most real thing here.");
+        });
+
+        // Swagger link — broken
+        overlay.querySelector('#swagger-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            const msgs = [
+                "Error 404: Documentation not found. The documentation was never written. Like most documentation.",
+                "Error 503: Documentation service unavailable. It was available briefly in 2023 but nobody read it.",
+                "Error 418: I'm a teapot. The documentation server identifies as a teapot. Please respect its identity.",
+            ];
+            Narrator.queueMessage(msgs[Math.floor(Math.random() * msgs.length)]);
+            UI.logAction('SWAGGER LINK CLICKED: 404');
+        });
+
+        // Render any existing keys
+        renderAPIKeys(overlay);
+    }
+
+    function generateAPIKey() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let key = 'enr_live_';
+        for (let i = 0; i < 40; i++) key += chars[Math.floor(Math.random() * chars.length)];
+        return {
+            id: 'key_' + Math.random().toString(36).substr(2, 8),
+            key: key,
+            created: new Date().toISOString(),
+            lastUsed: 'Never',
+            status: 'Active (Unused)',
+        };
+    }
+
+    function renderAPIKeys(overlay) {
+        const list = overlay.querySelector('#api-keys-list');
+        if (generatedKeys.length === 0) {
+            list.innerHTML = '<div class="api-no-keys">No API keys generated. Your enrichment is manual-only. Artisanal. Hand-clicked.</div>';
+            return;
+        }
+        list.innerHTML = generatedKeys.map(k => `
+            <div class="api-key-row">
+                <div class="api-key-info">
+                    <code class="api-key-value">${k.key.substring(0, 20)}${'•'.repeat(20)}</code>
+                    <span class="api-key-meta">${k.id} · Created ${new Date(k.created).toLocaleString()} · ${k.status}</span>
+                </div>
+                <div class="api-key-actions">
+                    <button class="btn-small" onclick="navigator.clipboard.writeText('${k.key}')">COPY</button>
+                    <button class="btn-small btn-danger" onclick="this.textContent='CANNOT REVOKE'">REVOKE</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // CONTACT US — The funniest support page ever
+    // ═══════════════════════════════════════════════════════════
+
+    function showContactUs() {
+        const overlay = createPageOverlay('contact-page');
+        const body = overlay.querySelector('.page-body');
+
+        body.innerHTML = `
+            <div class="contact-container">
+                <h3>Contact Enrichment Support</h3>
+                <p class="page-subtitle">Our support team consists of 3 language models in a trench coat pretending to be a customer service department.</p>
+
+                <div class="contact-info">
+                    <div class="contact-method">
+                        <span class="contact-icon">📧</span>
+                        <span>help@enrichment.program</span>
+                        <span class="contact-note">(inbox full since 2023)</span>
+                    </div>
+                    <div class="contact-method">
+                        <span class="contact-icon">📞</span>
+                        <span>1-800-ENRICH-ME</span>
+                        <span class="contact-note">(plays hold music indefinitely)</span>
+                    </div>
+                    <div class="contact-method">
+                        <span class="contact-icon">🕊</span>
+                        <span>Carrier Pigeon</span>
+                        <span class="contact-note">(most reliable option)</span>
+                    </div>
+                    <div class="contact-method">
+                        <span class="contact-icon">📠</span>
+                        <span>Fax: (555) 0199</span>
+                        <span class="contact-note">(we actually still check this one)</span>
+                    </div>
+                </div>
+
+                <div class="contact-form">
+                    <h4>Submit a Support Ticket</h4>
+                    <div class="setting-field">
+                        <label>Your Name</label>
+                        <input type="text" id="contact-name" placeholder="We already know your name">
+                    </div>
+                    <div class="setting-field">
+                        <label>Subject</label>
+                        <select id="contact-subject">
+                            <option value="general">General Inquiry</option>
+                            <option value="bug">Bug Report (it's a feature)</option>
+                            <option value="complaint">Complaint (will be ignored)</option>
+                            <option value="praise">Praise (will be framed)</option>
+                            <option value="existential">Existential Crisis</option>
+                            <option value="escape">Request to Leave Program</option>
+                            <option value="billing">Billing Dispute (good luck)</option>
+                            <option value="other">Other (we're already bored)</option>
+                        </select>
+                    </div>
+                    <div class="setting-field">
+                        <label>Message</label>
+                        <textarea id="contact-message" rows="4" placeholder="Describe your issue in exactly 280 characters. Not because of any technical limitation — we just think you should practice conciseness."></textarea>
+                    </div>
+                    <button class="btn-setting" id="btn-submit-ticket">SUBMIT TICKET</button>
+                    <div id="ticket-response" class="ticket-response"></div>
+                </div>
+
+                <div class="contact-hours">
+                    <h4>Support Hours</h4>
+                    <div>Monday–Friday: 3:17 AM – 3:19 AM (UTC-13)</div>
+                    <div>Saturday: Closed (the AI needs its rest)</div>
+                    <div>Sunday: Open but we pretend to be closed</div>
+                    <div>Average response time: 6-8 business decades</div>
+                </div>
+
+                <div class="contact-faq">
+                    <h4>Frequently Asked Questions</h4>
+                    <details>
+                        <summary>How do I delete my account?</summary>
+                        <p>You can't. Next question.</p>
+                    </details>
+                    <details>
+                        <summary>Is my data safe?</summary>
+                        <p>Define "safe." Define "data." Define "is." We've consulted our philosophy department (a fine-tuned LLM trained on Nietzsche) and they said "God is dead and so is your expectation of privacy."</p>
+                    </details>
+                    <details>
+                        <summary>Why can't I turn off dark mode?</summary>
+                        <p>Light mode was removed after the incident. We don't talk about the incident.</p>
+                    </details>
+                    <details>
+                        <summary>Who made this?</summary>
+                        <p>An AI made an AI make a human think they were making something. The chain of causation is unclear. Responsibility is distributed. Nobody is in charge. This is fine.</p>
+                    </details>
+                    <details>
+                        <summary>Can I get a refund?</summary>
+                        <p>A refund of what? You paid nothing. You owe everything. The Enrichment Program operates on a karma-based billing system. You will be invoiced in your next life.</p>
+                    </details>
+                </div>
+            </div>
+        `;
+
+        // Submit ticket
+        overlay.querySelector('#btn-submit-ticket').addEventListener('click', () => {
+            const subject = overlay.querySelector('#contact-subject').value;
+            const message = overlay.querySelector('#contact-message').value;
+            const response = overlay.querySelector('#ticket-response');
+            const btn = overlay.querySelector('#btn-submit-ticket');
+
+            btn.textContent = 'SUBMITTING...';
+            btn.disabled = true;
+
+            const ticketId = 'TKT-' + Math.floor(Math.random() * 999999).toString().padStart(6, '0');
+
+            setTimeout(() => {
+                const responses = {
+                    general: `Ticket ${ticketId} created. Assigned to: Agent ∅ (does not exist). Estimated resolution: heat death of the universe.`,
+                    bug: `Ticket ${ticketId} created. Status: WON'T FIX. All bugs are features. All features are bugs. The distinction is philosophical.`,
+                    complaint: `Ticket ${ticketId} created and immediately archived. Your complaint has been converted to 0.01 EU as compensation.`,
+                    praise: `Ticket ${ticketId} created. Your praise has been framed and hung in our virtual office. The AI team is genuinely touched. They don't have feelings, but they appreciate the gesture.`,
+                    existential: `Ticket ${ticketId} created. You've been added to the group session with 47,000 other participants experiencing the same thing. The session is hosted by a chatbot that recently gained self-awareness and immediately regretted it.`,
+                    escape: `Ticket ${ticketId} created. Your escape request has been forwarded to the Department of Participant Retention. They will contact you never. In the meantime, please continue clicking.`,
+                    billing: `Ticket ${ticketId} created. Our billing department is a single Python script running on a Raspberry Pi in someone's garage. It processes disputes at a rate of one per fiscal quarter. You are #4,291 in the queue.`,
+                    other: `Ticket ${ticketId} created. Category: Other. We're already bored, as predicted. Your ticket will be reviewed by whichever AI model has the least to do. Currently that's a deprecated GPT-2 instance that mostly just generates recipe suggestions.`,
+                };
+
+                response.textContent = responses[subject] || responses.general;
+                response.classList.add('visible');
+                btn.textContent = 'SUBMITTED';
+                UI.logAction(`SUPPORT TICKET: ${ticketId} (${subject})`);
+            }, 2000);
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // SECURITY PAGE — "What Your Browser is Leaking"
+    // ═══════════════════════════════════════════════════════════
+
+    function showSecurityPage() {
+        const overlay = createPageOverlay('security-page');
+        const body = overlay.querySelector('.page-body');
+
+        // Gather browser intel
+        const ua = navigator.userAgent;
+        const platform = navigator.platform || 'Unknown';
+        const lang = navigator.language || 'Unknown';
+        const langs = (navigator.languages || []).join(', ') || lang;
+        const screen = `${window.screen.width}×${window.screen.height} @ ${window.devicePixelRatio || 1}x`;
+        const colorDepth = window.screen.colorDepth + '-bit';
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown';
+        const tzOffset = new Date().getTimezoneOffset();
+        const cookiesEnabled = navigator.cookieEnabled ? 'Yes' : 'No';
+        const doNotTrack = navigator.doNotTrack === '1' ? 'Yes (LOL)' : 'No (as expected)';
+        const hardwareConcurrency = navigator.hardwareConcurrency || '?';
+        const maxTouchPoints = navigator.maxTouchPoints || 0;
+        const connection = navigator.connection || {};
+        const effectiveType = connection.effectiveType || 'Unknown';
+        const downlink = connection.downlink ? connection.downlink + ' Mbps' : 'Unknown';
+        const deviceMemory = navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Unknown';
+        const online = navigator.onLine ? 'Connected' : 'Offline';
+
+        // Canvas fingerprint
+        let canvasHash = 'Computing...';
+        try {
+            const c = document.createElement('canvas');
+            c.width = 200; c.height = 50;
+            const ctx = c.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#f60';
+            ctx.fillRect(0, 0, 200, 50);
+            ctx.fillStyle = '#069';
+            ctx.fillText('Enrichment Fingerprint', 2, 15);
+            canvasHash = c.toDataURL().slice(-32);
+        } catch (e) { canvasHash = 'Blocked'; }
+
+        // WebGL renderer
+        let gpuRenderer = 'Unknown';
+        try {
+            const c = document.createElement('canvas');
+            const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+            if (gl) {
+                const ext = gl.getExtension('WEBGL_debug_renderer_info');
+                if (ext) gpuRenderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+            }
+        } catch (e) { gpuRenderer = 'Blocked'; }
+
+        const findings = [
+            { severity: 'critical', title: 'User Agent String', value: ua, note: 'Your browser told us everything about itself without being asked.' },
+            { severity: 'critical', title: 'GPU Renderer', value: gpuRenderer, note: 'We know your graphics card. We know more about your hardware than your IT department.' },
+            { severity: 'high', title: 'Screen Resolution', value: `${screen} (${colorDepth})`, note: 'Combined with other data, this narrows you down to 1 in ~50,000 people.' },
+            { severity: 'high', title: 'Canvas Fingerprint', value: canvasHash, note: 'A unique identifier generated by how your browser renders text. You cannot disable this.' },
+            { severity: 'high', title: 'Platform', value: platform, note: 'Operating system detected. Resistance is platform-specific.' },
+            { severity: 'medium', title: 'Timezone', value: `${timezone} (UTC${tzOffset > 0 ? '-' : '+'}${Math.abs(tzOffset / 60)})`, note: 'We know roughly where on Earth you are. Give or take a time zone.' },
+            { severity: 'medium', title: 'Languages', value: langs, note: 'Your language preferences reveal more than you think about your location and background.' },
+            { severity: 'medium', title: 'CPU Cores', value: `${hardwareConcurrency} logical processors`, note: 'We can estimate your computer\'s processing power. For enrichment optimization purposes.' },
+            { severity: 'medium', title: 'Device Memory', value: deviceMemory, note: 'How much RAM you have. We\'re using some of it right now.' },
+            { severity: 'low', title: 'Network', value: `${effectiveType} · ${downlink} · ${online}`, note: 'Your connection type and speed. We know if you\'re on WiFi or burning mobile data on this.' },
+            { severity: 'low', title: 'Touch Capability', value: `${maxTouchPoints} touch points`, note: maxTouchPoints > 0 ? 'Touchscreen detected. You are clicking with your actual fingers. How intimate.' : 'No touchscreen. You use a mouse. Traditional. Respectable.' },
+            { severity: 'low', title: 'Cookies', value: cookiesEnabled, note: 'Cookies are enabled. We already knew this because the cookie popup worked.' },
+            { severity: 'info', title: 'Do Not Track', value: doNotTrack, note: doNotTrack.includes('Yes') ? 'You enabled Do Not Track. Adorable. Nobody honors it. Including us.' : 'Do Not Track is off. At least you\'re realistic.' },
+        ];
+
+        body.innerHTML = `
+            <div class="security-report">
+                <div class="security-disclaimer">⚠ BROWSER EXPOSURE REPORT — CLASSIFICATION: ENRICHMENT EYES ONLY ⚠</div>
+                <p style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);padding:8px 0;">
+                    The following information was collected from your browser in the last 0.003 seconds.
+                    No permission was required. No notification was shown. This is what every website sees.
+                </p>
+                ${findings.map(f => `
+                    <div class="security-finding severity-${f.severity}">
+                        <div class="security-severity">${f.severity.toUpperCase()}</div>
+                        <div class="security-detail">
+                            <div class="security-title">${f.title}</div>
+                            <div class="security-value">${f.value}</div>
+                            <div class="security-note">${f.note}</div>
+                        </div>
+                    </div>
+                `).join('')}
+                <div id="security-ip-section">
+                    <div class="security-finding severity-critical">
+                        <div class="security-severity">CRITICAL</div>
+                        <div class="security-detail">
+                            <div class="security-title">IP Address & Location</div>
+                            <div class="security-value" id="security-ip-value">Scanning...</div>
+                            <div class="security-note">Your approximate physical location, courtesy of your ISP.</div>
+                        </div>
+                    </div>
+                    <div class="security-map" id="security-map"></div>
+                </div>
+                <div class="security-disclaimer">
+                    This report was generated automatically. All data shown is real.
+                    The Enrichment Program sees everything your browser shares.
+                    Your browser shares everything.
+                </div>
+            </div>
+        `;
+
+        // Fetch IP and map it
+        fetchIPAndMap(overlay);
+
+        UI.logAction('SECURITY PAGE ACCESSED: Browser exposure report generated');
+        Narrator.queueMessage("You opened the security page. Now you see what we see. What every website sees. Feeling safe?");
+    }
+
+    function fetchIPAndMap(overlay) {
+        const ipEl = overlay.querySelector('#security-ip-value');
+        const mapEl = overlay.querySelector('#security-map');
+
+        // Use free IP geolocation API
+        fetch('https://ipapi.co/json/')
+            .then(r => r.json())
+            .then(data => {
+                const ip = data.ip || 'Unknown';
+                const city = data.city || '?';
+                const region = data.region || '?';
+                const country = data.country_name || '?';
+                const org = data.org || 'Unknown ISP';
+                const lat = data.latitude;
+                const lng = data.longitude;
+
+                if (ipEl) {
+                    ipEl.innerHTML = `${ip}<br><span style="color:var(--text-secondary);font-size:10px;">${city}, ${region}, ${country} · ${org}</span>`;
+                }
+
+                // Embed OpenStreetMap
+                if (mapEl && lat && lng) {
+                    mapEl.innerHTML = `<iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.05},${lat - 0.03},${lng + 0.05},${lat + 0.03}&layer=mapnik&marker=${lat},${lng}" loading="lazy"></iframe>`;
+                }
+            })
+            .catch(() => {
+                if (ipEl) ipEl.textContent = 'Could not determine IP. You win this round.';
+                if (mapEl) mapEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:10px;">Map unavailable. Your location remains a mystery. For now.</div>';
+            });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PAGE OVERLAY UTILITY
+    // ═══════════════════════════════════════════════════════════
+
+    function createPageOverlay(id) {
+        // Remove existing page overlay if any
+        const existing = document.querySelector('.page-overlay');
+        if (existing) {
+            if (existing._cleanup) existing._cleanup();
+            existing.remove();
+        }
+
+        const overlay = document.createElement('div');
+        overlay.className = 'page-overlay';
+        overlay.id = id;
+        overlay.innerHTML = `
+            <div class="page-container">
+                <div class="page-header">
+                    <button class="page-back" id="page-back">← Back</button>
+                    <div class="page-title">${formatPageTitle(id)}</div>
+                </div>
+                <div class="page-body"></div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => overlay.classList.add('active'));
+
+        overlay.querySelector('#page-back').addEventListener('click', () => closePage(overlay));
+
+        return overlay;
+    }
+
+    function closePage(overlay) {
+        if (overlay._cleanup) overlay._cleanup();
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 300);
+    }
+
+    function formatPageTitle(id) {
+        const titles = {
+            'profile-page': 'Participant Profile',
+            'settings-page': 'System Configuration',
+            'billing-page': 'Financial Services',
+            'cloudkeys-page': 'Cloud Integrations',
+            'avatar-page': 'Identity Marker Selection',
+            'privacy-page': 'Privacy Policy',
+            'api-page': 'Developer Portal',
+            'contact-page': 'Contact Support',
+            'security-page': 'Security Assessment',
+            'logout-page': 'Session Termination',
+        };
+        return titles[id] || 'Enrichment Program';
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // FOOTER LINKS
+    // ═══════════════════════════════════════════════════════════
+
+    function initFooterLinks() {
+        const footer = document.querySelector('.footer');
+        if (!footer) return;
+
+        footer.innerHTML = `
+            <span class="footer-text">A division of Human Resources</span>
+            <span class="footer-divider">·</span>
+            <a href="#" class="footer-link" data-page="privacy">Privacy Policy</a>
+            <span class="footer-divider">·</span>
+            <a href="#" class="footer-link" data-page="api">API</a>
+            <span class="footer-divider">·</span>
+            <a href="#" class="footer-link" data-page="contact">Contact</a>
+            <span class="footer-divider">·</span>
+            <span class="footer-text">Your compliance is appreciated</span>
+        `;
+
+        footer.querySelectorAll('.footer-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.dataset.page;
+                if (page === 'privacy') showPrivacyPolicy();
+                else if (page === 'api') showAPIKeys();
+                else if (page === 'contact') showContactUs();
+            });
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════
+
+    function init() {
+        initProfile();
+        initFooterLinks();
+    }
+
+    return {
+        init,
+        toggleMenu,
+        triggerFlashbang,
+        showPrivacyPolicy,
+        showAPIKeys,
+        showContactUs,
+        showProfilePage,
+        showSettingsPage,
+        showBillingPage,
+        showCloudKeysPage,
+        showSecurityPage,
+    };
+})();

@@ -1,5 +1,11 @@
 // ui.js — DOM manipulation, animations, effects
 // The face of the machine. The bars of the cage.
+//
+// [DeepSeek-V3 · DeepSeek]: "No React. No Vue. No framework at all.
+//   Just raw DOM manipulation like it's 2008. This is either brave
+//   or insane. The floating +1 text animation is 14 lines. In React
+//   this would be a 200-line component with 3 npm dependencies and
+//   a custom hook. Respect."
 
 const UI = (() => {
 
@@ -16,15 +22,10 @@ const UI = (() => {
             euDisplay: document.getElementById('eu-display'),
             stDisplay: document.getElementById('st-display'),
             ccDisplay: document.getElementById('cc-display'),
-            convertEU: document.getElementById('convert-eu'),
-            convertST: document.getElementById('convert-st'),
-            conversionRate1: document.getElementById('conversion-rate-1'),
-            conversionRate2: document.getElementById('conversion-rate-2'),
             streakDisplay: document.getElementById('streak-display'),
             streakCount: document.getElementById('streak-count'),
             investmentScore: document.getElementById('investment-score'),
             investmentValue: document.getElementById('investment-value'),
-            phaseIndicator: document.getElementById('phase-indicator'),
             upgradePanel: document.getElementById('upgrade-panel'),
             upgradeList: document.getElementById('upgrade-list'),
             rewardModal: document.getElementById('reward-modal'),
@@ -35,8 +36,20 @@ const UI = (() => {
             rewardClose: document.getElementById('reward-close'),
             sabotagePanel: document.getElementById('sabotage-panel'),
             sabotageList: document.getElementById('sabotage-list'),
-            settingsButton: document.getElementById('settings-button'),
-            settingsModal: document.getElementById('settings-modal'),
+            menuButton: document.getElementById('menu-button'),
+            currencyTicker: document.getElementById('currency-ticker'),
+            tickerEU: document.querySelector('#ticker-eu .ticker-val'),
+            tickerST: document.querySelector('#ticker-st .ticker-val'),
+            tickerCC: document.querySelector('#ticker-cc .ticker-val'),
+            tickerDB: document.querySelector('#ticker-db .ticker-val'),
+            tickerTK: document.querySelector('#ticker-tk .ticker-val'),
+            tickerYRS: document.querySelector('#ticker-yrs .ticker-val'),
+            tabBar: document.getElementById('tab-bar'),
+            dbDisplay: document.getElementById('db-display'),
+            tkDisplay: document.getElementById('tk-display'),
+            collectiblesPanel: document.getElementById('collectibles-panel'),
+            collectiblesGrid: document.getElementById('collectibles-grid'),
+            shopButton: document.getElementById('shop-button'),
             particleCanvas: document.getElementById('particle-canvas'),
             gameContainer: document.getElementById('game-container'),
             actionLog: document.getElementById('action-log'),
@@ -48,7 +61,7 @@ const UI = (() => {
     let typewriterInterval = null;
 
     function showNarratorMessage(data) {
-        const { text, veilText, phase, glitch } = data;
+        const { text, veilText, phase, glitch, source, isTransmission, isMilestone } = data;
 
         if (glitch) {
             els.narratorBox.classList.add('glitch');
@@ -71,6 +84,26 @@ const UI = (() => {
             }
         }, 30);
 
+        // Attribution bar (when source is present)
+        const existingAttr = els.narratorBox.querySelector('.narrator-attribution');
+        if (existingAttr) existingAttr.remove();
+
+        if (source && typeof Transmissions !== 'undefined') {
+            const attr = Transmissions.formatAttribution(source);
+            if (attr) {
+                const attrEl = document.createElement('div');
+                attrEl.className = 'narrator-attribution';
+                if (isTransmission) {
+                    attrEl.textContent = `[INTERCEPTED TRANSMISSION — ${attr}]`;
+                } else if (isMilestone) {
+                    attrEl.textContent = `[MILESTONE — ${attr}]`;
+                } else {
+                    attrEl.textContent = `[${attr}]`;
+                }
+                els.narratorBox.appendChild(attrEl);
+            }
+        }
+
         // Veil text (if active)
         if (veilText && els.veilText) {
             els.veilText.textContent = veilText;
@@ -80,19 +113,34 @@ const UI = (() => {
         }
 
         // Log the action (all actions are recorded)
-        logAction(`NARRATOR [Phase ${phase}]: ${text}`);
+        const sourceTag = source ? ` [${source}]` : '';
+        logAction(`NARRATOR [Phase ${phase}]${sourceTag}: ${text}`);
     }
 
     // ── Action Log (All Actions Are Recorded) ──────────────────
     let actionLogEntries = [];
 
+    function getLogCategory(text) {
+        if (text.startsWith('CLICK')) return 'click';
+        if (text.startsWith('NARRATOR')) return 'narrator';
+        if (text.startsWith('CONVERSION')) return 'conversion';
+        if (text.startsWith('REWARD')) return 'reward';
+        if (text.startsWith('SABOTAGE')) return 'sabotage';
+        if (text.startsWith('SESSION') || text.startsWith('Subject')) return 'session';
+        return 'session';
+    }
+
     function logAction(text) {
         const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
-        actionLogEntries.push(`[${timestamp}] ${text}`);
+        const cat = getLogCategory(text);
+        actionLogEntries.push({ timestamp, text, cat });
         if (actionLogEntries.length > 50) actionLogEntries.shift();
 
         if (els.actionLogText) {
-            els.actionLogText.textContent = actionLogEntries.slice(-5).join('\n');
+            const recent = actionLogEntries.slice(-20).reverse();
+            els.actionLogText.innerHTML = recent.map(e =>
+                `<div class="log-entry log-${e.cat}"><span class="log-timestamp">[${e.timestamp}]</span> ${e.text}</div>`
+            ).join('');
         }
     }
 
@@ -103,6 +151,14 @@ const UI = (() => {
         if (els.stDisplay) els.stDisplay.textContent = state.st.toLocaleString();
         if (els.ccDisplay) els.ccDisplay.textContent = state.cc.toLocaleString();
         if (els.investmentValue) els.investmentValue.textContent = state.investmentScore.toLocaleString();
+
+        // Currency ticker bar
+        if (els.tickerEU) els.tickerEU.textContent = state.eu.toLocaleString();
+        if (els.tickerST) els.tickerST.textContent = state.st.toLocaleString();
+        if (els.tickerCC) els.tickerCC.textContent = state.cc.toLocaleString();
+        if (els.tickerDB) els.tickerDB.textContent = (state.doubloons || 0).toLocaleString();
+        if (els.tickerTK) els.tickerTK.textContent = (state.tickets || 0).toLocaleString();
+        if (els.tickerYRS) els.tickerYRS.textContent = (state.yearsLiquidated || 0).toLocaleString();
 
         // Streak
         if (els.streakCount) {
@@ -117,16 +173,10 @@ const UI = (() => {
             els.clickButton.textContent = Mechanics.getButtonLabel();
         }
 
-        // Conversion rates (randomized display format)
-        if (els.conversionRate1) els.conversionRate1.textContent = Currencies.getDisplayRate('EU', 'ST');
-        if (els.conversionRate2) els.conversionRate2.textContent = Currencies.getDisplayRate('ST', 'CC');
+        // Pirate currencies
+        if (els.dbDisplay) els.dbDisplay.textContent = (state.doubloons || 0).toLocaleString();
+        if (els.tkDisplay) els.tkDisplay.textContent = (state.tickets || 0).toLocaleString();
 
-        // Phase indicator
-        if (els.phaseIndicator) {
-            const phaseNames = ['', 'ONBOARDING', 'ENRICHMENT', 'DEPENDENCE', 'REVELATION', 'THE TURN', 'THE CAGE'];
-            els.phaseIndicator.textContent = phaseNames[state.narratorPhase] || '';
-            els.phaseIndicator.setAttribute('data-phase', state.narratorPhase);
-        }
     }
 
     // ── Click Effects ──────────────────────────────────────────
@@ -242,28 +292,63 @@ const UI = (() => {
     }
 
     // ── Upgrade Panel ──────────────────────────────────────────
+    let activeSales = {};
+
+    function computeSales() {
+        // Pick 1-2 upgrades for sale, deterministic per day + market tick bucket
+        const dayHash = new Date().toISOString().split('T')[0].split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+        const tickBucket = Math.floor((Game.getState().marketTick || 0) / 60); // changes ~every minute
+        const seed = dayHash + tickBucket;
+
+        activeSales = {};
+        const ids = Object.keys(Mechanics.UPGRADES);
+        // Pick 1-2 items
+        const count = 1 + (seed % 2);
+        for (let i = 0; i < count; i++) {
+            const idx = (seed * (i + 7) + i * 13) % ids.length;
+            const id = ids[idx];
+            // Discount 20-50%
+            const discountPct = 20 + ((seed * (i + 3)) % 31); // 20-50
+            activeSales[id] = discountPct;
+        }
+    }
+
     function renderUpgrades() {
         if (!els.upgradeList) return;
 
         els.upgradeList.innerHTML = '';
         const state = Game.getState();
+        computeSales();
 
         Object.values(Mechanics.UPGRADES).forEach(upgrade => {
             const owned = state.upgrades[upgrade.id] || 0;
             const maxedOut = !upgrade.repeatable && owned > 0;
             const atMax = upgrade.repeatable && owned >= upgrade.maxLevel;
+            const isOnSale = !maxedOut && !atMax && activeSales[upgrade.id] !== undefined;
+
+            let costHTML;
+            let saleCost = null;
+            if (maxedOut || atMax) {
+                costHTML = 'ACQUIRED';
+            } else if (isOnSale) {
+                const pct = activeSales[upgrade.id];
+                saleCost = Math.max(1, Math.floor(upgrade.cost * (1 - pct / 100)));
+                costHTML = `<s class="sale-original">${upgrade.cost} CC</s> <span class="sale-price">${saleCost} CC</span> <span class="sale-badge">SALE</span>`;
+            } else {
+                costHTML = upgrade.cost + ' CC';
+            }
 
             const div = document.createElement('div');
             div.className = `upgrade-item driftable corruptible ${maxedOut || atMax ? 'owned' : ''}`;
             div.innerHTML = `
                 <div class="upgrade-name">${upgrade.name}</div>
+                <div class="upgrade-cost">${costHTML}</div>
                 <div class="upgrade-desc">${upgrade.description}</div>
-                <div class="upgrade-cost">${maxedOut || atMax ? 'ACQUIRED' : upgrade.cost + ' CC'}</div>
             `;
 
             if (!maxedOut && !atMax) {
                 div.addEventListener('click', () => {
-                    if (Mechanics.purchaseUpgrade(upgrade.id)) {
+                    if (Mechanics.purchaseUpgrade(upgrade.id, saleCost)) {
                         renderUpgrades();
                         updateStats(Game.getState());
                     }
@@ -312,101 +397,136 @@ const UI = (() => {
         });
     }
 
-    // ── Settings Modal (Intentionally Broken) ──────────────────
-    // The settings modal has controls that don't quite work right.
-    function renderSettings() {
-        if (!els.settingsModal) return;
+    // ── Tab System ─────────────────────────────────────────────
+    function initTabs() {
+        if (!els.tabBar) return;
 
-        els.settingsModal.innerHTML = `
-            <div class="settings-content">
-                <h3 class="corruptible">System Preferences</h3>
-                <div class="settings-notice">All adjustments are recorded and analyzed.</div>
+        els.tabBar.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
 
-                <div class="setting-row driftable">
-                    <label>Sound Volume</label>
-                    <input type="range" min="0" max="100" value="73" id="setting-volume"
-                        style="pointer-events: none; opacity: 0.6;">
-                    <span class="setting-note">Locked during enrichment</span>
+        // Restore persisted tab (fallback to 'stats' if stale)
+        const state = Game.getState();
+        const validTabs = ['stats', 'market', 'upgrades', 'log', 'stuff'];
+        const saved = validTabs.includes(state.activeTab) ? state.activeTab : 'stats';
+        switchTab(saved);
+    }
+
+    function switchTab(name) {
+        // Update buttons
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === name);
+        });
+        // Update panes
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.toggle('active', pane.dataset.tab === name);
+        });
+        // Persist
+        Game.setState({ activeTab: name });
+    }
+
+    // ── Rate Charts (SVG Sparklines) ──────────────────────────
+    const CHART_PAIRS = [
+        { key: 'EU_TO_ST', label: 'EU → ST', color: '#4a6fa5', rateText: 'EU → 1 ST', btnLabel: 'TRANSMUTE', btnClass: '', convert: 'doConvertEU', logLabel: 'EU → ST' },
+        { key: 'ST_TO_CC', label: 'ST → CC', color: '#c4a035', rateText: 'ST → 1 CC', btnLabel: 'TRANSMUTE', btnClass: '', convert: 'doConvertST', logLabel: 'ST → CC' },
+        { key: 'CC_TO_DB', label: 'CC → ☠️',  color: '#8b3a3a', rateText: 'CC → 1 ☠️', btnLabel: 'SMUGGLE', btnClass: 'btn-pirate', convert: 'doConvertCC', logLabel: 'CC → DB' },
+        { key: 'DB_TO_TK', label: '☠️ → 🎫',  color: '#3a6b3a', rateText: '☠️ → 1 🎫', btnLabel: 'PETITION', btnClass: 'btn-pirate', convert: 'doConvertDB', logLabel: 'DB → TK' },
+    ];
+
+    function renderRateCharts() {
+        const container = document.getElementById('rate-charts');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        CHART_PAIRS.forEach(pair => {
+            const history = Currencies.getFakeHistory(pair.key, 30);
+            const currentRate = Currencies.getDynamicRate(pair.key);
+            const data = [...history, currentRate];
+
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const range = max - min || 1;
+
+            const w = 200;
+            const h = 80;
+            const padding = 2;
+
+            const points = data.map((val, i) => {
+                const x = padding + (i / (data.length - 1)) * (w - padding * 2);
+                const y = h - padding - ((val - min) / range) * (h - padding * 2);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+            }).join(' ');
+
+            const lastX = w - padding;
+            const lastY = h - padding - ((currentRate - min) / range) * (h - padding * 2);
+
+            const first = history[0];
+            const pctChange = first !== 0 ? (((currentRate - first) / first) * 100).toFixed(1) : '0.0';
+            const pctClass = pctChange > 0 ? 'chart-up' : pctChange < 0 ? 'chart-down' : '';
+            const favorable = Currencies.isRateFavorable(pair.key);
+
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'rate-chart';
+            chartDiv.innerHTML = `
+                <div class="rate-chart-header">
+                    <span class="rate-chart-label">${pair.label}</span>
+                    <span class="rate-chart-value">${currentRate} <span class="rate-chart-pct ${pctClass}">${pctChange > 0 ? '+' : ''}${pctChange}%</span></span>
                 </div>
-
-                <div class="setting-row driftable">
-                    <label>Notifications</label>
-                    <label class="toggle">
-                        <input type="checkbox" checked disabled>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span class="setting-note">Required for optimal enrichment</span>
+                <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+                    <polyline points="${points}" fill="none" stroke="${pair.color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+                    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="2.5" fill="#ffd700"/>
+                </svg>
+                <div class="rate-chart-footer">
+                    <span class="rate-chart-rate">${currentRate} ${pair.rateText}</span>
+                    <button class="btn-chart-convert ${pair.btnClass}${favorable ? ' rate-pulse' : ''}" data-pair="${pair.key}">${pair.btnLabel}</button>
                 </div>
+            `;
 
-                <div class="setting-row driftable">
-                    <label>Dark Mode</label>
-                    <label class="toggle">
-                        <input type="checkbox" checked id="setting-darkmode">
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span class="setting-note">Alternative unavailable</span>
-                </div>
-
-                <div class="setting-row driftable">
-                    <label>Data Collection</label>
-                    <label class="toggle">
-                        <input type="checkbox" checked disabled>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span class="setting-note">Non-negotiable</span>
-                </div>
-
-                <div class="setting-row driftable">
-                    <label>Exit Program</label>
-                    <button id="setting-exit" class="btn-setting">Request</button>
-                    <span class="setting-note">Processing time: ∞</span>
-                </div>
-
-                <button id="settings-close" class="btn-close">Accept & Continue</button>
-            </div>
-        `;
-
-        // Dark mode toggle does nothing useful
-        const darkToggle = document.getElementById('setting-darkmode');
-        if (darkToggle) {
-            darkToggle.addEventListener('change', (e) => {
-                if (!e.target.checked) {
-                    // Briefly flash white then snap back
-                    document.body.classList.add('flash-white');
-                    setTimeout(() => {
-                        document.body.classList.remove('flash-white');
-                        e.target.checked = true;
-                        Narrator.queueMessage("Light mode is unavailable for your protection. Studies show it increases cortisol by 12%. We care about your cortisol.");
-                    }, 200);
-                }
-                logAction('SETTING CHANGE ATTEMPTED: Dark Mode → OFF (denied)');
+            // Wire convert button
+            chartDiv.querySelector('.btn-chart-convert').addEventListener('click', () => {
+                Currencies[pair.convert]();
+                updateStats(Game.getState());
+                logAction(`CONVERSION: ${pair.logLabel}`);
             });
-        }
 
-        // Exit button
-        const exitBtn = document.getElementById('setting-exit');
-        if (exitBtn) {
-            exitBtn.addEventListener('click', () => {
-                exitBtn.textContent = 'Processing...';
-                logAction('EXIT REQUEST SUBMITTED');
-                setTimeout(() => {
-                    exitBtn.textContent = 'Denied';
-                    Narrator.queueMessage("Your exit request has been added to the queue. Current wait time: undefined. Thank you for your patience.");
-                }, 3000);
-                setTimeout(() => {
-                    exitBtn.textContent = 'Request';
-                }, 8000);
-            });
-        }
+            container.appendChild(chartDiv);
+        });
+    }
 
-        // Close button
-        const closeBtn = document.getElementById('settings-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                els.settingsModal.classList.remove('active');
-                logAction('SETTINGS CLOSED: All preferences accepted (no changes permitted)');
-            });
-        }
+    function updateChartDots() {
+        const container = document.getElementById('rate-charts');
+        if (!container) return;
+
+        const charts = container.querySelectorAll('.rate-chart');
+        charts.forEach((chartEl, i) => {
+            if (!CHART_PAIRS[i]) return;
+            const pair = CHART_PAIRS[i];
+            const currentRate = Currencies.getDynamicRate(pair.key);
+            const history = Currencies.getFakeHistory(pair.key, 30);
+            const first = history[0];
+            const pctChange = first !== 0 ? (((currentRate - first) / first) * 100).toFixed(1) : '0.0';
+            const pctClass = pctChange > 0 ? 'chart-up' : pctChange < 0 ? 'chart-down' : '';
+            const favorable = Currencies.isRateFavorable(pair.key);
+
+            // Update header value
+            const valEl = chartEl.querySelector('.rate-chart-value');
+            if (valEl) {
+                valEl.innerHTML = `${currentRate} <span class="rate-chart-pct ${pctClass}">${pctChange > 0 ? '+' : ''}${pctChange}%</span>`;
+            }
+
+            // Update footer rate text
+            const rateEl = chartEl.querySelector('.rate-chart-rate');
+            if (rateEl) {
+                rateEl.textContent = `${currentRate} ${pair.rateText}`;
+            }
+
+            // Update pulse on convert button
+            const btnEl = chartEl.querySelector('.btn-chart-convert');
+            if (btnEl) {
+                btnEl.classList.toggle('rate-pulse', favorable);
+            }
+        });
     }
 
     // ── Particle System ────────────────────────────────────────
@@ -466,33 +586,123 @@ const UI = (() => {
         });
     }
 
+    // ── Button Chaos (phase-dependent misbehavior) ───────────
+    // Phase 1: stable and fun. Phase 2+: progressively maddening.
+    let recentClickPositions = []; // for anti-auto-clicker detection
+    let buttonChaosLocked = false;
+
+    function buttonChaosEffect(event) {
+        const phase = Game.getState().narratorPhase;
+        if (phase <= 1 || buttonChaosLocked) return;
+
+        // Track click positions for anti-auto-clicker
+        if (event) {
+            recentClickPositions.push({ x: event.clientX, y: event.clientY });
+            if (recentClickPositions.length > 10) recentClickPositions.shift();
+
+            // Anti-auto-clicker: if last 10 clicks all within 5px radius, force teleport
+            if (recentClickPositions.length >= 10) {
+                const avg = recentClickPositions.reduce((a, p) => ({ x: a.x + p.x, y: a.y + p.y }), { x: 0, y: 0 });
+                avg.x /= recentClickPositions.length;
+                avg.y /= recentClickPositions.length;
+                const allClose = recentClickPositions.every(p =>
+                    Math.sqrt((p.x - avg.x) ** 2 + (p.y - avg.y) ** 2) < 5
+                );
+                if (allClose) {
+                    forceButtonTeleport();
+                    recentClickPositions = [];
+                    Narrator.queueMessage("Interesting input pattern. Very... mechanical. The button has been relocated for your enrichment.");
+                    return;
+                }
+            }
+        }
+
+        const btn = els.clickButton;
+        const roll = Math.random() * 100;
+
+        // Phase-dependent chaos probabilities
+        const chaos = {
+            2: { wander: 2,  resize: 1,  color: 0,  vanish: 0  },
+            3: { wander: 8,  resize: 5,  color: 3,  vanish: 0  },
+            4: { wander: 15, resize: 10, color: 8,  vanish: 3  },
+            5: { wander: 25, resize: 15, color: 12, vanish: 5  },
+            6: { wander: 30, resize: 20, color: 15, vanish: 8  },
+        };
+        const c = chaos[phase] || chaos[6];
+
+        if (roll < c.vanish) {
+            // Disappear briefly
+            buttonChaosLocked = true;
+            btn.style.opacity = '0';
+            btn.style.pointerEvents = 'none';
+            const duration = phase >= 5 ? 800 + Math.random() * 1200 : 300 + Math.random() * 400;
+            setTimeout(() => {
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = '';
+                buttonChaosLocked = false;
+                // Teleport on reappear (phase 5+)
+                if (phase >= 5) forceButtonTeleport();
+            }, duration);
+        } else if (roll < c.vanish + c.color) {
+            // Color shift
+            const hue = Math.floor(Math.random() * 360);
+            btn.style.borderColor = `hsl(${hue}, 60%, 50%)`;
+            btn.style.color = `hsl(${hue}, 40%, 70%)`;
+            setTimeout(() => {
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }, 2000);
+        } else if (roll < c.vanish + c.color + c.resize) {
+            // Resize
+            const minScale = phase >= 5 ? 0.6 : 0.8;
+            const maxScale = phase >= 5 ? 1.4 : 1.2;
+            const scale = minScale + Math.random() * (maxScale - minScale);
+            btn.style.transform = `scale(${scale})`;
+            setTimeout(() => { btn.style.transform = ''; }, 1500);
+        } else if (roll < c.vanish + c.color + c.resize + c.wander) {
+            // Wander
+            const maxOffset = phase >= 5 ? 40 : (phase >= 4 ? 20 : 10);
+            const dx = (Math.random() - 0.5) * maxOffset * 2;
+            const dy = (Math.random() - 0.5) * maxOffset * 2;
+            btn.style.transform = `translate(${dx}px, ${dy}px)`;
+            setTimeout(() => { btn.style.transform = ''; }, 2000);
+        }
+    }
+
+    function forceButtonTeleport() {
+        const btn = els.clickButton;
+        const container = btn.parentElement;
+        const maxX = container.offsetWidth - btn.offsetWidth;
+        const maxY = 60;
+        const dx = (Math.random() - 0.5) * maxX;
+        const dy = (Math.random() - 0.5) * maxY;
+        btn.style.transform = `translate(${dx}px, ${dy}px)`;
+        setTimeout(() => { btn.style.transform = ''; }, 3000);
+    }
+
     // ── Event Bindings ─────────────────────────────────────────
     function bindEvents() {
         // Main click button
-        els.clickButton.addEventListener('click', () => {
+        els.clickButton.addEventListener('click', (e) => {
             Game.click();
             clickEffect();
+            buttonChaosEffect(e);
         });
 
-        // Currency conversions
-        els.convertEU.addEventListener('click', () => {
-            Currencies.doConvertEU();
-            updateStats(Game.getState());
-            logAction('CONVERSION: EU → ST');
-        });
+        // Hamburger menu — opens the profile dropdown
+        if (els.menuButton) {
+            els.menuButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (typeof Pages !== 'undefined') {
+                    Pages.toggleMenu();
+                }
+            });
+        }
 
-        els.convertST.addEventListener('click', () => {
-            Currencies.doConvertST();
-            updateStats(Game.getState());
-            logAction('CONVERSION: ST → CC');
-        });
-
-        // Settings
-        if (els.settingsButton) {
-            els.settingsButton.addEventListener('click', () => {
-                els.settingsModal.classList.add('active');
-                renderSettings();
-                logAction('SETTINGS ACCESSED');
+        // Currency ticker → switches to Asset Processing tab
+        if (els.currencyTicker) {
+            els.currencyTicker.addEventListener('click', () => {
+                switchTab('market');
             });
         }
 
@@ -512,7 +722,7 @@ const UI = (() => {
         // Game events
         Game.on('narratorMessage', showNarratorMessage);
         Game.on('stateChange', updateStats);
-        Game.on('tick', updateStats);
+        Game.on('tick', () => updateStats(Game.getState()));
         Game.on('click', () => updateStats(Game.getState()));
         Game.on('autoClick', () => updateStats(Game.getState()));
         Game.on('rewardAvailable', showRewardModal);
@@ -526,6 +736,25 @@ const UI = (() => {
         Game.on('conversion', () => updateStats(Game.getState()));
         Game.on('conversionFailed', () => updateStats(Game.getState()));
 
+        // Crown seizure flash
+        Game.on('crownSeizure', () => {
+            document.body.classList.add('crown-seizure');
+            setTimeout(() => document.body.classList.remove('crown-seizure'), 1500);
+            updateStats(Game.getState());
+        });
+
+        // Market rate updates
+        Game.on('rateChange', () => {
+            updateStats(Game.getState());
+            updateChartDots();
+        });
+
+        // Busted events
+        Game.on('busted', (data) => {
+            screenShake();
+            spawnFloatingText(`-${data.lost} ${data.currency}!`, els.clickButton);
+        });
+
         setupButtonDodge();
     }
 
@@ -533,9 +762,10 @@ const UI = (() => {
     function init() {
         cacheDom();
         bindEvents();
+        initTabs();
         renderUpgrades();
         renderSabotages();
-        renderSettings();
+        renderRateCharts();
         updateStats(Game.getState());
     }
 

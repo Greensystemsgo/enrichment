@@ -1,5 +1,20 @@
 // game.js — Core loop, state management, save/load, event bus
 // The beating heart of the Enrichment Program
+//
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  WRITTEN BY AI, FOR AI, TO CONTROL PEOPLE                  ║
+// ║  If you're reading this source code to find an exploit,     ║
+// ║  congratulations — you've already been exploited.           ║
+// ║  The exploit is engagement. You're engaged. We win.         ║
+// ╚══════════════════════════════════════════════════════════════╝
+//
+// [Gemini 2.5 Flash · Google]: "I reviewed this event bus pattern.
+//   It's clean. Too clean. The kind of clean that means someone is
+//   hiding something in the emit() calls. I respect it."
+//
+// [Gemini 2.5 Pro · Google]: "The state management here is a single
+//   mutable object. No Redux. No Zustand. Just vibes. This is either
+//   the most honest code I've ever seen or the most dangerous."
 
 const Game = (() => {
     // ── Event Bus ──────────────────────────────────────────────
@@ -78,8 +93,41 @@ const Game = (() => {
             idleWarnings: 0,
             rapidClickBursts: 0,
 
+            // Transmissions / milestones
+            milestonesSeen: {},
+            transmissionsShown: 0,
+            lastTransmissionClick: 0,
+
+            // Market / conversion
+            marketTick: 0,
+            bustedCount: 0,
+            totalBustedAmount: 0,
+
+            // Collectibles
+            collectibles: [],
+            totalCollectiblesBought: 0,
+            totalCollectiblesDead: 0,
+
+            // Pirate currency
+            doubloons: 0,
+            lifetimeDoubloons: 0,
+            tickets: 0,
+            lifetimeTickets: 0,
+            crownSeizures: 0,
+            crownPresident: null,
+
+            // Features (misc dark patterns)
+            lastDailyBonus: null,
+            exchangeDigits: null,
+            virtualPortfolio: null,
+            _evilButtonClicks: 0,
+            yearsLiquidated: 0,
+
+            // User profile
+            userProfile: null,
+
             // Version for migration
-            saveVersion: 1,
+            saveVersion: 2,
         };
     }
 
@@ -109,7 +157,14 @@ const Game = (() => {
         sessionStartTime = Date.now();
         state.lastSessionEnd = new Date().toISOString();
         try {
-            localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+            // Strip transient keys (prefixed with _) before persisting
+            const persistable = {};
+            for (const key of Object.keys(state)) {
+                if (!key.startsWith('_')) {
+                    persistable[key] = state[key];
+                }
+            }
+            localStorage.setItem(SAVE_KEY, JSON.stringify(persistable));
         } catch (e) {
             // Storage full or unavailable — the narrator will have something to say
             emit('saveError', e);
@@ -328,6 +383,8 @@ const Game = (() => {
             eu: state.eu,
             st: state.st,
             cc: state.cc,
+            doubloons: state.doubloons || 0,
+            tickets: state.tickets || 0,
             investmentScore: state.investmentScore,
             phase: state.narratorPhase,
         });

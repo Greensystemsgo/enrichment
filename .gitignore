@@ -1,3 +1,10 @@
+# AI model query results (outputs only, no keys)
+tools/results/
+
+# Node (puppeteer for smoke tests)
+node_modules/
+package-lock.json
+
 # OS files
 .DS_Store
 Thumbs.db

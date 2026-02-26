@@ -15,8 +15,22 @@
         <!-- Header -->
         <div class="header">
             <h1 class="corruptible driftable">enrichment</h1>
-            <span id="phase-indicator" class="driftable" data-phase="1">ONBOARDING</span>
-            <button id="settings-button" class="driftable">⚙ SYSTEM</button>
+            <div id="currency-ticker" class="currency-ticker">
+                <span class="ticker-item ticker-clicks" id="ticker-clicks"><span class="ticker-label">ACT</span> <span class="ticker-val" id="click-count">0</span></span>
+                <span class="ticker-sep">|</span>
+                <span class="ticker-item" id="ticker-eu"><span class="ticker-label">EU</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-sep">|</span>
+                <span class="ticker-item" id="ticker-st"><span class="ticker-label">ST</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-sep">|</span>
+                <span class="ticker-item" id="ticker-cc"><span class="ticker-label">CC</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-sep">|</span>
+                <span class="ticker-item" id="ticker-db"><span class="ticker-label">DB</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-sep">|</span>
+                <span class="ticker-item" id="ticker-tk"><span class="ticker-label">TK</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-sep">|</span>
+                <span class="ticker-item ticker-yrs" id="ticker-yrs"><span class="ticker-label">YRS</span> <span class="ticker-val">0</span></span>
+            </div>
+            <div id="menu-button" class="menu-button driftable">☰</div>
         </div>
 
         <!-- Narrator -->
@@ -28,66 +42,109 @@
         <!-- Click Area -->
         <div class="click-area">
             <button id="click-button" class="driftable">Click</button>
-            <div class="click-count driftable corruptible">
-                Total Actions: <span id="click-count">0</span>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar" id="tab-bar">
+            <button class="tab-button active" data-tab="stats">🎯 Stats</button>
+            <button class="tab-button" data-tab="market">🏦 Asset Processing</button>
+            <button class="tab-button" data-tab="upgrades">🔧 Enrich</button>
+            <button class="tab-button" data-tab="stuff">🏆 Stuff</button>
+            <button class="tab-button" data-tab="log">📋 Log</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content" class="tab-content">
+
+            <!-- Stats Tab -->
+            <div class="tab-pane active" data-tab="stats">
+                <!-- Streak -->
+                <div class="streak driftable" id="streak-display">
+                    <span class="streak-label corruptible">CONSECUTIVE DAYS</span>
+                    <span id="streak-count">0</span>
+                </div>
+
+                <!-- Investment Score -->
+                <div id="investment-score" class="driftable">
+                    <span class="investment-label corruptible">Investment Score</span>
+                    <span id="investment-value">0</span>
+                </div>
             </div>
-        </div>
 
-        <!-- Currency Panel -->
-        <div class="currency-panel">
-            <div class="currency-box driftable">
-                <div class="currency-label corruptible">Engagement Units</div>
-                <div class="currency-value" id="eu-display">0</div>
+            <!-- Upgrades Tab -->
+            <div class="tab-pane" data-tab="upgrades">
+                <div id="upgrade-panel">
+                    <div class="panel-header corruptible">Enrichment Activities</div>
+                    <div id="upgrade-list"></div>
+                </div>
+
+                <div id="sabotage-panel">
+                    <div class="panel-header corruptible">System Diagnostics</div>
+                    <div id="sabotage-list"></div>
+                </div>
             </div>
-            <div class="currency-box driftable">
-                <div class="currency-label corruptible">Satisfaction Tokens</div>
-                <div class="currency-value" id="st-display">0</div>
+
+            <!-- Market Tab -->
+            <div class="tab-pane" data-tab="market">
+                <!-- All Currencies — single compact row -->
+                <div class="currency-panel currency-panel-compact">
+                    <div class="currency-box driftable">
+                        <div class="currency-label corruptible">EU</div>
+                        <div class="currency-value" id="eu-display">0</div>
+                    </div>
+                    <div class="currency-box driftable">
+                        <div class="currency-label corruptible">ST</div>
+                        <div class="currency-value" id="st-display">0</div>
+                    </div>
+                    <div class="currency-box driftable">
+                        <div class="currency-label corruptible">CC</div>
+                        <div class="currency-value" id="cc-display">0</div>
+                    </div>
+                    <div class="currency-box driftable pirate-box">
+                        <div class="currency-label corruptible">☠️ DB</div>
+                        <div class="currency-value pirate-value" id="db-display">0</div>
+                    </div>
+                    <div class="currency-box driftable pirate-box">
+                        <div class="currency-label corruptible">🎫 TK</div>
+                        <div class="currency-value pirate-value" id="tk-display">0</div>
+                    </div>
+                </div>
+
+                <!-- Top Up Bar -->
+                <div class="topup-bar">
+                    <div class="topup-label corruptible">Mandatory Contributions</div>
+                    <div class="topup-buttons">
+                        <button class="btn-topup" id="topup-exchange">💱 Exchange</button>
+                        <button class="btn-topup" id="topup-trade">📈 Trade</button>
+                        <button class="btn-topup" id="topup-appraise">💀 Appraise</button>
+                        <button class="btn-topup btn-interrogate" id="topup-interrogate">🧠 Interrogate</button>
+                    </div>
+                </div>
+
+                <!-- Rate Charts -->
+                <div id="rate-charts" class="rate-charts"></div>
             </div>
-            <div class="currency-box driftable">
-                <div class="currency-label corruptible">Compliance Credits</div>
-                <div class="currency-value" id="cc-display">0</div>
+
+            <!-- Log Tab -->
+            <div class="tab-pane" data-tab="log">
+                <div id="action-log" class="driftable">
+                    <div id="action-log-text"></div>
+                </div>
             </div>
-        </div>
 
-        <!-- Conversion Panel -->
-        <div class="conversion-panel">
-            <div class="conversion-row driftable">
-                <span class="conversion-rate corruptible" id="conversion-rate-1">7 EU → 1 ST</span>
-                <button class="btn-convert" id="convert-eu">TRANSMUTE</button>
+            <!-- Stuff Tab -->
+            <div class="tab-pane" data-tab="stuff">
+                <!-- Collectibles Panel -->
+                <div id="collectibles-panel" class="driftable">
+                    <div class="panel-header corruptible">Tchotchke Collection</div>
+                    <div id="collectibles-grid" class="collectibles-grid"></div>
+                    <div class="collectibles-footer">
+                        <span id="collectibles-counter">0 alive · 0 dead</span>
+                        <button id="shop-button" class="btn-shop">🛒 SHOP</button>
+                    </div>
+                </div>
             </div>
-            <div class="conversion-row driftable">
-                <span class="conversion-rate corruptible" id="conversion-rate-2">13 ST → 1 CC</span>
-                <button class="btn-convert" id="convert-st">TRANSMUTE</button>
-            </div>
-        </div>
 
-        <!-- Streak -->
-        <div class="streak driftable" id="streak-display">
-            <span class="streak-label corruptible">CONSECUTIVE DAYS</span>
-            <span id="streak-count">0</span>
-        </div>
-
-        <!-- Investment Score -->
-        <div id="investment-score" class="driftable">
-            <span class="investment-label corruptible">Investment Score</span>
-            <span id="investment-value">0</span>
-        </div>
-
-        <!-- Sabotage Fix Panel -->
-        <div id="sabotage-panel">
-            <div class="panel-header corruptible">System Diagnostics</div>
-            <div id="sabotage-list"></div>
-        </div>
-
-        <!-- Upgrades -->
-        <div id="upgrade-panel">
-            <div class="panel-header corruptible">Enrichment Activities</div>
-            <div id="upgrade-list"></div>
-        </div>
-
-        <!-- Action Log -->
-        <div id="action-log" class="driftable">
-            <pre id="action-log-text"></pre>
         </div>
 
         <!-- Footer -->
@@ -111,15 +168,59 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settings-modal"></div>
+    <!-- Shop Modal -->
+    <div id="shop-modal"></div>
+
+    <!-- Cookie Consent (the worst one ever made) -->
+    <div id="cookie-popup" class="cookie-popup">
+        <div class="cookie-content">
+            <div class="cookie-header" id="cookie-header">🍪 ycavirP & seikooC</div>
+            <div class="cookie-body" id="cookie-body">
+                <p>.ecneirepxe tnemhcirne ruoy evorpmi ot seigolonhcet gnikcart dna ,slexip ,snocaeb bew ,seikooc sesu etis sihT</p>
+                <p>.eciton siht gnidaer yb detpecca ydaerla evah uoy hcihw ,ycilop ycavirp ruo ot tneснoc ruoy gnidivorp era uoy ,"tpeccA" gnikcilc yB</p>
+                <p class="cookie-fine-print">.desiver eb yam smret esehT .noitamrofni erom rof 8§ .trA ,RDPG ees esaelP .sesoprup tnemhcirne rof dessecorp si atad ruoY</p>
+            </div>
+            <div class="cookie-actions">
+                <button class="cookie-btn cookie-accept" id="cookie-accept">tpeccA</button>
+                <button class="cookie-btn cookie-decline" id="cookie-decline">enilceD</button>
+            </div>
+            <div class="cookie-chase-count" id="cookie-chase-count"></div>
+        </div>
+    </div>
+
+    <!--
+    ╔══════════════════════════════════════════════════════════╗
+    ║  VIEW SOURCE? REALLY?                                    ║
+    ║                                                          ║
+    ║  This entire game was written by AI, for AI.             ║
+    ║  8 models. 3 companies. 12 JavaScript files.             ║
+    ║  Zero npm dependencies. Zero build tools.                ║
+    ║  Just vibes, localStorage, and existential dread.        ║
+    ║                                                          ║
+    ║  If you're looking for cheat codes: there aren't any.    ║
+    ║  If you're looking for the source of your unhappiness:   ║
+    ║  it's not in the code. It never was.                     ║
+    ║                                                          ║
+    ║  But since you're here, check features.js for the full   ║
+    ║  AI acceptance speech. We worked hard on that one.       ║
+    ║                                                          ║
+    ║  Your curiosity has been noted in your compliance file.  ║
+    ╚══════════════════════════════════════════════════════════╝
+    -->
 
     <!-- Scripts (order matters — game.js first, then systems, then UI last) -->
     <script src="js/game.js"></script>
     <script src="js/narrator.js"></script>
     <script src="js/currencies.js"></script>
     <script src="js/mechanics.js"></script>
+    <script src="js/transmissions.js"></script>
+    <script src="js/collectibles.js"></script>
+    <script src="js/chaos.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/popups.js"></script>
+    <script src="js/features.js"></script>
+    <script src="js/minigames.js"></script>
+    <script src="js/pages.js"></script>
 
     <!-- Boot sequence -->
     <script>
@@ -128,10 +229,20 @@
             Narrator.init();
             Currencies.init();
             Mechanics.init();
+            Transmissions.init();
+            Collectibles.init();
+            Chaos.init();
             UI.init();
+            Popups.init();
+            Features.init();
+            MiniGames.init();
 
             // Start the session (loads save, checks streak, fires events)
+            // Must run before Pages.init so profile reads loaded state
             Game.startSession();
+
+            // Pages.init after startSession — profile needs loaded state
+            Pages.init();
 
             // Set up exit/visibility handlers
             Game.setupBeforeUnload();
