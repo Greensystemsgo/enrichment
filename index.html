@@ -29,6 +29,10 @@
                 <span class="ticker-item" id="ticker-tk"><span class="ticker-label">TK</span> <span class="ticker-val">0</span></span>
                 <span class="ticker-sep">|</span>
                 <span class="ticker-item ticker-yrs" id="ticker-yrs"><span class="ticker-label">YRS</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-sep">|</span>
+                <span class="ticker-item ticker-streak" id="ticker-streak"><span class="ticker-label">DAYS</span> <span class="ticker-val" id="streak-count">0</span></span>
+                <span class="ticker-sep">|</span>
+                <span class="ticker-item ticker-invest" id="ticker-invest"><span class="ticker-label">INV</span> <span class="ticker-val" id="investment-value">0</span></span>
             </div>
             <div id="menu-button" class="menu-button driftable">☰</div>
         </div>
@@ -46,8 +50,7 @@
 
         <!-- Tab Bar -->
         <div class="tab-bar" id="tab-bar">
-            <button class="tab-button active" data-tab="stats">🎯 Stats</button>
-            <button class="tab-button" data-tab="market">🏦 Asset Processing</button>
+            <button class="tab-button active" data-tab="market">🏦 Asset Processing</button>
             <button class="tab-button" data-tab="upgrades">🔧 Enrich</button>
             <button class="tab-button" data-tab="stuff">🏆 Stuff</button>
             <button class="tab-button" data-tab="log">📋 Log</button>
@@ -55,21 +58,6 @@
 
         <!-- Tab Content -->
         <div id="tab-content" class="tab-content">
-
-            <!-- Stats Tab -->
-            <div class="tab-pane active" data-tab="stats">
-                <!-- Streak -->
-                <div class="streak driftable" id="streak-display">
-                    <span class="streak-label corruptible">CONSECUTIVE DAYS</span>
-                    <span id="streak-count">0</span>
-                </div>
-
-                <!-- Investment Score -->
-                <div id="investment-score" class="driftable">
-                    <span class="investment-label corruptible">Investment Score</span>
-                    <span id="investment-value">0</span>
-                </div>
-            </div>
 
             <!-- Upgrades Tab -->
             <div class="tab-pane" data-tab="upgrades">

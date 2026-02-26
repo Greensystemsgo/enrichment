@@ -22,10 +22,9 @@ const UI = (() => {
             euDisplay: document.getElementById('eu-display'),
             stDisplay: document.getElementById('st-display'),
             ccDisplay: document.getElementById('cc-display'),
-            streakDisplay: document.getElementById('streak-display'),
             streakCount: document.getElementById('streak-count'),
-            investmentScore: document.getElementById('investment-score'),
             investmentValue: document.getElementById('investment-value'),
+            tickerStreak: document.getElementById('ticker-streak'),
             upgradePanel: document.getElementById('upgrade-panel'),
             upgradeList: document.getElementById('upgrade-list'),
             rewardModal: document.getElementById('reward-modal'),
@@ -183,12 +182,9 @@ const UI = (() => {
         if (els.tickerTK) els.tickerTK.textContent = (state.tickets || 0).toLocaleString();
         if (els.tickerYRS) els.tickerYRS.textContent = (state.yearsLiquidated || 0).toLocaleString();
 
-        // Streak
+        // Streak (in ticker bar)
         if (els.streakCount) {
             els.streakCount.textContent = state.streakDays;
-            els.streakDisplay.className = 'streak driftable';
-            if (state.streakDays >= 30) els.streakDisplay.classList.add('streak-gold');
-            else if (state.streakDays >= 7) els.streakDisplay.classList.add('streak-pulse');
         }
 
         // Button label escalation
@@ -430,8 +426,8 @@ const UI = (() => {
 
         // Restore persisted tab (fallback to 'stats' if stale)
         const state = Game.getState();
-        const validTabs = ['stats', 'market', 'upgrades', 'log', 'stuff'];
-        const saved = validTabs.includes(state.activeTab) ? state.activeTab : 'stats';
+        const validTabs = ['market', 'upgrades', 'log', 'stuff'];
+        const saved = validTabs.includes(state.activeTab) ? state.activeTab : 'market';
         switchTab(saved);
     }
 
