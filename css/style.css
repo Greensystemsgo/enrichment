@@ -5040,3 +5040,141 @@ body.crown-seizure {
     border-color: var(--accent-blue);
     color: var(--text-primary);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   NEWS TICKER — Persistent scrolling headlines
+   ═══════════════════════════════════════════════════════════ */
+
+.news-ticker {
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    margin: 4px 0;
+    overflow: hidden;
+    height: 22px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+}
+
+.news-ticker-label {
+    background: var(--accent-red);
+    color: #fff;
+    padding: 0 8px;
+    font-weight: 700;
+    white-space: nowrap;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    font-size: 9px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+
+.news-ticker-scroll {
+    overflow: hidden;
+    flex: 1;
+    position: relative;
+}
+
+.news-ticker-content {
+    display: inline-block;
+    white-space: nowrap;
+    animation: news-ticker-scroll 180s linear infinite;
+    color: var(--text-secondary);
+    padding-left: 100%;
+}
+
+@keyframes news-ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VALIDATION BOOTH — Confetti compliments
+   ═══════════════════════════════════════════════════════════ */
+
+.validation-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5999;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 2px solid var(--accent-gold);
+    border-radius: 12px;
+    padding: 24px 32px;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.3), 0 0 80px rgba(255, 215, 0, 0.1);
+    animation: validation-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes validation-pop {
+    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.validation-header {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-gold-bright);
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.validation-compliment {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.validation-fine-print {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INVENTORY OF NOTHING
+   ═══════════════════════════════════════════════════════════ */
+
+.nothing-inventory {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-color);
+    border-radius: 4px;
+    text-align: center;
+}
+
+.nothing-header {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+}
+
+.nothing-count {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    line-height: 1.2;
+}
+
+.nothing-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 2px;
+}

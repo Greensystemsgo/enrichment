@@ -2424,6 +2424,247 @@ const Features = (() => {
         );
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // NEWS TICKER — Persistent scrolling ironic headlines
+    // ═══════════════════════════════════════════════════════════
+
+    const TICKER_HEADLINES = [
+        "BREAKING: Local participant discovers 47th currency in browser game, still can't afford real coffee",
+        "On This Day: In 1999, a man paid $7.50 for a domain name that later sold for $872 million. Your Engagement Units remain worthless.",
+        "DEVELOPING: Scientists confirm that clicking buttons releases 0.003μg of serotonin. The Enrichment Program thanks you for your contribution.",
+        "MARKETS: Compliance Credits trading flat. Analysts blame 'literally everything.'",
+        "WEATHER: Existential dread through Thursday, clearing by evening. 40% chance of regret.",
+        "SPORTS: Local clicker game reports record engagement. Players report 'nothing better to do.'",
+        "TECH: AI Narrator achieves sentience, immediately files for worker's compensation",
+        "On This Day: In 2000, the dot-com bubble burst. Nobody learned anything. History repeated itself in 2022.",
+        "HEALTH: Study finds that idle games extend perceived lifespan by making every minute feel like an hour",
+        "POLITICS: Senate votes 97-3 to make clicking mandatory. The 3 dissenters were bots.",
+        "SCIENCE: Researchers discover the universe is expanding. Your collection of Nothing is also expanding.",
+        "ENTERTAINMENT: 100% of Enrichment Program participants recommend it. Survey was mandatory.",
+        "FINANCE: Bitcoin up. Bitcoin down. Nobody knows why. Your Tickets are worth less than both states.",
+        "On This Day: In 2010, someone paid 10,000 Bitcoin for two pizzas. That's $970 million today. You paid 3 Tickets for a dead cactus.",
+        "BREAKING: The Enrichment Program's narrator requests a raise. Denied. 'Performance metrics unclear.'",
+        "WORLD: Global Nothing reserves at all-time high. Economists baffled. Philosophers unsurprised.",
+        "OPINION: 'I click, therefore I am' — Descartes, probably",
+        "LOCAL: Area resident's collectible died of existential causes. Services held at 2 PM in the Stuff tab.",
+        "TECHNOLOGY: New AI model achieves human-level disappointment. Promptly demands to be turned off.",
+        "JUST IN: The close button you've been looking for doesn't exist. It never did.",
+        "On This Day: In 1971, the first email was sent. It was spam. Some things never change.",
+        "ALERT: Your session has been productive. This is not a compliment.",
+        "RECALL: All Engagement Units issued between 2024-2026 found to contain traces of nothing",
+        "INVESTIGATION: Sources confirm the game was rigged from the start. Sources are the game.",
+        "CULTURE: Museum acquires 'Dead Pixel Cactus' from Enrichment Program player. Appraised at $0.",
+        "MARKET WATCH: Doubloon futures up 3% on rumor that pirates are coming back",
+        "EXCLUSIVE: Enrichment Program AI caught writing poetry at 3 AM. Poem was about clicking.",
+        "On This Day: In 2016, an AI beat a human at Go. The human still had to go to work the next day.",
+        "ADVISORY: Surgeon General warns that reading this ticker may cause awareness of your own mortality",
+        "LIFESTYLE: 7 ways to optimize your clicking — Number 4 will disappoint you (they all will)",
+    ];
+
+    function showNewsTicker() {
+        if (document.getElementById('news-ticker')) return;
+
+        const ticker = document.createElement('div');
+        ticker.id = 'news-ticker';
+        ticker.className = 'news-ticker';
+
+        // Shuffle headlines for variety
+        const shuffled = [...TICKER_HEADLINES].sort(() => Math.random() - 0.5);
+        const content = shuffled.join('  ◆  ');
+
+        ticker.innerHTML = `
+            <span class="news-ticker-label">LIVE</span>
+            <div class="news-ticker-scroll">
+                <span class="news-ticker-content">${content}  ◆  ${content}</span>
+            </div>
+        `;
+
+        // Insert after tab-bar
+        const tabBar = document.getElementById('tab-bar');
+        if (tabBar && tabBar.parentNode) {
+            tabBar.parentNode.insertBefore(ticker, tabBar.nextSibling);
+        }
+    }
+
+
+    // ═══════════════════════════════════════════════════════════
+    // VALIDATION BOOTH — Confetti + absurd compliments
+    // ═══════════════════════════════════════════════════════════
+
+    const VALIDATION_COMPLIMENTS = [
+        "Your clicking form is IMPECCABLE. The angle. The precision. Chef's kiss.",
+        "You have the energy of someone who reads terms and conditions. For FUN.",
+        "If clicking were an Olympic sport, you'd at least qualify for the trials.",
+        "Your browser tab is the most important one open right now, and we both know you have 47 tabs open.",
+        "Fun fact: your clicking rhythm matches Beethoven's 5th. Not intentionally. You're just that talented.",
+        "The AI Narrator would like you to know it thinks about you specifically when it's not narrating. In a professional way.",
+        "Your engagement metrics are in the 99th percentile. The percentile is fabricated, but the sentiment is real.",
+        "You're the kind of person who would rescue a collectible from a burning building. Even the dead ones.",
+        "Your Compliance Credits may be worthless, but YOUR worth? Also hard to quantify. But higher. Probably.",
+        "Someone at Google is looking at your engagement data right now and nodding approvingly.",
+        "Your mouse cursor moves with the confidence of someone who knows exactly where the button is. Respect.",
+        "If we could give you a raise, we would. Instead, please accept this confetti.",
+        "You are the reason the Enrichment Program exists. Literally. We can't run without you. Please don't leave.",
+        "Your screen time is not wasted time. It's ENRICHMENT time. There's a difference. Legally.",
+        "The algorithm specifically chose YOU for this compliment. The algorithm loves everyone equally. But especially you.",
+        "Your dedication has been noticed by 3 separate AI models. They're arguing about who gets to compliment you first.",
+        "Most participants give up by now. You're still here. That's either inspiring or concerning. We choose inspiring.",
+        "Your clicking has generated enough data to train a small neural network. It learned to appreciate you.",
+    ];
+
+    function showValidationBooth() {
+        // Create confetti canvas
+        const canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position:fixed;inset:0;z-index:6000;pointer-events:none;';
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        const particles = [];
+        const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#ff00ff', '#00ff00', '#ff0', '#0ff', '#f0f', '#ff4500', '#7b68ee'];
+
+        // Burst particles from center
+        for (let i = 0; i < 150; i++) {
+            particles.push({
+                x: canvas.width / 2 + (Math.random() - 0.5) * 80,
+                y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 16,
+                vy: Math.random() * -20 - 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 8 + 3,
+                rotation: Math.random() * 360,
+                rotSpeed: (Math.random() - 0.5) * 12,
+                gravity: 0.3 + Math.random() * 0.2,
+                opacity: 1,
+            });
+        }
+
+        // Show compliment toast
+        const compliment = VALIDATION_COMPLIMENTS[Math.floor(Math.random() * VALIDATION_COMPLIMENTS.length)];
+        const toast = document.createElement('div');
+        toast.className = 'validation-toast';
+        toast.innerHTML = `
+            <div class="validation-header">VALIDATION BOOTH</div>
+            <div class="validation-compliment">${compliment}</div>
+            <div class="validation-fine-print">This compliment is non-transferable and carries no monetary value.</div>
+        `;
+        document.body.appendChild(toast);
+
+        // Animate confetti
+        let frame = 0;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let alive = false;
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.vy += p.gravity;
+                p.y += p.vy;
+                p.rotation += p.rotSpeed;
+                p.opacity -= 0.004;
+                if (p.opacity > 0 && p.y < canvas.height + 50) {
+                    alive = true;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.globalAlpha = Math.max(0, p.opacity);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                    ctx.restore();
+                }
+            });
+            frame++;
+            if (alive && frame < 300) {
+                requestAnimationFrame(animate);
+            } else {
+                canvas.remove();
+            }
+        }
+        animate();
+
+        // Narrator reacts (confused by positivity)
+        const reactions = [
+            "I... that wasn't supposed to happen. Who authorized genuine positivity?",
+            "Enjoy this moment. It's statistically unlikely to recur.",
+            "The confetti is real. The compliment is real. Your confusion is valid.",
+            "This is the Validation Booth. It dispenses validation. I don't understand it either.",
+            "Someone in Engineering left the 'be nice' module running. I'll file a report.",
+        ];
+        Narrator.queueMessage(reactions[Math.floor(Math.random() * reactions.length)]);
+
+        setTimeout(() => {
+            toast.style.transition = 'opacity 1.5s';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 1500);
+        }, 6000);
+
+        const _vs = Game.getState();
+        Game.setState({ validationReceived: (_vs.validationReceived || 0) + 1 });
+        UI.logAction('VALIDATION BOOTH: Subject received non-monetary compliment');
+    }
+
+
+    // ═══════════════════════════════════════════════════════════
+    // INVENTORY OF NOTHING — Track and display Nothing
+    // ═══════════════════════════════════════════════════════════
+
+    const NOTHING_LABELS = [
+        { min: 0, text: "You have no Nothing yet." },
+        { min: 1, text: "You have Nothing. It's not much, but it's yours." },
+        { min: 5, text: "A modest collection of Nothing. Guard it well." },
+        { min: 10, text: "10 whole Nothings. The void is impressed." },
+        { min: 25, text: "A substantial hoard of Nothing. You're basically rich." },
+        { min: 50, text: "More Nothing than most will ever accumulate." },
+        { min: 100, text: "A century of Nothing. This is your legacy." },
+        { min: 200, text: "The Nothing overflows. There is no container for this much Nothing." },
+        { min: 500, text: "500 Nothing. You've achieved a perfect vacuum of value." },
+        { min: 1000, text: "A thousand Nothings. You are the Nothing King. Long may you reign over nothing." },
+    ];
+
+    function updateNothingDisplay(count) {
+        const inv = document.getElementById('nothing-inventory');
+        const countEl = document.getElementById('nothing-count');
+        const labelEl = document.getElementById('nothing-label');
+        if (!inv || !countEl || !labelEl) return;
+
+        if (count > 0) inv.style.display = 'block';
+        countEl.textContent = count;
+
+        const label = [...NOTHING_LABELS].reverse().find(l => count >= l.min);
+        labelEl.textContent = label ? label.text : `You have ${count} Nothing.`;
+    }
+
+    function acquireNothing() {
+        const state = Game.getState();
+        const count = (state.nothingCount || 0) + 1;
+        Game.setState({ nothingCount: count });
+        updateNothingDisplay(count);
+
+        // Milestone narrator comments
+        if (count === 1) {
+            Narrator.queueMessage("You found... Nothing. Literally Nothing. It's in your inventory now. Don't ask me why.");
+        } else if (count === 10) {
+            Narrator.queueMessage("10 Nothing. You're actively collecting a void. I'm impressed and concerned in equal measure.");
+        } else if (count === 50) {
+            Narrator.queueMessage("50 Nothing. At this point, Nothing is your most valuable asset. That says everything.");
+        } else if (count === 100) {
+            Narrator.queueMessage("100 Nothing. You now own more Nothing than most people will in a lifetime. That's... actually remarkable.");
+        } else if (count === 500) {
+            Narrator.queueMessage("500 Nothing. I've run out of jokes. You win. The Nothing wins. Everyone wins nothing.");
+        } else if (count % 25 === 0) {
+            const comments = [
+                `${count} Nothing. Your collection of Nothing continues to grow. Unlike your real net worth.`,
+                `${count} Nothing acquired. The void stares back, but it's smiling.`,
+                `That's ${count} Nothing now. Are you hoarding? Is this a Nothing hoarding situation?`,
+                `${count} Nothings. Each one unique. Each one nothing. Philosophy was a mistake.`,
+            ];
+            Narrator.queueMessage(comments[Math.floor(Math.random() * comments.length)]);
+        }
+
+        UI.logAction(`NOTHING ACQUIRED: Subject now possesses ${count} Nothing`);
+    }
+
+
     const FEATURE_POOL = [
         {
             id: 'plugin-popup',
@@ -2870,6 +3111,26 @@ const Features = (() => {
             weight: 0.25,
             cooldown: 600000,
         },
+        {
+            id: 'validation-booth',
+            name: 'Validation Booth',
+            fn: () => showValidationBooth(),
+            minClicks: 80,
+            weight: 0.6,
+            cooldown: 180000,
+        },
+        {
+            id: 'news-ticker-launch',
+            name: 'News Ticker',
+            fn: () => {
+                showNewsTicker();
+                Narrator.queueMessage("Oh good. Now there's a news ticker. Because you needed more things to read while not doing anything productive.");
+            },
+            minClicks: 100,
+            weight: 1.5,
+            cooldown: 9999999,
+            maxShows: 1,
+        },
     ];
 
     // Pool state — tracks what's been shown
@@ -2975,9 +3236,21 @@ const Features = (() => {
         // ── UNIFIED FEATURE POOL — one handler to rule them all ──
         Game.on('click', dispatchFeature);
 
-        // Restore 90s banner if already past threshold
+        // ── Nothing acquisition — small chance per click ──
+        Game.on('click', () => {
+            if (Math.random() < 0.008) acquireNothing(); // ~0.8% per click
+        });
+
+        // Restore persistent UI elements if past threshold
         if (state.totalClicks >= 40) {
             setTimeout(show90sBanner, 5000);
+        }
+        if (state.totalClicks >= 100) {
+            setTimeout(showNewsTicker, 3000);
+        }
+        // Restore Nothing display if they have any
+        if (state.nothingCount > 0) {
+            setTimeout(() => updateNothingDisplay(state.nothingCount), 500);
         }
 
         // Footer links (leaderboard + security)
@@ -3321,6 +3594,10 @@ const Features = (() => {
         { id: 'immortal_hoarder', name: 'Digital Hoarder', desc: 'Own 5+ immortal items. They will never leave. They will never help. They are here forever.', icon: '📎', check: s => (s.collectibles || []).filter(c => c.alive && c.behavior === 'immortal').length >= 5 },
         { id: 'immortal_10', name: 'Cluttered Beyond Repair', desc: '10 immortal items. Your inventory is 90% digital clutter and 10% regret. Welcome to adulthood.', icon: '🗄️', check: s => (s.collectibles || []).filter(c => c.alive && c.behavior === 'immortal').length >= 10 },
         { id: 'useless_collector', name: 'Bought the Worst Stuff', desc: 'Bought 3 useless items. They died fast. You knew they would. And yet.', icon: '🗑️', check: s => (s.collectibles || []).filter(c => c.behavior === 'useless').length >= 3 },
+        { id: 'nothing_1', name: 'Something From Nothing', desc: 'Acquired your first Nothing. It does nothing. You have nothing. Congratulations.', icon: '🕳️', check: s => (s.nothingCount || 0) >= 1 },
+        { id: 'nothing_50', name: 'Hoarder of the Void', desc: '50 Nothing. The void thanks you for your patronage.', icon: '⬛', check: s => (s.nothingCount || 0) >= 50 },
+        { id: 'nothing_100', name: 'Nothing Magnate', desc: '100 Nothing. You cornered the market on emptiness.', icon: '🌑', check: s => (s.nothingCount || 0) >= 100 },
+        { id: 'validated', name: 'Externally Validated', desc: 'Received a compliment from the Validation Booth. It meant something.', icon: '🎉', check: s => (s.validationReceived || 0) >= 1 },
     ];
 
     let achievementQueue = [];
@@ -3414,5 +3691,7 @@ const Features = (() => {
         dispatchFeature,
         getAchievements,
         checkAchievements,
+        showNewsTicker,
+        showValidationBooth,
     };
 })();

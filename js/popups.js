@@ -413,6 +413,9 @@ const Popups = (() => {
         { category: "US Air Traffic", value: "~5,000 planes at any moment", source: "FAA / OpenSky", detail: "At any given time, roughly 5,000 aircraft are flying over the continental United States, collectively burning about 62,500 gallons of jet fuel per minute. The Enrichment Program runs on electricity. We're practically green by comparison." },
         { category: "Air Quality", value: "92% breathe polluted air", source: "WHO", detail: "92% of the world's population lives in places where air quality exceeds WHO guideline limits. The Enrichment Program's digital environment has zero particulates. You're safer here. Probably." },
         { category: "Indoor Air", value: "2-5x worse than outdoor", source: "EPA", detail: "Indoor air pollution is typically 2-5 times worse than outdoor air. You're breathing recirculated disappointment right now. The Enrichment Program cannot help with this, but we appreciate you staying inside to click." },
+        { category: "Inexplicably Positive", value: "🐱 Cats purr at 25-150 Hz", source: "Veterinary Science", detail: "Cat purring frequencies promote bone healing and reduce stress. The Enrichment Program cannot explain why this fact is in rotation. It's not depressing at all. We apologize for the inconvenience." },
+        { category: "Unauthorized Good News", value: "🌳 3 trillion trees on Earth", source: "Nature (2015)", detail: "There are approximately 3.04 trillion trees on Earth — about 400 for every person. The narrator finds this information... uncomfortably pleasant. Normal programming will resume shortly." },
+        { category: "Suspiciously Wholesome", value: "🦦 Sea otters hold hands while sleeping", source: "Marine Biology", detail: "Sea otters hold hands while floating so they don't drift apart. This is called a 'raft.' The Enrichment Program did not authorize this information. Someone in content moderation is getting written up." },
     ];
 
     let factModalEl = null;
@@ -649,6 +652,30 @@ const Popups = (() => {
                 value: `AQI ${aqi} — ${labels[level]}`,
                 source: "WAQI (live)",
                 detail: commentary[Math.floor(Math.random() * commentary.length)],
+                live: true,
+            };
+        },
+        // Cat Fact (Inexplicably Positive)
+        async () => {
+            const res = await fetch('https://catfact.ninja/fact');
+            const data = await res.json();
+            return {
+                category: "Inexplicably Positive Content",
+                value: "🐱 " + data.fact.substring(0, 60) + (data.fact.length > 60 ? "..." : ""),
+                source: "Cat Fact API (live)",
+                detail: `${data.fact} — The Enrichment Program is confused by this data. It's not depressing. It's about cats. We're investigating how this got into the rotation. Please acknowledge and we'll return to regularly scheduled despair.`,
+                live: true,
+            };
+        },
+        // Affirmation (Unauthorized Positivity)
+        async () => {
+            const res = await fetch('https://www.affirmations.dev/');
+            const data = await res.json();
+            return {
+                category: "Unauthorized Positivity",
+                value: `"${data.affirmation}"`,
+                source: "Affirmations API (live)",
+                detail: `${data.affirmation} — This message was not approved by the Enrichment Program's Morale Suppression Department. Someone left the positivity valve open. Your feelings of warmth are temporary and unauthorized. Please do not get used to this.`,
                 live: true,
             };
         },

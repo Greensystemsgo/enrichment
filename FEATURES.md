@@ -175,20 +175,14 @@ These features are built, wired in, and functional.
    - Could use Flickr API, Unsplash, or similar free image API
    - Display as a reward or random popup
 
-2. **News ticker / historical ironic alerts**
-   - Ironic historical facts, event-triggered
-   - Endless scrolling feed, always on screen
-   - Triggered by game events (phase changes, milestones, etc.)
+2. ~~**News ticker / historical ironic alerts**~~ → DONE (Session 5)
 
 3. **Forced interaction breaks**
    - Occasionally lock main button
    - Force user to complete a side task before resuming
    - Could tie into math captcha, trivia, or mini-game
 
-4. **Inventory of Nothing**
-   - Literal count of "Nothing" items
-   - Track quantity, display prominently
-   - "You have 47 Nothing. It's not much, but it's yours."
+4. ~~**Inventory of Nothing**~~ → DONE (Session 5)
 
 5. **Hot-loaded mini-games as rewards**
    - From playgama.com, addicting games, or similar
@@ -233,10 +227,7 @@ These features are built, wired in, and functional.
     - "100% GitHub, not tracking anything, purely satirical, the AI made me say this"
     - Meta-ironic: disclaimer about everything being satirical IS satirical
 
-7. **News ticker / historical ironic alerts**
-    - Ironic historical facts, event-triggered
-    - Endless scrolling feed, always on screen
-    - Triggered by game events (phase changes, milestones, etc.)
+7. ~~**News ticker / historical ironic alerts**~~ → DONE (Session 5)
 
 8. **Forced interaction breaks** (partially done via Turing Sincerity Test)
     - Occasionally lock main button
@@ -244,9 +235,7 @@ These features are built, wired in, and functional.
 
 ### LOWER PRIORITY — Polish & Extras
 
-9. **Inventory of Nothing**
-    - Literal count of "Nothing" items
-    - "You have 47 Nothing. It's not much, but it's yours."
+9. ~~**Inventory of Nothing**~~ → DONE (Session 5)
 
 10. **Flickr/Image Gallery of AI-themed images**
     - Random gallery via Flickr API, Unsplash, or similar
@@ -297,6 +286,13 @@ These features are built, wired in, and functional.
 - [x] 100+ brainrot items from 14 AI models
 - [x] 15 narrator lines per model
 - [x] 75 new content entries total
+
+### Session 5 — Fun & Engagement (Feb 26, 2026)
+- [x] **Inventory of Nothing** — persistent Nothing counter in Stuff tab, 0.8% chance per click, milestone narrator reactions (1/10/50/100/500), 10 progressive labels
+- [x] **Wholesome News Fetcher** — 2 new live API fetchers (Cat Facts, Affirmations) + 3 wholesome fallback facts; narrator confused by unauthorized positivity
+- [x] **News Ticker** — 30 ironic scrolling headlines (BREAKING/On This Day/MARKETS/etc.), persistent after 100 clicks, CNN-style red LIVE badge
+- [x] **Validation Booth** — canvas confetti explosion (150 particles, physics-based) + 18 absurd hyper-specific compliments, gold toast overlay, narrator confused by genuine positivity
+- [x] 4 new achievements: Something From Nothing (1 Nothing), Hoarder of the Void (50), Nothing Magnate (100), Externally Validated (validation booth)
 
 ### Session 4 — Engagement & UX (Feb 26, 2026)
 - [x] Ad blocker nag drastically reduced (60s delay, 3% chance, 30min interval, 5/session cap)
