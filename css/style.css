@@ -44,8 +44,8 @@ body {
 /* ── Game Container ─────────────────────────────────────────── */
 #game-container {
     width: 100%;
-    max-width: 640px;
-    padding: 12px 16px;
+    max-width: 760px;
+    padding: 12px 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
