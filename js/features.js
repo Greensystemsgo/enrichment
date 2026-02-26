@@ -1737,6 +1737,7 @@ const Features = (() => {
     function executeTrade(sym, action, amount, overlay) {
         const state = Game.getState();
         const portfolio = state.virtualPortfolio || {};
+        const ts = state.tradeStats || { totalBuys: 0, totalSells: 0, ticketsSpent: 0, ticketsEarned: 0, profitableSells: 0, losingSells: 0, biggestWin: 0, biggestLoss: 0, totalSharesBought: 0, totalSharesSold: 0, uniqueSymsTraded: [], winStreak: 0, loseStreak: 0, bestWinStreak: 0, bestLoseStreak: 0 };
 
         if (action === 'buy') {
             const ticketCost = Math.ceil((cryptoPrices[sym].price / 100) * amount);
@@ -1750,7 +1751,13 @@ const Features = (() => {
             portfolio[sym].shares += amount;
             portfolio[sym].avgCost = portfolio[sym].totalSpent / portfolio[sym].shares;
 
-            Game.setState({ tickets: state.tickets, virtualPortfolio: portfolio });
+            // Track stats
+            ts.totalBuys++;
+            ts.ticketsSpent += ticketCost;
+            ts.totalSharesBought += amount;
+            if (!ts.uniqueSymsTraded.includes(sym)) ts.uniqueSymsTraded.push(sym);
+
+            Game.setState({ tickets: state.tickets, virtualPortfolio: portfolio, tradeStats: ts });
             Game.save();
 
             UI.logAction(`TRADE: BUY ${amount} ${sym} for ${ticketCost} TK`);
@@ -1761,6 +1768,9 @@ const Features = (() => {
                 return;
             }
             const ticketReturn = Math.floor((cryptoPrices[sym].price / 100) * amount);
+            const costBasis = Math.floor(portfolio[sym].avgCost * amount);
+            const pnl = ticketReturn - costBasis;
+
             portfolio[sym].shares -= amount;
             if (portfolio[sym].shares <= 0) {
                 const profit = ticketReturn - portfolio[sym].totalSpent;
@@ -1770,14 +1780,34 @@ const Features = (() => {
                     : `You sold all your ${sym}. Loss: ${Math.abs(profit)} Tickets. The market is efficient. You are not.`
                 );
             } else {
+                portfolio[sym].totalSpent -= costBasis;
                 Narrator.queueMessage(`Sold ${amount} ${sym} for ${ticketReturn} Tickets.`);
             }
 
+            // Track stats
+            ts.totalSells++;
+            ts.ticketsEarned += ticketReturn;
+            ts.totalSharesSold += amount;
+            if (pnl >= 0) {
+                ts.profitableSells++;
+                ts.biggestWin = Math.max(ts.biggestWin, pnl);
+                ts.winStreak++;
+                ts.loseStreak = 0;
+                ts.bestWinStreak = Math.max(ts.bestWinStreak, ts.winStreak);
+            } else {
+                ts.losingSells++;
+                ts.biggestLoss = Math.max(ts.biggestLoss, Math.abs(pnl));
+                ts.loseStreak++;
+                ts.winStreak = 0;
+                ts.bestLoseStreak = Math.max(ts.bestLoseStreak, ts.loseStreak);
+            }
+            if (!ts.uniqueSymsTraded.includes(sym)) ts.uniqueSymsTraded.push(sym);
+
             state.tickets = (state.tickets || 0) + ticketReturn;
-            Game.setState({ tickets: state.tickets, virtualPortfolio: portfolio });
+            Game.setState({ tickets: state.tickets, virtualPortfolio: portfolio, tradeStats: ts });
             Game.save();
 
-            UI.logAction(`TRADE: SELL ${amount} ${sym} for ${ticketReturn} TK`);
+            UI.logAction(`TRADE: SELL ${amount} ${sym} for ${ticketReturn} TK (P&L: ${pnl >= 0 ? '+' : ''}${pnl})`);
         }
 
         // Refresh display
@@ -1883,7 +1913,7 @@ const Features = (() => {
     // Where the player sits — fluctuates but trends toward hopelessness
     function getPlayerLeaderboardPosition() {
         const state = Game.getState();
-        const totalPlayers = 2_847_291 + Math.floor(state.totalClicks * 0.3);
+        const totalPlayers = 8_147_293_841 + Math.floor(state.totalClicks * 127);
         // Player rank oscillates: small improvements, big drops
         const timeFactor = Math.sin(Date.now() / 30000) * 0.15; // ±15% wobble
         const baseRank = Math.max(6, totalPlayers - Math.floor(state.totalClicks * 0.8));
@@ -2731,6 +2761,32 @@ const Features = (() => {
         { id: 'adblock_100', name: 'Deaf to Our Pleas', desc: 'Received 100 ad blocker notifications. We asked nicely. 100 times. You said no. 100 times.', icon: '🙉', check: s => (s.adBlockNagCount || 0) >= 100 },
         { id: 'adblock_1000', name: 'Professional Ad Dodger', desc: '1,000 ad blocker nags. At this point the ad blocker is protecting you from us, not the ads.', icon: '🛡️', check: s => (s.adBlockNagCount || 0) >= 1000 },
         { id: 'adblock_10000', name: 'The Unmonetizable', desc: '10,000 ad nags. You have cost us more in guilt-trip compute than the ad would have ever earned. Congratulations.', icon: '💸', check: s => (s.adBlockNagCount || 0) >= 10000 },
+
+        // ── Trading Achievements ──
+        { id: 'first_trade', name: 'Market Participant', desc: 'Made your first trade. Welcome to the casino. The house always wins. You are not the house.', icon: '📊', check: s => ((s.tradeStats || {}).totalBuys || 0) >= 1 },
+        { id: 'trades_10', name: 'Day Trader', desc: '10 trades. You\'re not day trading, you\'re day losing. But with enthusiasm.', icon: '📈', check: s => (((s.tradeStats || {}).totalBuys || 0) + ((s.tradeStats || {}).totalSells || 0)) >= 10 },
+        { id: 'trades_50', name: 'Frequent Flyer', desc: '50 trades. The exchange knows you by name. They named a loss category after you.', icon: '✈️', check: s => (((s.tradeStats || {}).totalBuys || 0) + ((s.tradeStats || {}).totalSells || 0)) >= 50 },
+        { id: 'trades_100', name: 'Wall Street Wannabe', desc: '100 trades. You trade more than some hedge funds. They\'re more profitable though.', icon: '🏛️', check: s => (((s.tradeStats || {}).totalBuys || 0) + ((s.tradeStats || {}).totalSells || 0)) >= 100 },
+        { id: 'trades_500', name: 'High Frequency Coper', desc: '500 trades. At this velocity, your losses compound at the speed of light.', icon: '⚡', check: s => (((s.tradeStats || {}).totalBuys || 0) + ((s.tradeStats || {}).totalSells || 0)) >= 500 },
+        { id: 'first_profit', name: 'Beginner\'s Luck', desc: 'Made a profitable trade. Enjoy this feeling. It does not last.', icon: '💰', check: s => ((s.tradeStats || {}).profitableSells || 0) >= 1 },
+        { id: 'profit_10', name: 'Lucky Streak', desc: '10 profitable sells. You either know something or the universe is setting you up for a fall.', icon: '🎰', check: s => ((s.tradeStats || {}).profitableSells || 0) >= 10 },
+        { id: 'first_loss', name: 'Tuition Payment', desc: 'Made your first losing trade. Consider it an education. An expensive, worthless education.', icon: '🎓', check: s => ((s.tradeStats || {}).losingSells || 0) >= 1 },
+        { id: 'loss_10', name: 'Bag Holder', desc: '10 losing trades. At this point you\'re not investing, you\'re donating.', icon: '💼', check: s => ((s.tradeStats || {}).losingSells || 0) >= 10 },
+        { id: 'loss_50', name: 'Sunk Cost Specialist', desc: '50 losing trades. You keep going because you\'ve "invested too much to stop." That\'s the sunk cost fallacy. You\'re living it.', icon: '🕳️', check: s => ((s.tradeStats || {}).losingSells || 0) >= 50 },
+        { id: 'win_streak_3', name: 'Hot Hand', desc: '3 wins in a row. Gamblers call this a streak. Statisticians call it variance. You call it skill.', icon: '🔥', check: s => ((s.tradeStats || {}).bestWinStreak || 0) >= 3 },
+        { id: 'win_streak_5', name: 'The Oracle', desc: '5 wins in a row. You\'re either psychic or the market is rigged in your favor. (It\'s the second one. For now.)', icon: '🔮', check: s => ((s.tradeStats || {}).bestWinStreak || 0) >= 5 },
+        { id: 'lose_streak_3', name: 'Red Candle Collector', desc: '3 losses in a row. The chart is red. Your face is red. Your portfolio is red. Everything is red.', icon: '🕯️', check: s => ((s.tradeStats || {}).bestLoseStreak || 0) >= 3 },
+        { id: 'lose_streak_5', name: 'Professional Capitulant', desc: '5 losses in a row. The market tested your resolve. You failed. Spectacularly.', icon: '📉', check: s => ((s.tradeStats || {}).bestLoseStreak || 0) >= 5 },
+        { id: 'lose_streak_10', name: 'Reverse Midas', desc: '10 losses in a row. Everything you touch turns to loss. Doctors are studying you.', icon: '👑', check: s => ((s.tradeStats || {}).bestLoseStreak || 0) >= 10 },
+        { id: 'volume_100', name: 'Whale Watching', desc: 'Spent 100+ Tickets on trades. A whale! Well, a guppy. But you tried.', icon: '🐋', check: s => ((s.tradeStats || {}).ticketsSpent || 0) >= 100 },
+        { id: 'volume_1000', name: 'Market Mover', desc: 'Spent 1,000+ Tickets. Your trades now register as noise on the exchange. Congratulations on being noise.', icon: '🌊', check: s => ((s.tradeStats || {}).ticketsSpent || 0) >= 1000 },
+        { id: 'volume_10000', name: 'Liquidity Provider', desc: '10,000 Tickets spent trading. You are the liquidity. The whales thank you for your sacrifice.', icon: '🏊', check: s => ((s.tradeStats || {}).ticketsSpent || 0) >= 10000 },
+        { id: 'shares_100', name: 'Centurion of Shares', desc: 'Bought 100 total shares. Quantity over quality. The motto of every failed portfolio.', icon: '📦', check: s => ((s.tradeStats || {}).totalSharesBought || 0) >= 100 },
+        { id: 'diversified', name: 'Diversified Disaster', desc: 'Traded all 3 cryptos. They say diversification reduces risk. They lied.', icon: '🎨', check: s => ((s.tradeStats || {}).uniqueSymsTraded || []).length >= 3 },
+        { id: 'big_win', name: 'Jackpot', desc: 'Made 50+ Tickets profit on a single trade. Screenshot it. It won\'t happen again.', icon: '🎪', check: s => ((s.tradeStats || {}).biggestWin || 0) >= 50 },
+        { id: 'big_loss', name: 'Rekt', desc: 'Lost 50+ Tickets on a single trade. F in chat. Your portfolio has been sent thoughts and prayers.', icon: '💀', check: s => ((s.tradeStats || {}).biggestLoss || 0) >= 50 },
+        { id: 'mega_loss', name: 'Financially Vaporized', desc: 'Lost 500+ Tickets on a single trade. This isn\'t investing. This is performance art.', icon: '☄️', check: s => ((s.tradeStats || {}).biggestLoss || 0) >= 500 },
+        { id: 'net_negative', name: 'Negative Sum Player', desc: 'You\'ve spent more on trades than you\'ve earned back. You are subsidizing the exchange. Thank you for your service.', icon: '🕸️', check: s => { const t = s.tradeStats || {}; return (t.ticketsSpent || 0) > 0 && (t.ticketsEarned || 0) < (t.ticketsSpent || 0); } },
     ];
 
     let achievementQueue = [];

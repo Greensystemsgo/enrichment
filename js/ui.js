@@ -124,9 +124,32 @@ const UI = (() => {
         if (text.startsWith('CLICK')) return 'click';
         if (text.startsWith('NARRATOR')) return 'narrator';
         if (text.startsWith('CONVERSION')) return 'conversion';
-        if (text.startsWith('REWARD')) return 'reward';
+        if (text.startsWith('REWARD') || text.startsWith('REROLL')) return 'reward';
         if (text.startsWith('SABOTAGE')) return 'sabotage';
         if (text.startsWith('SESSION') || text.startsWith('Subject')) return 'session';
+        if (text.startsWith('ACHIEVEMENT')) return 'achievement';
+        if (text.startsWith('TRADE') || text.startsWith('STOCK') || text.startsWith('LIQUIDATION')) return 'trade';
+        if (text.startsWith('EXCHANGE')) return 'exchange';
+        if (text.startsWith('CHAOS')) return 'chaos';
+        if (text.startsWith('AD BLOCK')) return 'adblock';
+        if (text.startsWith('POPUP AD') || text.startsWith('AD CLOSE') || text.startsWith('AD CTA') || text.startsWith('AD DISMISSED') || text.startsWith('FOREIGN AD')) return 'popup';
+        if (text.startsWith('PLUGIN')) return 'plugin';
+        if (text.startsWith('CHATBOT')) return 'chatbot';
+        if (text.startsWith('MINIGAME') || text.startsWith('INTERROGATION')) return 'minigame';
+        if (text.startsWith('CAPTCHA')) return 'captcha';
+        if (text.startsWith('COOKIE')) return 'cookie';
+        if (text.startsWith('DEPRESSING') || text.startsWith('FACT')) return 'fact';
+        if (text.startsWith('SECURITY')) return 'security';
+        if (text.startsWith('LEADERBOARD')) return 'leaderboard';
+        if (text.startsWith('BRAINROT')) return 'brainrot';
+        if (text.startsWith('DAILY BONUS')) return 'bonus';
+        if (text.startsWith('EVIL')) return 'evil';
+        if (text.startsWith('SAVE') || text.startsWith('IMPORT') || text.startsWith('EXPORT')) return 'data';
+        if (text.startsWith('AVATAR') || text.startsWith('PASSWORD') || text.startsWith('SETTINGS') || text.startsWith('LOGOUT') || text.startsWith('LIGHT MODE') || text.startsWith('ACCOUNT') || text.startsWith('EXIT')) return 'settings';
+        if (text.startsWith('BILLING') || text.startsWith('CARD')) return 'billing';
+        if (text.startsWith('PRIVACY') || text.startsWith('API KEY') || text.startsWith('SWAGGER') || text.startsWith('CLOUD') || text.startsWith('SUPPORT')) return 'admin';
+        if (text.startsWith('ANALYTICS')) return 'analytics';
+        if (text.startsWith('90S BANNER')) return 'chaos';
         return 'session';
     }
 

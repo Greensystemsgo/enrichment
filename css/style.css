@@ -4465,6 +4465,95 @@ body.crown-seizure {
     color: #b33a3a;
 }
 
+.log-achievement {
+    color: #ffd700;
+    text-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
+}
+
+.log-trade {
+    color: #2fc4a5;
+}
+
+.log-exchange {
+    color: #7ac4d4;
+}
+
+.log-chaos {
+    color: #e07a2f;
+}
+
+.log-adblock {
+    color: #ff4a4a;
+}
+
+.log-popup {
+    color: #c44aaa;
+}
+
+.log-plugin {
+    color: #a08060;
+}
+
+.log-chatbot {
+    color: #4ac4c4;
+}
+
+.log-minigame {
+    color: #d4a72c;
+}
+
+.log-captcha {
+    color: #c4c44a;
+}
+
+.log-cookie {
+    color: #c47a30;
+}
+
+.log-fact {
+    color: #8b5a6a;
+}
+
+.log-security {
+    color: #d44a4a;
+}
+
+.log-leaderboard {
+    color: #7a5aaa;
+}
+
+.log-brainrot {
+    color: #ff69b4;
+}
+
+.log-bonus {
+    color: #4adf6a;
+}
+
+.log-evil {
+    color: #a03030;
+}
+
+.log-data {
+    color: #6a8a6a;
+}
+
+.log-settings {
+    color: #5a7a9a;
+}
+
+.log-billing {
+    color: #4a9a6a;
+}
+
+.log-admin {
+    color: #6a6a8a;
+}
+
+.log-analytics {
+    color: #5a5a7a;
+}
+
 /* ── Steam-Style Achievement Toast ────────────────────────── */
 /* CS 1.6 / early Steam (2003) achievement toast */
 .achievement-toast {
