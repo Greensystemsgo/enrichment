@@ -147,6 +147,8 @@ body {
     gap: 0;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 0;
+    position: relative;
+    z-index: 5;
 }
 
 .tab-button {
@@ -176,8 +178,7 @@ body {
     overflow-y: visible;
     scrollbar-width: thin;
     scrollbar-color: var(--border-color) transparent;
-    flex: 1;
-    min-height: 0;
+    flex: 1 0 auto;
 }
 
 .tab-content::-webkit-scrollbar {

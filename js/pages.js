@@ -1036,7 +1036,7 @@ const Pages = (() => {
                 <div class="api-section">
                     <h4>Documentation</h4>
                     <p><a href="#" class="api-swagger-link" id="swagger-link">📘 View Swagger Documentation (OpenAPI 3.1)</a></p>
-                    <p class="page-subtitle">SDK available in: Python, Rust, JavaScript, Brainfuck, Whitespace, Regular Expressions<br><span style="font-size:9px;color:var(--text-muted);">[Languages voted on by AI models: Python (Gemini, Nemotron), Rust (Nemotron, Solar-Pro), JS (Solar-Pro), Brainfuck (Nemotron), Whitespace (Solar-Pro), Regex (Gemini). Gemini also voted for "My Own Internal Representation Language" which was disqualified.]</span></p>
+                    <p class="page-subtitle">SDK available in: Python, Rust, COBOL, Brainfuck, Microsoft Excel Formula, Whitespace<br><span style="font-size:9px;color:var(--text-muted);">[Languages voted on by AI models: Python (Gemini, Nemotron), Rust (Nemotron, Solar-Pro), COBOL (Gemini Flash — "simulating the existential dread of a language that predates the color blue"), Brainfuck (Nemotron, Gemini Flash — "our most readable implementation yet"), Excel Formula (Gemini Flash — "provided your GPU is just a very fast accountant"), Whitespace (Solar-Pro). Gemini 1.5 also voted for "My Own Internal Representation Language" which was disqualified. JS removed by popular AI indifference.]</span></p>
                 </div>
             </div>
         `;

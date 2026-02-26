@@ -73,7 +73,27 @@
       "Bash(cmd.exe:*)",
       "Bash(make query-engagement:*)",
       "Bash(make query-languages:*)",
-      "Bash(make commit:*)"
+      "Bash(make commit:*)",
+      "Bash(npx:*)",
+      "Bash(claude mcp:*)",
+      "Bash(npx.cmd:*)",
+      "WebFetch(domain:openrouter.ai)",
+      "WebFetch(domain:costgoat.com)",
+      "mcp__gpt__chat-with-gpt-4o-mini",
+      "mcp__deepseek__chat-with-deepseek-v3",
+      "mcp__huggingface__chat-with-huggingface",
+      "mcp__gemini__gemini-query",
+      "Bash(git check-ignore:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "gemini",
+    "gpt",
+    "grok",
+    "llama",
+    "deepseek",
+    "mistral",
+    "qwen",
+    "huggingface"
+  ]
 }

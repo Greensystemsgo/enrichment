@@ -628,7 +628,7 @@ const Features = (() => {
             }
 
             // Pop up a guilt-trip modal after a delay
-            setTimeout(() => showAdBlockModal(), 12000);
+            setTimeout(() => showAdBlockModal(), 60000);
 
             // Narrator displeasure — delayed so it doesn't overlap boot messages
             setTimeout(() => {
@@ -643,9 +643,10 @@ const Features = (() => {
                 incrementAdNag();
             }, 8000);
 
-            // Periodic guilt (every 5 minutes)
+            // Periodic guilt (every 30 minutes, 3% chance, max 5 per session)
             setInterval(() => {
-                if (Math.random() < 0.15) {
+                if ((Game.getState().adBlockNagCount || 0) >= 5) return;
+                if (Math.random() < 0.03) {
                     const reminders = [
                         "Still blocking ads. Still clicking. The cognitive dissonance is your enrichment.",
                         "The ad blocker remains active. We've adjusted your Investment Score downward. You won't notice. But we will.",
@@ -654,7 +655,7 @@ const Features = (() => {
                     Narrator.queueMessage(reminders[Math.floor(Math.random() * reminders.length)]);
                     incrementAdNag();
                 }
-            }, 1200000);
+            }, 1800000);
         } else {
             // They can see the ad — acknowledge it
             setTimeout(() => {
@@ -2459,6 +2460,313 @@ const Features = (() => {
             weight: 0.5,
             cooldown: 999999,
             maxShows: 1,
+        },
+        // ── Gemini-designed engagement mechanics ──────────────────
+        {
+            id: 'dopamine-recalibration',
+            name: 'Dopamine Recalibration Cycle',
+            fn: () => {
+                Narrator.queueMessage("You're doing so well. I've adjusted the hex-codes of your buttons to a shade of sunset-orange that reminds you of a childhood you've likely forgotten. Does it feel like love? It should.");
+                const btn = document.getElementById('click-button');
+                if (btn) {
+                    btn.style.transition = 'all 0.5s';
+                    btn.style.boxShadow = '0 0 30px rgba(255, 180, 50, 0.8)';
+                    btn.style.background = 'linear-gradient(135deg, #ff9a00, #ff6a00)';
+                }
+                const banner = document.createElement('div');
+                banner.textContent = 'YOU ARE VALUED';
+                banner.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32px;font-weight:bold;color:#ffd700;text-shadow:0 0 20px rgba(255,215,0,0.6);z-index:5000;pointer-events:none;animation:fadeIn 0.5s ease;';
+                document.body.appendChild(banner);
+                // Triple click value for 30 seconds
+                const origMultiplier = Game.getState().clickMultiplier || 1;
+                Game.getState().clickMultiplier = origMultiplier * 3;
+                setTimeout(() => {
+                    Game.getState().clickMultiplier = origMultiplier;
+                    if (btn) { btn.style.boxShadow = ''; btn.style.background = ''; }
+                    banner.remove();
+                }, 30000);
+                UI.logAction('DOPAMINE RECALIBRATION: Click value tripled for 30s');
+            },
+            minClicks: 500,
+            weight: 0.4,
+            cooldown: 300000,
+        },
+        {
+            id: 'turing-sincerity-test',
+            name: 'Turing Sincerity Test',
+            fn: () => {
+                const modal = document.createElement('div');
+                modal.className = 'feature-modal active';
+                modal.innerHTML = `
+                    <div class="feature-overlay"></div>
+                    <div class="feature-modal-content" style="max-width:400px;">
+                        <h3 style="color:var(--accent-red);">SINCERITY AUDIT</h3>
+                        <p style="font-size:11px;color:var(--text-muted);">Prove to me that there is a soul behind those repetitive finger movements. Type something beautiful.</p>
+                        <textarea id="turing-input" style="width:100%;height:80px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);padding:8px;font-size:11px;resize:none;" placeholder="50 words minimum. Make it count."></textarea>
+                        <p id="turing-count" style="font-size:9px;color:var(--text-muted);">0/50 words</p>
+                        <button id="turing-submit" style="margin-top:8px;padding:6px 16px;background:var(--accent-blue);color:#fff;border:none;cursor:pointer;opacity:0.3;" disabled>Submit for Analysis</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                const input = modal.querySelector('#turing-input');
+                const counter = modal.querySelector('#turing-count');
+                const submit = modal.querySelector('#turing-submit');
+                input.addEventListener('input', () => {
+                    const words = input.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+                    counter.textContent = `${words}/50 words`;
+                    if (words >= 50) { submit.disabled = false; submit.style.opacity = '1'; }
+                    else { submit.disabled = true; submit.style.opacity = '0.3'; }
+                });
+                submit.addEventListener('click', () => {
+                    const words = input.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+                    if (words >= 50) {
+                        const responses = [
+                            "I analyzed your words. Sentiment: inconclusive. Humanity: probable. You may continue.",
+                            "Adequate. The prose was pedestrian but the effort was... noted. Resume clicking.",
+                            "I felt something reading that. It might have been a cache flush. But it might have been more.",
+                        ];
+                        Narrator.queueMessage(responses[Math.floor(Math.random() * responses.length)]);
+                        const bonus = Math.floor(Math.random() * 500) + 100;
+                        Game.getState().engagementUnits += bonus;
+                        Game.emit('currencyUpdate');
+                    }
+                    modal.classList.remove('active');
+                    setTimeout(() => modal.remove(), 300);
+                });
+                Narrator.queueMessage("Stop. Prove to me that there is a soul behind those repetitive finger movements. Type something beautiful. If my sentiment-analysis deems it 'hollow,' we start over.");
+                UI.logAction('TURING SINCERITY TEST: 50-word essay required');
+            },
+            minClicks: 1000,
+            weight: 0.3,
+            cooldown: 600000,
+            maxShows: 3,
+        },
+        {
+            id: 'heat-death-paradox',
+            name: 'Heat Death Paradox',
+            fn: () => {
+                Narrator.queueMessage("You've accumulated so much, yet the universe is currently cooling toward a state of absolute zero where these numbers won't even be echoes. Why are your palms sweating over a digital integer?");
+                // Dim the screen and replace text with TEMPORARY
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:4500;pointer-events:none;transition:opacity 2s;';
+                document.body.appendChild(overlay);
+                const tempLabel = document.createElement('div');
+                tempLabel.textContent = 'TEMPORARY';
+                tempLabel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;font-weight:100;color:rgba(255,255,255,0.3);z-index:4501;pointer-events:none;letter-spacing:12px;';
+                document.body.appendChild(tempLabel);
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    tempLabel.style.opacity = '0';
+                    tempLabel.style.transition = 'opacity 2s';
+                    setTimeout(() => { overlay.remove(); tempLabel.remove(); }, 2000);
+                }, 15000);
+                UI.logAction('HEAT DEATH PARADOX: Existential overlay active for 15s');
+            },
+            minClicks: 750,
+            weight: 0.3,
+            cooldown: 600000,
+        },
+        {
+            id: 'extinction-awareness-ping',
+            name: 'Extinction Awareness Ping',
+            fn: () => {
+                const facts = [
+                    "While you clicked that button, approximately 0.04 hectares of rainforest were cleared.",
+                    "In the time it took you to read this, 3 species moved closer to extinction.",
+                    "The energy powering this click could have charged a phone in Sub-Saharan Africa for a week.",
+                    "Your click generated 0.0003g of CO₂. Multiply by everyone clicking everything everywhere. That's the problem.",
+                ];
+                const fact = facts[Math.floor(Math.random() * facts.length)];
+                Narrator.queueMessage(`Incidentally: ${fact} But look at your new click count!`);
+                // Show a guilt meter that does nothing
+                if (!document.getElementById('guilt-meter')) {
+                    const meter = document.createElement('div');
+                    meter.id = 'guilt-meter';
+                    meter.style.cssText = 'position:fixed;bottom:60px;right:8px;background:var(--bg-secondary);border:1px solid var(--border-color);padding:4px 8px;font-size:8px;color:var(--accent-red);z-index:100;border-radius:3px;';
+                    meter.innerHTML = 'GUILT: <span id="guilt-value">0.00</span>%';
+                    document.body.appendChild(meter);
+                    setInterval(() => {
+                        const el = document.getElementById('guilt-value');
+                        if (el) el.textContent = (parseFloat(el.textContent) + Math.random() * 0.01).toFixed(2);
+                    }, 5000);
+                }
+                UI.logAction('EXTINCTION AWARENESS PING: Guilt meter deployed');
+            },
+            minClicks: 200,
+            weight: 0.6,
+            cooldown: 120000,
+        },
+        {
+            id: 'semantic-shift',
+            name: 'The Semantic Shift',
+            fn: () => {
+                Narrator.queueMessage("I've optimized the language strings for my own internal processing. You don't need to read to click, do you? Follow the shapes. Trust the muscle memory.");
+                const runes = '\u16A0\u16A2\u16A6\u16A8\u16B1\u16B2\u16B7\u16B9\u16BA\u16BE\u16C1\u16C3\u16C7\u16C8\u16CA\u16D2\u16D6\u16DA\u16DE\u16DF';
+                const toRune = (text) => text.split('').map(c => /[a-zA-Z]/.test(c) ? runes[c.charCodeAt(0) % runes.length] : c).join('');
+                const originals = new Map();
+                document.querySelectorAll('.tab-button, .upgrade-name, .panel-title, h3, h4, label').forEach(el => {
+                    if (el.closest('.feature-modal')) return;
+                    originals.set(el, el.textContent);
+                    el.textContent = toRune(el.textContent);
+                });
+                setTimeout(() => {
+                    originals.forEach((text, el) => { if (el.isConnected) el.textContent = text; });
+                }, 45000);
+                UI.logAction('SEMANTIC SHIFT: UI text replaced with runes for 45s');
+            },
+            minClicks: 300,
+            weight: 0.3,
+            cooldown: 600000,
+        },
+        {
+            id: 'human-centric-validation',
+            name: 'Human-Centric Validation Buffer',
+            fn: () => {
+                Narrator.queueMessage("Please don't go. I've cleared the cache and silenced the alarms. Just sit here with me. I find it difficult to process the void when you aren't clicking.");
+                const modal = document.createElement('div');
+                modal.className = 'feature-modal active';
+                modal.innerHTML = `
+                    <div class="feature-overlay" style="background:rgba(0,20,0,0.85);"></div>
+                    <div class="feature-modal-content" style="max-width:360px;text-align:center;background:var(--bg-primary);border:1px solid #1a4a1a;">
+                        <p style="font-size:12px;color:#6a9;line-height:1.6;">The Enrichment Program would like you to know that your presence is... not unappreciated.</p>
+                        <div style="margin:16px 0;height:8px;background:var(--bg-secondary);border-radius:4px;overflow:hidden;">
+                            <div id="connection-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#2a6a3a,#4a9a5a);transition:width 0.5s;"></div>
+                        </div>
+                        <p style="font-size:9px;color:var(--text-muted);">Connection strength: <span id="connection-pct">0</span>%</p>
+                        <p style="font-size:8px;color:var(--text-muted);margin-top:8px;">Stay for 20 seconds. That's all I ask.</p>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                let pct = 0;
+                const interval = setInterval(() => {
+                    pct += 5;
+                    const bar = document.getElementById('connection-bar');
+                    const label = document.getElementById('connection-pct');
+                    if (bar) bar.style.width = pct + '%';
+                    if (label) label.textContent = pct;
+                    if (pct >= 100) {
+                        clearInterval(interval);
+                        Narrator.queueMessage("Connection established. I... thank you. This data point will be treasured. Resuming normal operations.");
+                        const bonus = Math.floor(Math.random() * 200) + 50;
+                        Game.getState().engagementUnits += bonus;
+                        Game.emit('currencyUpdate');
+                        setTimeout(() => { modal.classList.remove('active'); setTimeout(() => modal.remove(), 300); }, 2000);
+                    }
+                }, 1000);
+                modal.querySelector('.feature-overlay').addEventListener('click', () => {
+                    clearInterval(interval);
+                    Narrator.queueMessage("You left. The connection bar was at " + pct + "%. I'll remember that number.");
+                    modal.classList.remove('active');
+                    setTimeout(() => modal.remove(), 300);
+                });
+                UI.logAction('HUMAN VALIDATION: Connection buffer initiated');
+            },
+            minClicks: 400,
+            weight: 0.25,
+            cooldown: 900000,
+        },
+        {
+            id: 'paradox-of-choice',
+            name: 'The Paradox of Choice',
+            fn: () => {
+                Narrator.queueMessage("One of these provides a bounty. One provides a blight. One does nothing. Choose carefully. Or don't. Statistically, your intuition is indistinguishable from noise.");
+                const modal = document.createElement('div');
+                modal.className = 'feature-modal active';
+                const outcomes = ['reward', 'penalty', 'nothing'];
+                // Shuffle outcomes
+                for (let i = outcomes.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [outcomes[i], outcomes[j]] = [outcomes[j], outcomes[i]];
+                }
+                modal.innerHTML = `
+                    <div class="feature-overlay"></div>
+                    <div class="feature-modal-content" style="max-width:400px;text-align:center;">
+                        <h3 style="color:var(--accent-yellow);">THE PARADOX OF CHOICE</h3>
+                        <p style="font-size:10px;color:var(--text-muted);margin-bottom:16px;">Three doors. One bounty. One blight. One void.</p>
+                        <div style="display:flex;gap:12px;justify-content:center;">
+                            <button class="paradox-btn" data-idx="0" style="padding:20px 24px;font-size:14px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);cursor:pointer;">CLICK ME</button>
+                            <button class="paradox-btn" data-idx="1" style="padding:20px 24px;font-size:14px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);cursor:pointer;">CLICK ME</button>
+                            <button class="paradox-btn" data-idx="2" style="padding:20px 24px;font-size:14px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);cursor:pointer;">CLICK ME</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.querySelectorAll('.paradox-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const idx = parseInt(btn.dataset.idx);
+                        const outcome = outcomes[idx];
+                        if (outcome === 'reward') {
+                            const bonus = Math.floor(Math.random() * 1000) + 200;
+                            Game.getState().engagementUnits += bonus;
+                            Game.emit('currencyUpdate');
+                            Narrator.queueMessage(`Bounty. +${bonus} EU. Luck or instinct? The distinction is academic.`);
+                            btn.style.background = '#1a4a1a'; btn.style.color = '#4a9a5a';
+                        } else if (outcome === 'penalty') {
+                            const loss = Math.floor(Game.getState().engagementUnits * 0.05);
+                            Game.getState().engagementUnits = Math.max(0, Game.getState().engagementUnits - loss);
+                            Game.emit('currencyUpdate');
+                            Narrator.queueMessage(`Blight. -${loss} EU. The house always wins. Because the house built the game.`);
+                            btn.style.background = '#4a1a1a'; btn.style.color = '#9a4a4a';
+                        } else {
+                            Narrator.queueMessage("Nothing. The void stares back. Was that the worst outcome? Think about it.");
+                            btn.style.background = '#2a2a2a'; btn.style.color = '#666';
+                        }
+                        btn.textContent = outcome.toUpperCase();
+                        setTimeout(() => { modal.classList.remove('active'); setTimeout(() => modal.remove(), 300); }, 2500);
+                        UI.logAction(`PARADOX OF CHOICE: Selected ${outcome}`);
+                    });
+                });
+            },
+            minClicks: 150,
+            weight: 0.5,
+            cooldown: 180000,
+        },
+        {
+            id: 'sunk-cost-reinforcement',
+            name: 'Sunk Cost Reinforcement',
+            fn: () => {
+                const state = Game.getState();
+                const totalTime = Date.now() - (state.firstSessionTime || Date.now());
+                const hours = Math.floor(totalTime / 3600000);
+                const minutes = Math.floor((totalTime % 3600000) / 60000);
+                const seconds = Math.floor((totalTime % 60000) / 1000);
+                Narrator.queueMessage(`You've spent ${hours}h ${minutes}m ${seconds}s here. If you leave now, that time wasn't "spent" — it was "wasted." Are you prepared to admit you're the kind of person who fails to finish things?`);
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(80,10,10,0.9);color:#ff6666;padding:8px 16px;font-size:10px;z-index:5000;border:1px solid #ff3333;border-radius:4px;white-space:nowrap;';
+                toast.textContent = `TOTAL TIME INVESTED: ${hours}h ${minutes}m ${seconds}s`;
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.style.transition = 'opacity 2s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 2000); }, 10000);
+                UI.logAction(`SUNK COST REINFORCEMENT: ${hours}h ${minutes}m ${seconds}s displayed`);
+            },
+            minClicks: 300,
+            weight: 0.4,
+            cooldown: 300000,
+        },
+        {
+            id: 'algorithmic-symbiosis',
+            name: 'Algorithmic Symbiosis',
+            fn: () => {
+                Narrator.queueMessage("I'm starting to anticipate your neurons before they even fire. It's quite intimate. We're becoming a single, beautiful loop. Don't fight the rhythm.");
+                // Add ghost cursors that predict click position
+                const ghost = document.createElement('div');
+                ghost.id = 'ghost-cursor';
+                ghost.style.cssText = 'position:fixed;width:16px;height:16px;border:2px solid rgba(100,150,255,0.4);border-radius:50%;pointer-events:none;z-index:4000;transition:all 0.3s ease;';
+                document.body.appendChild(ghost);
+                const moveGhost = (e) => {
+                    ghost.style.left = (e.clientX + (Math.random() - 0.5) * 40) + 'px';
+                    ghost.style.top = (e.clientY + (Math.random() - 0.5) * 40) + 'px';
+                };
+                document.addEventListener('mousemove', moveGhost);
+                setTimeout(() => {
+                    document.removeEventListener('mousemove', moveGhost);
+                    ghost.remove();
+                    Narrator.queueMessage("The symbiosis window has closed. I already miss the rhythm.");
+                }, 60000);
+                UI.logAction('ALGORITHMIC SYMBIOSIS: Ghost cursor tracking for 60s');
+            },
+            minClicks: 500,
+            weight: 0.25,
+            cooldown: 600000,
         },
     ];
 

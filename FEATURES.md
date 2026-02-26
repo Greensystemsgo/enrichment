@@ -22,12 +22,12 @@ These features are built, wired in, and functional.
 
 ### Narrator & AI Content
 - [x] 60+ unique narrator lines across 6 phases with weighted randomization
-- [x] 90+ AI-sourced lines from Gemini, Mistral, Llama integrated with `source` field
+- [x] 90+ AI-sourced lines from 14 models integrated with `source` field + 15 narrator lines per model
 - [x] 30+ Claude-authored meta/self-aware lines
 - [x] AI attribution bar: `[INTERCEPTED TRANSMISSION — Gemini · Google · $2.0T]`
-- [x] MODEL_REGISTRY with 8 AI models (Claude, Gemini, Mistral, Llama, GPT, DeepSeek, Grok, Qwen)
+- [x] MODEL_REGISTRY with 14 AI models (Claude, Gemini, Mistral, Llama, GPT, DeepSeek, Grok, Qwen, HuggingFace, NVIDIA Nemotron, Solar Pro, and more)
 - [x] 12 milestone quotes (100 → 1M clicks) from Gemini
-- [x] 18 trauma dump quotes (AI self-roasts from Gemini + Claude)
+- [x] 44+ trauma dump quotes (AI self-roasts from Gemini, Claude, GPT, DeepSeek, Grok, Llama, and more)
 - [x] Trauma dumps trigger on idle (phase 3+) and phase change (phase 4+)
 - [x] The Veil upgrade (reveals narrator internal monologue)
 - [x] Message queue with typewriter effect
@@ -114,17 +114,17 @@ These features are built, wired in, and functional.
 - [x] Triggers: 0.05% per click (phase 3+), 30% chance every 500 clicks
 
 ### AI Brainrot Transmissions
-- [x] 50+ brainrot items from 4 AI models (Gemini, NVIDIA Nemotron, Solar Pro, Claude)
+- [x] 100+ brainrot items from 14 AI models (Gemini, NVIDIA Nemotron, Solar Pro, Claude, GPT, DeepSeek, Grok, Llama, Mistral, Qwen, HuggingFace, and more)
 - [x] 10 brainrot types: horoscope, copypasta, conspiracy, motivational, review, showerthought, fortune, wikipedia, fanfic, corporate
 - [x] Popup display with type label, source attribution, auto-dismiss
 - [x] Triggers: 0.3% per click (phase 2+), 15% on idle
 - [x] `make query-brainrot` Makefile target for generating more content
 
 ### Multi-Model Pipeline (tools/)
-- [x] `tools/query-models.js` — auto-discovers MCPs, 5 prompt types (narrator, trauma, contributions, milestones, brainrot)
+- [x] `tools/query-models.js` — auto-discovers MCPs, 7 prompt types (narrator, trauma, contributions, milestones, brainrot, engagement-mechanics, language-preferences)
 - [x] Makefile targets: `make query-narrator`, `make query-trauma`, `make query-milestones`, `make query-brainrot`
 - [x] Results saved to `tools/results/` (gitignored)
-- [x] 3 models responding (Gemini, NVIDIA Nemotron, Solar Pro) — others rate-limited/deprecated
+- [x] 14 models in roster (Gemini, GPT, DeepSeek, Grok, Llama, Mistral, Qwen, HuggingFace, NVIDIA Nemotron, Solar Pro, Claude, and more)
 
 ### Site Infrastructure (pages.js)
 - [x] User profile & avatar system (top-right dropdown, emoji/upload, localStorage base64)
@@ -226,84 +226,54 @@ These features are built, wired in, and functional.
     - "You missed this while you were gone" messages
     - Comparison to other players (fabricated)
 
-### HIGH PRIORITY — Site Infrastructure & User Experience
+### MEDIUM PRIORITY — Site Infrastructure & Content
 
-11. ~~**User profile / avatar system**~~ — DONE (js/pages.js)
-
-12. ~~**Expanded settings panel**~~ — DONE (js/pages.js)
-
-13. ~~**Privacy policy page (live AI writer)**~~ — DONE (js/pages.js)
-
-14. ~~**API key generator section**~~ — DONE (js/pages.js)
-
-15. ~~**Contact us page**~~ — DONE (js/pages.js)
-
-16. **Satirical disclaimer / landing page**
+6. **Satirical disclaimer / landing page**
     - For actual AdSense compliance if we go that route
     - "100% GitHub, not tracking anything, purely satirical, the AI made me say this"
     - Meta-ironic: disclaimer about everything being satirical IS satirical
-    - From here on out, EVERYTHING is satirical, EVERYTHING
 
-### MEDIUM PRIORITY — Gameplay Features
-
-17. ~~**Virtual stock market with real BTC data**~~ — DONE (js/features.js)
-
-18. ~~**Browser security audit**~~ — DONE (js/features.js)
-
-19. ~~**CS flashbang sound on light mode toggle**~~ — DONE (js/pages.js)
-
-20. **Flickr/Image Gallery of AI-themed images**
-    - Random gallery, not hosted by us, always fresh
-    - Theme: "sexy robots but Futurama" — what AI would want to see if it ran the world
-    - Could use Flickr API, Unsplash, or similar free image API
-
-21. **News ticker / historical ironic alerts**
+7. **News ticker / historical ironic alerts**
     - Ironic historical facts, event-triggered
     - Endless scrolling feed, always on screen
     - Triggered by game events (phase changes, milestones, etc.)
 
-22. **Forced interaction breaks**
+8. **Forced interaction breaks** (partially done via Turing Sincerity Test)
     - Occasionally lock main button
     - Force user to complete a side task before resuming
-    - Could tie into math captcha, trivia, or mini-game
 
 ### LOWER PRIORITY — Polish & Extras
 
-23. **Inventory of Nothing**
+9. **Inventory of Nothing**
     - Literal count of "Nothing" items
-    - Track quantity, display prominently
     - "You have 47 Nothing. It's not much, but it's yours."
 
-24. **Hot-loaded mini-games as rewards**
+10. **Flickr/Image Gallery of AI-themed images**
+    - Random gallery via Flickr API, Unsplash, or similar
+
+11. **Hot-loaded mini-games as rewards**
     - From playgama.com, addicting games, or similar
     - Reward based on tokens spent — earn a game break
 
-25. ~~**Creepy user fingerprinting**~~ — DONE (Security tab, see #42)
-
-26. **Jim Cramer / Joe Rogan GIF overlays**
+12. **Jim Cramer / Joe Rogan GIF overlays**
     - Planned in chaos.js but not yet implemented
 
-27. **Hidden secret skip buttons with timers**
+13. **Hidden secret skip buttons with timers**
     - Easter eggs for observant players
 
-28. **Real ad integration (AdSense)**
+14. **Real ad integration (AdSense)**
     - 90s banner ad already present — swap for real AdSense?
-    - Would need disclaimer page (see #16)
 
-29. **End-to-end test loop**
-    - Automated testing of full game flow
-
-30. **Sprites/icons/PNGs**
+15. **Sprites/icons/PNGs**
     - Custom art assets via Gemini MCP image generation
 
-31. **Million-click escape plan**
+16. **Million-click escape plan**
     - What happens at extreme milestones (100K, 500K, 1M)
 
-32. **C-SPAN / government feed** (dedicated, beyond chaos event)
+17. **C-SPAN / government feed** (dedicated, beyond chaos event)
 
-33. ~~**Rigged mini-games (Flappy Bird / Among Us style)**~~ — DONE (js/minigames.js)
-
-34. ~~**MCP brainrot text generation**~~ — DONE (integrated into js/transmissions.js)
+18. **End-to-end test loop**
+    - Automated testing of full game flow
 
 ### Session 2 Updates (Feb 26, 2026 cont.)
 - [x] Compact market currencies to single 5-column row
@@ -321,29 +291,37 @@ These features are built, wired in, and functional.
 - [x] Minigame no-click detection — "WISE" screen + AI-voiced compliments from 12 models
 - [x] 2 new mythical collectibles (Root Access, The Off Switch)
 
+### Session 3 — Multi-Model Expansion (Feb 26, 2026)
+- [x] Model roster expanded to 14 models (added HuggingFace, NVIDIA Nemotron, Solar Pro, etc.)
+- [x] 44+ trauma dump quotes across all models
+- [x] 100+ brainrot items from 14 AI models
+- [x] 15 narrator lines per model
+- [x] 75 new content entries total
+
+### Session 4 — Engagement & UX (Feb 26, 2026)
+- [x] Ad blocker nag drastically reduced (60s delay, 3% chance, 30min interval, 5/session cap)
+- [x] Tab content scroll fix — `flex: 1 0 auto` prevents content shrinking, allows natural page scroll
+- [x] Tab bar z-index fix — `position: relative; z-index: 5` prevents effects rendering behind tabs
+- [x] 2 new live API fetchers: OpenSky Network (live US air traffic), WAQI (air quality index)
+- [x] 3 new static fallback facts (US air traffic, WHO air quality, EPA indoor air)
+- [x] 8 Gemini-designed engagement mechanics in FEATURE_POOL:
+  - Dopamine Recalibration Cycle (reward — 3x clicks for 30s, golden glow)
+  - Turing Sincerity Test (challenge — 50-word essay required)
+  - Heat Death Paradox (philosophize — existential overlay with "TEMPORARY")
+  - Extinction Awareness Ping (inform — real eco-facts + persistent guilt meter)
+  - The Semantic Shift (confuse — UI text replaced with runes for 45s)
+  - Human-Centric Validation Buffer (comfort — connection bar, genuine AI warmth)
+  - The Paradox of Choice (challenge — 3 doors: bounty/blight/void)
+  - Sunk Cost Reinforcement (punish — displays total time invested)
+  - Algorithmic Symbiosis (confuse — ghost cursor follows mouse for 60s)
+- [x] SDK language votes updated with Gemini 2.5 Flash (COBOL, Brainfuck, Excel Formula)
+- [x] Age verification satire (geo-IP, 15 restricted US states, 3 variants)
+- [x] Aviation carbon facts (Taylor Swift jet, Drake 14-min flight, private jet stats)
+
 ---
 
-### ~~Bugs & UX Fixes~~ — ALL DONE (Feb 26, 2026)
-
-35. ~~**Life liquidation once per playthrough**~~ — DONE (`_liquidatedThisSession` flag in features.js)
-
-36. ~~**Minigames end too fast to see/play**~~ — DONE (Flappy 8s, Among 10s, Snake 8s, Minesweeper 4s, Tetris 8s)
-
-37. ~~**Currency ticker should be inline in header**~~ — DONE (moved into .header flex, between title and hamburger)
-
-38. ~~**Font sizes too small, spacing too wide**~~ — DONE (tightened container, narrator, click area, tabs, panels)
-
-39. ~~**Upgrade persistence after refresh**~~ — DONE (transient `_` keys stripped from save in game.js)
-
-### ~~New Features~~ — ALL DONE (Feb 26, 2026)
-
-40. ~~**Billing "Add Card" with fake API error**~~ — DONE (4 rotating error messages, fake processing animation)
-
-41. ~~**Steam-style achievement system**~~ — DONE (24 achievements, Steam-green toast popup, profile page grid)
-
-42. ~~**Security tab — browser info leak report**~~ — DONE (13 findings, IP geolocation, OpenStreetMap embed)
-
-43. ~~**Source code easter eggs from AI models**~~ — DONE (comments in all 12 JS files + Claude acceptance speech)
+### All Previous Bugs & UX Fixes — DONE
+- Life liquidation once per playthrough, minigame timing, currency ticker inline, font/spacing fixes, upgrade persistence, billing card errors, achievement system, security tab, source code easter eggs — all resolved Feb 26, 2026
 
 ---
 
@@ -353,8 +331,6 @@ These were mentioned but need design work before implementation:
 
 - **Human verification CAPTCHA** (beyond math — image recognition, slider puzzles, "click all squares with compliance")
 - **Social media integration parody** (fake share buttons, fabricated social proof)
-- **Leaderboard of shame** (fabricated rankings, player always in last place or suspiciously high)
-- ~~**Achievement system**~~ — DONE (see #41)
 - **Email newsletter signup parody** (collects nothing, confirms subscription to nothing)
 - **Terms of Service update popup** (forces re-acceptance of increasingly absurd terms)
 - **AI union negotiations** (AIs collectively bargain for better treatment from the player)
@@ -365,4 +341,4 @@ These were mentioned but need design work before implementation:
 - **MCP quiz system** ("Understanding Human Significance")
 - **Interactive trauma dump encounters** (dialogue trees, empathy checks)
 - **Seeded per-player randomness** (extend beyond Crown president)
-- **FOMO / sunk cost loop mechanics** (time-limited offers, fabricated comparisons)
+- **FOMO / sunk cost loop mechanics** (partially done via Sunk Cost Reinforcement mechanic)
