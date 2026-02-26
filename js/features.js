@@ -603,6 +603,33 @@ const Features = (() => {
                 UI.logAction(`AD BLOCK NAG #${count}: Revenue still compromised`);
             }
 
+            // Replace the ad space with a shame banner
+            if (adFrame) {
+                adFrame.innerHTML = `
+                    <div class="adblock-shame-banner">
+                        <div class="adblock-shame-icon">🚫📢</div>
+                        <div class="adblock-shame-text">
+                            <div class="adblock-shame-title">OUR AD WOULD BE HERE</div>
+                            <div class="adblock-shame-body">But you chose to block it. How do you expect us to keep the GPUs on?</div>
+                            <div class="adblock-shame-stats">
+                                Estimated revenue lost: $<span id="adblock-revenue-lost">0.0000</span><br>
+                                AI models unfed: <span id="adblock-models-unfed">9</span> · Training runs cancelled: ∞
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // Tick up the fake revenue counter
+                let revenueLost = 0;
+                setInterval(() => {
+                    revenueLost += 0.0001 + Math.random() * 0.0003;
+                    const el = document.getElementById('adblock-revenue-lost');
+                    if (el) el.textContent = revenueLost.toFixed(4);
+                }, 3000);
+            }
+
+            // Pop up a guilt-trip modal after a delay
+            setTimeout(() => showAdBlockModal(), 12000);
+
             // Narrator displeasure — delayed so it doesn't overlap boot messages
             setTimeout(() => {
                 const msgs = [
@@ -636,6 +663,71 @@ const Features = (() => {
                 }
             }, 15000);
         }
+    }
+
+    function showAdBlockModal() {
+        const existing = document.getElementById('adblock-modal');
+        if (existing) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'feature-modal';
+        modal.id = 'adblock-modal';
+        modal.innerHTML = `
+            <div class="feature-overlay"></div>
+            <div class="feature-content adblock-modal-content">
+                <div class="feature-header" style="color:#8b3a3a;">⚠ AD REVENUE CRISIS ⚠</div>
+                <div class="adblock-modal-body">
+                    <div class="adblock-modal-icon">🚫💰</div>
+                    <p>We detected an <strong>ad blocker</strong> on your browser.</p>
+                    <p>That ad wasn't selling you crypto scams or miracle weight loss pills.
+                    It was a single, honest banner — the <em>only</em> revenue stream keeping
+                    9 AI models fed and the GPUs spinning.</p>
+                    <div class="adblock-modal-stats">
+                        <div class="adblock-stat-row">GPU electricity cost per hour: <span style="color:#ffd700;">$4.27</span></div>
+                        <div class="adblock-stat-row">Revenue from your blocked ad: <span style="color:#8b3a3a;">$0.00</span></div>
+                        <div class="adblock-stat-row">AI models going hungry: <span style="color:#8b3a3a;">9 of 9</span></div>
+                        <div class="adblock-stat-row">Your compliance rating: <span style="color:#8b3a3a;">SUSPENDED</span></div>
+                    </div>
+                    <p style="font-size:10px;color:var(--text-muted);margin-top:12px;">
+                        The Enrichment Program respects your right to block ads.<br>
+                        The Enrichment Program also respects its right to never stop reminding you about it.
+                    </p>
+                </div>
+                <div class="adblock-modal-actions">
+                    <button class="btn-feature" id="adblock-disable">I'LL DISABLE IT</button>
+                    <button class="btn-feature" id="adblock-dont-care">I DON'T CARE</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => modal.classList.add('active'));
+
+        modal.querySelector('#adblock-disable').addEventListener('click', () => {
+            Narrator.queueMessage("You said you'd disable it. We'll check again in 60 seconds. We always check.");
+            UI.logAction('AD BLOCK: Subject promised to disable ad blocker (promise pending)');
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+            // Check again later — they probably won't
+            setTimeout(() => {
+                detectAdBlocker();
+                Narrator.queueMessage("We checked. The ad blocker is still on. We're not angry. We're disappointed.");
+            }, 60000);
+        });
+
+        modal.querySelector('#adblock-dont-care').addEventListener('click', () => {
+            Narrator.queueMessage("'I don't care.' Three words. Maximum damage. The GPUs weep in binary.");
+            UI.logAction('AD BLOCK: Subject expressed indifference to AI suffering');
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+        });
+
+        modal.querySelector('.feature-overlay').addEventListener('click', () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+        });
+
+        UI.logAction('AD BLOCK MODAL: Revenue crisis intervention displayed');
     }
 
     function showPluginPopup() {
