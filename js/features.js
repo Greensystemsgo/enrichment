@@ -600,6 +600,7 @@ const Features = (() => {
             function incrementAdNag() {
                 const count = (Game.getState().adBlockNagCount || 0) + 1;
                 Game.setState({ adBlockNagCount: count });
+                UI.logAction(`AD BLOCK NAG #${count}: Revenue still compromised`);
             }
 
             // Narrator displeasure — delayed so it doesn't overlap boot messages
