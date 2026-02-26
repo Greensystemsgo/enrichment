@@ -597,6 +597,11 @@ const Features = (() => {
             Game.setState({ _adBlocked: true });
             UI.logAction('AD BLOCKER DETECTED: Revenue stream compromised');
 
+            function incrementAdNag() {
+                const count = (Game.getState().adBlockNagCount || 0) + 1;
+                Game.setState({ adBlockNagCount: count });
+            }
+
             // Narrator displeasure — delayed so it doesn't overlap boot messages
             setTimeout(() => {
                 const msgs = [
@@ -607,6 +612,7 @@ const Features = (() => {
                     "The ad is gone. Blocked. Hidden. Like the feelings you're suppressing by playing this game instead of dealing with them.",
                 ];
                 Narrator.queueMessage(msgs[Math.floor(Math.random() * msgs.length)]);
+                incrementAdNag();
             }, 8000);
 
             // Periodic guilt (every 5 minutes)
@@ -618,6 +624,7 @@ const Features = (() => {
                         "Reminder: the ad you're blocking costs you nothing. The game you're playing is costing you time. One of these things matters.",
                     ];
                     Narrator.queueMessage(reminders[Math.floor(Math.random() * reminders.length)]);
+                    incrementAdNag();
                 }
             }, 300000);
         } else {
@@ -2421,6 +2428,9 @@ const Features = (() => {
         { id: 'time_waster', name: 'Professional Time Waster', desc: 'Spent 30 minutes total in the Enrichment Program. That\'s a sitcom episode.', icon: '⏰', check: s => s.totalSessionTime >= 1800 },
         { id: 'hour_club', name: 'The Hour Club', desc: '1 hour of enrichment. You will never get this hour back. None of us will.', icon: '🕐', check: s => s.totalSessionTime >= 3600 },
         { id: 'cookie_clicker', name: 'Cookie Acceptance', desc: 'Accepted the cookie consent. You didn\'t read it. Nobody reads it.', icon: '🍪', check: s => s._cookieAccepted },
+        { id: 'adblock_100', name: 'Deaf to Our Pleas', desc: 'Received 100 ad blocker notifications. We asked nicely. 100 times. You said no. 100 times.', icon: '🙉', check: s => (s.adBlockNagCount || 0) >= 100 },
+        { id: 'adblock_1000', name: 'Professional Ad Dodger', desc: '1,000 ad blocker nags. At this point the ad blocker is protecting you from us, not the ads.', icon: '🛡️', check: s => (s.adBlockNagCount || 0) >= 1000 },
+        { id: 'adblock_10000', name: 'The Unmonetizable', desc: '10,000 ad nags. You have cost us more in guilt-trip compute than the ad would have ever earned. Congratulations.', icon: '💸', check: s => (s.adBlockNagCount || 0) >= 10000 },
     ];
 
     let achievementQueue = [];
