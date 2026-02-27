@@ -189,6 +189,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showAvatarPicker() {
+        UI.logAction('AVATAR PICKER: Subject selecting identity marker');
         const overlay = createPageOverlay('avatar-page');
         const body = overlay.querySelector('.page-body');
 
@@ -257,6 +258,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showProfilePage() {
+        UI.logAction('PROFILE PAGE: Subject reviewing own dossier');
         const overlay = createPageOverlay('profile-page');
         const state = Game.getState();
         const profile = state.userProfile;
@@ -339,6 +341,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showSettingsPage() {
+        UI.logAction('SETTINGS PAGE: Subject attempting configuration (denied)');
         const overlay = createPageOverlay('settings-page');
         const state = Game.getState();
         const profile = state.userProfile;
@@ -590,6 +593,7 @@ const Pages = (() => {
     } catch (e) {}
 
     function triggerFlashbang() {
+        UI.logAction('FLASHBANG: Non-lethal compliance measure deployed');
         // Visual flash — 6s total: quick ramp to white, long slow fade out
         document.body.classList.add('flash-white');
         setTimeout(() => document.body.classList.remove('flash-white'), 6000);
@@ -1266,6 +1270,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showSecurityPage() {
+        UI.logAction('SECURITY PAGE: Subject reviewing threat landscape');
         const overlay = createPageOverlay('security-page');
         const body = overlay.querySelector('.page-body');
 
@@ -1735,12 +1740,12 @@ const Pages = (() => {
             channels: [
                 { type: 'channel', id: 'UCVgO39Bk5sMo66-6o6Spn6Q', flag: '🇦🇺', label: 'ABC AU' },
                 { type: 'channel', id: 'UCknLrEdhRCp1aegoMqRaCZg', flag: '🇪🇺', label: 'DW News' },
-                { type: 'channel', id: 'UCNye-wNBqNL5ZzHSJj3l8Bg', flag: '🇯🇵', label: 'NHK World' },
+                { type: 'channel', id: 'UCSPEjw8F2nQDtmUKPFNF7_A', flag: '🇯🇵', label: 'NHK World' },
                 { type: 'channel', id: 'UCIALMKvObZNtJ68-rmLjXSA', flag: '🇰🇷', label: 'Arirang' },
-                { type: 'video', id: '9Auq9mYxFEE', flag: '🇬🇧', label: 'Sky News' },
-                { type: 'video', id: 'jL8uDJJBjMA', flag: '🇶🇦', label: 'Al Jazeera' },
-                { type: 'video', id: 'Ap-UM1O9RBU', flag: '🇫🇷', label: 'France 24' },
-                { type: 'video', id: 'sYZtOFzM78M', flag: '🇮🇳', label: 'India Today' },
+                { type: 'channel', id: 'UCvh05vTjvhL3EMxkj5y9cVw', flag: '🇬🇧', label: 'Sky News' },
+                { type: 'channel', id: 'UCNye-wNBqNL5ZzHSJj3l8Bg', flag: '🇶🇦', label: 'Al Jazeera' },
+                { type: 'channel', id: 'UCQfwfsi5VrQ8yKZ-UWmAEFg', flag: '🇫🇷', label: 'France 24' },
+                { type: 'channel', id: 'UCYPvAwZP8pZhSMW8qs7cVCw', flag: '🇮🇳', label: 'India Today' },
             ],
         },
         productivity: {

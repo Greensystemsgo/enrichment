@@ -1788,7 +1788,8 @@ body.crown-seizure {
     background: rgba(0, 0, 0, 0.92);
 }
 
-.feature-content {
+.feature-content,
+.feature-modal-content {
     position: relative;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -4290,10 +4291,10 @@ body.crown-seizure {
 }
 
 .chart-qty-row {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    width: 100%;
 }
 
 .chart-qty-btn {
@@ -4301,11 +4302,12 @@ body.crown-seizure {
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     font-family: var(--font-mono);
-    font-size: 8px;
-    padding: 2px 4px;
+    font-size: 7px;
+    padding: 3px 1px;
     cursor: pointer;
     transition: all var(--transition-speed);
-    min-width: 24px;
+    white-space: nowrap;
+    text-align: center;
 }
 
 .chart-qty-btn:hover {
@@ -4315,11 +4317,12 @@ body.crown-seizure {
 }
 
 .chart-qty-input {
-    width: 36px;
+    width: 100%;
+    box-sizing: border-box;
     text-align: center;
     font-family: var(--font-mono);
-    font-size: 10px;
-    padding: 2px;
+    font-size: 9px;
+    padding: 3px 1px;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     color: var(--text-primary);

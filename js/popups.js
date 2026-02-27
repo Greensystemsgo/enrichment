@@ -255,9 +255,9 @@ const Popups = (() => {
         adEl.className = 'popup-ad';
         adEl.id = 'popup-ad';
 
-        // Random position
-        const x = 40 + Math.random() * (window.innerWidth - 400);
-        const y = 60 + Math.random() * (window.innerHeight - 350);
+        // Random position — clamped to visible viewport
+        const x = Math.max(10, Math.min(window.innerWidth - 360, 40 + Math.random() * Math.max(0, window.innerWidth - 400)));
+        const y = Math.max(10, Math.min(window.innerHeight - 300, 60 + Math.random() * Math.max(0, window.innerHeight - 350)));
         adEl.style.left = x + 'px';
         adEl.style.top = y + 'px';
 
@@ -311,9 +311,9 @@ const Popups = (() => {
         closeBtn.addEventListener('click', () => {
             if (adCloseAttempts < 2) {
                 adCloseAttempts++;
-                // Move the whole ad
-                const newX = 40 + Math.random() * (window.innerWidth - 400);
-                const newY = 60 + Math.random() * (window.innerHeight - 350);
+                // Move the whole ad — clamped to viewport
+                const newX = Math.max(10, Math.min(window.innerWidth - 360, 40 + Math.random() * Math.max(0, window.innerWidth - 400)));
+                const newY = Math.max(10, Math.min(window.innerHeight - 300, 60 + Math.random() * Math.max(0, window.innerHeight - 350)));
                 adEl.style.left = newX + 'px';
                 adEl.style.top = newY + 'px';
                 UI.logAction('AD CLOSE CLICKED: Ad relocated');

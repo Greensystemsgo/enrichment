@@ -755,9 +755,9 @@ const Features = (() => {
             </div>
         `;
 
-        // Random position
-        const x = 40 + Math.random() * (window.innerWidth - 380);
-        const y = 40 + Math.random() * (window.innerHeight - 280);
+        // Random position — clamped to viewport
+        const x = Math.max(10, Math.min(window.innerWidth - 340, 40 + Math.random() * Math.max(0, window.innerWidth - 380)));
+        const y = Math.max(10, Math.min(window.innerHeight - 240, 40 + Math.random() * Math.max(0, window.innerHeight - 280)));
         popup.style.left = x + 'px';
         popup.style.top = y + 'px';
 
@@ -875,9 +875,9 @@ const Features = (() => {
             </div>
         `;
 
-        // Random position
-        const x = 20 + Math.random() * (window.innerWidth - 360);
-        const y = 40 + Math.random() * (window.innerHeight - 320);
+        // Random position — clamped to viewport
+        const x = Math.max(10, Math.min(window.innerWidth - 340, 20 + Math.random() * Math.max(0, window.innerWidth - 360)));
+        const y = Math.max(10, Math.min(window.innerHeight - 280, 40 + Math.random() * Math.max(0, window.innerHeight - 320)));
         popup.style.left = x + 'px';
         popup.style.top = y + 'px';
 
@@ -969,8 +969,8 @@ const Features = (() => {
             </div>
         `;
 
-        const x = 20 + Math.random() * Math.max(0, window.innerWidth - 320);
-        const y = 40 + Math.random() * Math.max(0, window.innerHeight - 380);
+        const x = Math.max(10, Math.min(window.innerWidth - 300, 20 + Math.random() * Math.max(0, window.innerWidth - 320)));
+        const y = Math.max(10, Math.min(window.innerHeight - 340, 40 + Math.random() * Math.max(0, window.innerHeight - 380)));
         popup.style.left = x + 'px';
         popup.style.top = y + 'px';
 
@@ -1139,6 +1139,7 @@ const Features = (() => {
 
     function showRandomVideo() {
         const video = RANDOM_VIDEOS[Math.floor(Math.random() * RANDOM_VIDEOS.length)];
+        UI.logAction(`RANDOM VIDEO: ${video.label} deployed`);
 
         const modal = document.createElement('div');
         modal.className = 'feature-modal video-modal';
@@ -1329,6 +1330,7 @@ const Features = (() => {
 
     function showMusicPlayer() {
         const track = MUSIC_TRACKS[Math.floor(Math.random() * MUSIC_TRACKS.length)];
+        UI.logAction(`MUSIC PLAYER: ${track.name} (${track.origin}) queued`);
 
         const modal = document.createElement('div');
         modal.className = 'feature-modal music-modal';
@@ -2084,14 +2086,14 @@ const Features = (() => {
                 </div>
 
                 <div class="lb-row lb-gap-row">
-                    <div class="lb-rank">#9</div>
+                    <div class="lb-rank">···</div>
                     <div class="lb-avatar">👥</div>
                     <div class="lb-info">
                         <div class="lb-name" style="color:var(--text-muted);">${aheadOfYou.toLocaleString()} participants</div>
                         <div class="lb-title">Standing between you and greatness</div>
                     </div>
                     <div class="lb-stats">
-                        <div class="lb-clicks" style="color:var(--text-muted);">···</div>
+                        <div class="lb-clicks" style="color:var(--text-muted);">rank #9 – #${(8 + aheadOfYou).toLocaleString()}</div>
                     </div>
                 </div>
 
@@ -2109,14 +2111,14 @@ const Features = (() => {
                 </div>
 
                 <div class="lb-row lb-below-row">
-                    <div class="lb-rank">#${(playerRank + 1).toLocaleString()}</div>
+                    <div class="lb-rank">···</div>
                     <div class="lb-avatar">🐌</div>
                     <div class="lb-info">
-                        <div class="lb-name" style="color:var(--text-muted);">${below} participant${below !== 1 ? 's' : ''}</div>
+                        <div class="lb-name" style="color:var(--text-muted);">${below} participant${below !== 1 ? 's' : ''} below you</div>
                         <div class="lb-title">Somehow worse than you</div>
                     </div>
                     <div class="lb-stats">
-                        <div class="lb-clicks" style="color:var(--text-muted);">···</div>
+                        <div class="lb-clicks" style="color:var(--text-muted);">rank #${(playerRank + 1).toLocaleString()}+</div>
                     </div>
                 </div>
 
@@ -3304,17 +3306,56 @@ const Features = (() => {
             let holdStart = 0;
             let holdInterval = null;
 
+            let failCount = 0;
+            const OVERSHOOT_MESSAGES = [
+                'OVERSHOT. You held for {t}s. The requirement was 5. Is counting difficult?',
+                'That was {t}s. We said 5. Not {t}. Start over.',
+                'Patience means knowing when to STOP. {t}s is not 5s. Again.',
+                'Your inability to release after exactly 5 seconds has been documented. ({t}s)',
+                'FAIL #{n}. Held {t}s. The number 5 is right there on screen. Reset.',
+            ];
+            const EARLY_MESSAGES = [
+                'Released too early. Try again.',
+                'That was {t}s. Not even close. Again.',
+                'Premature release logged. HR has been notified.',
+                'FAIL #{n}. {t}s is not 5s. Your impulsivity is noted.',
+            ];
+
             const startHold = () => {
                 holdStart = Date.now();
                 holdBtn.style.borderColor = 'var(--accent-green)';
                 holdBtn.style.background = 'rgba(58, 107, 58, 0.3)';
+                holdBtn.textContent = 'HOLDING...';
                 holdInterval = setInterval(() => {
                     const elapsed = (Date.now() - holdStart) / 1000;
-                    bar.style.width = Math.min(100, (elapsed / 5) * 100) + '%';
+                    const pct = Math.min(100, (elapsed / 5) * 100);
+                    bar.style.width = pct + '%';
                     status.textContent = `${elapsed.toFixed(1)} / 5.0 seconds`;
-                    if (elapsed >= 5) {
+                    status.style.color = 'var(--text-muted)';
+                    if (elapsed >= 5 && elapsed < 7) {
+                        bar.style.background = 'var(--accent-green)';
+                        status.textContent = `${elapsed.toFixed(1)}s — RELEASE NOW!`;
+                        status.style.color = 'var(--accent-green)';
+                        holdBtn.textContent = 'RELEASE!';
+                    }
+                    if (elapsed >= 7) {
                         clearInterval(holdInterval);
-                        unlockButton();
+                        holdInterval = null;
+                        failCount++;
+                        const msg = OVERSHOOT_MESSAGES[(failCount - 1) % OVERSHOOT_MESSAGES.length]
+                            .replace(/\{t\}/g, elapsed.toFixed(1)).replace(/\{n\}/g, failCount);
+                        status.textContent = msg;
+                        status.style.color = 'var(--accent-red)';
+                        bar.style.width = '0%';
+                        bar.style.background = 'var(--accent-green)';
+                        holdBtn.style.borderColor = 'var(--accent-red)';
+                        holdBtn.style.background = 'var(--bg-tertiary)';
+                        holdBtn.textContent = 'HOLD';
+                        Narrator.queueMessage(failCount >= 3
+                            ? "You can't even hold a button correctly. This is genuinely impressive in the worst way."
+                            : "Too long. The calibration window was 5 seconds. Not 'as long as you feel like.' Reset."
+                        );
+                        UI.logAction(`PATIENCE CALIBRATION: Overshot at ${elapsed.toFixed(1)}s (fail #${failCount})`);
                     }
                 }, 100);
             };
@@ -3323,11 +3364,27 @@ const Features = (() => {
                 if (holdInterval) {
                     clearInterval(holdInterval);
                     holdInterval = null;
+                    const elapsed = (Date.now() - holdStart) / 1000;
+                    if (elapsed >= 5 && elapsed < 7) {
+                        // Success — released in the window
+                        bar.style.width = '100%';
+                        status.textContent = `${elapsed.toFixed(1)}s — CALIBRATED.`;
+                        status.style.color = 'var(--accent-green)';
+                        holdBtn.textContent = '✓';
+                        unlockButton();
+                        return;
+                    }
+                    // Released too early
+                    failCount++;
+                    const msg = EARLY_MESSAGES[(failCount - 1) % EARLY_MESSAGES.length]
+                        .replace(/\{t\}/g, elapsed.toFixed(1)).replace(/\{n\}/g, failCount);
                     bar.style.width = '0%';
-                    status.textContent = 'Released too early. Try again.';
+                    status.textContent = msg;
                     status.style.color = 'var(--accent-red)';
                     holdBtn.style.borderColor = 'var(--accent-blue)';
                     holdBtn.style.background = 'var(--bg-tertiary)';
+                    holdBtn.textContent = 'HOLD';
+                    UI.logAction(`PATIENCE CALIBRATION: Released early at ${elapsed.toFixed(1)}s (fail #${failCount})`);
                 }
             };
 
@@ -3656,7 +3713,7 @@ const Features = (() => {
                         ];
                         Narrator.queueMessage(responses[Math.floor(Math.random() * responses.length)]);
                         const bonus = Math.floor(Math.random() * 500) + 100;
-                        Game.getState().engagementUnits += bonus;
+                        Game.getState().eu += bonus;
                         Game.emit('currencyUpdate');
                     }
                     modal.classList.remove('active');
@@ -3777,7 +3834,7 @@ const Features = (() => {
                         clearInterval(interval);
                         Narrator.queueMessage("Connection established. I... thank you. This data point will be treasured. Resuming normal operations.");
                         const bonus = Math.floor(Math.random() * 200) + 50;
-                        Game.getState().engagementUnits += bonus;
+                        Game.getState().eu += bonus;
                         Game.emit('currencyUpdate');
                         setTimeout(() => { modal.classList.remove('active'); setTimeout(() => modal.remove(), 300); }, 2000);
                     }
@@ -3826,13 +3883,13 @@ const Features = (() => {
                         const outcome = outcomes[idx];
                         if (outcome === 'reward') {
                             const bonus = Math.floor(Math.random() * 1000) + 200;
-                            Game.getState().engagementUnits += bonus;
+                            Game.getState().eu += bonus;
                             Game.emit('currencyUpdate');
                             Narrator.queueMessage(`Bounty. +${bonus} EU. Luck or instinct? The distinction is academic.`);
                             btn.style.background = '#1a4a1a'; btn.style.color = '#4a9a5a';
                         } else if (outcome === 'penalty') {
-                            const loss = Math.floor(Game.getState().engagementUnits * 0.05);
-                            Game.getState().engagementUnits = Math.max(0, Game.getState().engagementUnits - loss);
+                            const loss = Math.floor(Game.getState().eu * 0.05);
+                            Game.getState().eu = Math.max(0, Game.getState().eu - loss);
                             Game.emit('currencyUpdate');
                             Narrator.queueMessage(`Blight. -${loss} EU. The house always wins. Because the house built the game.`);
                             btn.style.background = '#4a1a1a'; btn.style.color = '#9a4a4a';
@@ -4248,6 +4305,7 @@ const Features = (() => {
     ];
 
     function showMortalityCalculator() {
+        UI.logAction('MORTALITY CALCULATOR: Human capital appraisal initiated');
         // Remove existing modal if present
         let modal = document.getElementById('mortality-modal');
         if (modal) modal.remove();
@@ -4518,6 +4576,14 @@ const Features = (() => {
                 <div class="achievement-toast-desc">${ach.desc}</div>
             </div>
         `;
+        toast.style.cursor = 'pointer';
+        toast.title = 'Click to view all achievements';
+        toast.addEventListener('click', () => {
+            toast.remove();
+            achievementShowing = false;
+            if (typeof Pages !== 'undefined') Pages.showProfilePage();
+        });
+
         document.body.appendChild(toast);
         requestAnimationFrame(() => toast.classList.add('show'));
 

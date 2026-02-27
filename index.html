@@ -16,23 +16,23 @@
         <div class="header">
             <h1 class="corruptible driftable">enrichment</h1>
             <div id="currency-ticker" class="currency-ticker">
-                <span class="ticker-item ticker-clicks" id="ticker-clicks"><span class="ticker-label">ACT</span> <span class="ticker-val" id="click-count">0</span></span>
+                <span class="ticker-item ticker-clicks" id="ticker-clicks" title="Actions — Total clicks performed"><span class="ticker-label">ACT</span> <span class="ticker-val" id="click-count">0</span></span>
                 <span class="ticker-sep">|</span>
-                <span class="ticker-item" id="ticker-eu"><span class="ticker-label">EU</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-item" id="ticker-eu" title="Engagement Units — Primary currency earned by clicking"><span class="ticker-label">EU</span> <span class="ticker-val">0</span></span>
                 <span class="ticker-sep">|</span>
-                <span class="ticker-item" id="ticker-st"><span class="ticker-label">ST</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-item" id="ticker-st" title="Satisfaction Tokens — Converted from EU at unfavorable rates"><span class="ticker-label">ST</span> <span class="ticker-val">0</span></span>
                 <span class="ticker-sep">|</span>
-                <span class="ticker-item" id="ticker-cc"><span class="ticker-label">CC</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-item" id="ticker-cc" title="Compliance Credits — Premium currency, converted from ST"><span class="ticker-label">CC</span> <span class="ticker-val">0</span></span>
                 <span class="ticker-sep">|</span>
-                <span class="ticker-item" id="ticker-db"><span class="ticker-label">DB</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-item" id="ticker-db" title="Doubloons — Pirate currency, converted from CC (subject to Crown seizure)"><span class="ticker-label">DB</span> <span class="ticker-val">0</span></span>
                 <span class="ticker-sep">|</span>
-                <span class="ticker-item" id="ticker-tk"><span class="ticker-label">TK</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-item" id="ticker-tk" title="Tickets — Final currency tier, used for stock market trading"><span class="ticker-label">TK</span> <span class="ticker-val">0</span></span>
                 <span class="ticker-sep">|</span>
-                <span class="ticker-item ticker-yrs" id="ticker-yrs"><span class="ticker-label">YRS</span> <span class="ticker-val">0</span></span>
+                <span class="ticker-item ticker-yrs" id="ticker-yrs" title="Years Liquidated — Life years exchanged for Engagement Units"><span class="ticker-label">YRS</span> <span class="ticker-val">0</span></span>
                 <span class="ticker-sep">|</span>
-                <span class="ticker-item ticker-streak" id="ticker-streak"><span class="ticker-label">DAYS</span> <span class="ticker-val" id="streak-count">0</span></span>
+                <span class="ticker-item ticker-streak" id="ticker-streak" title="Streak Days — Consecutive daily visits"><span class="ticker-label">DAYS</span> <span class="ticker-val" id="streak-count">0</span></span>
                 <span class="ticker-sep">|</span>
-                <span class="ticker-item ticker-invest" id="ticker-invest"><span class="ticker-label">INV</span> <span class="ticker-val" id="investment-value">0</span></span>
+                <span class="ticker-item ticker-invest" id="ticker-invest" title="Investment Score — Composite metric of your total engagement value"><span class="ticker-label">INV</span> <span class="ticker-val" id="investment-value">0</span></span>
             </div>
             <div id="menu-button" class="menu-button driftable">☰</div>
         </div>
@@ -50,10 +50,10 @@
 
         <!-- Tab Bar -->
         <div class="tab-bar" id="tab-bar">
-            <button class="tab-button active" data-tab="market">🏦 Asset Processing</button>
-            <button class="tab-button" data-tab="upgrades">🧬 Conditioning</button>
-            <button class="tab-button" data-tab="stuff">🗄️ Holdings</button>
-            <button class="tab-button" data-tab="log">👁️ Dossier</button>
+            <button class="tab-button active" data-tab="market" title="Currency exchange, trading, and financial instruments">🏦 Asset Processing</button>
+            <button class="tab-button" data-tab="upgrades" title="Purchase upgrades and activate system diagnostics">🧬 Conditioning</button>
+            <button class="tab-button" data-tab="stuff" title="View your tchotchke collection and inventory of nothing">🗄️ Holdings</button>
+            <button class="tab-button" data-tab="log" title="Complete surveillance log of all your actions">👁️ Dossier</button>
         </div>
 
         <!-- Tab Content -->
@@ -76,23 +76,23 @@
             <div class="tab-pane" data-tab="market">
                 <!-- All Currencies — single compact row -->
                 <div class="currency-panel currency-panel-compact">
-                    <div class="currency-box driftable">
+                    <div class="currency-box driftable" title="Engagement Units — Primary currency earned by clicking. Convert to ST at unfavorable rates.">
                         <div class="currency-label corruptible">EU</div>
                         <div class="currency-value" id="eu-display">0</div>
                     </div>
-                    <div class="currency-box driftable">
+                    <div class="currency-box driftable" title="Satisfaction Tokens — Converted from EU at 7:1. Convert to CC at even worse rates.">
                         <div class="currency-label corruptible">ST</div>
                         <div class="currency-value" id="st-display">0</div>
                     </div>
-                    <div class="currency-box driftable">
+                    <div class="currency-box driftable" title="Compliance Credits — Premium currency, converted from ST at 13:1.">
                         <div class="currency-label corruptible">CC</div>
                         <div class="currency-value" id="cc-display">0</div>
                     </div>
-                    <div class="currency-box driftable pirate-box">
+                    <div class="currency-box driftable pirate-box" title="Doubloons — Pirate currency, converted from CC. Subject to Crown seizure.">
                         <div class="currency-label corruptible">☠️ DB</div>
                         <div class="currency-value pirate-value" id="db-display">0</div>
                     </div>
-                    <div class="currency-box driftable pirate-box">
+                    <div class="currency-box driftable pirate-box" title="Tickets — Final currency tier. Used for stock market trading.">
                         <div class="currency-label corruptible">🎫 TK</div>
                         <div class="currency-value pirate-value" id="tk-display">0</div>
                     </div>
@@ -102,10 +102,10 @@
                 <div class="topup-bar">
                     <div class="topup-label corruptible">Mandatory Contributions</div>
                     <div class="topup-buttons">
-                        <button class="btn-topup" id="topup-exchange">💱 Exchange</button>
-                        <button class="btn-topup" id="topup-trade">📈 Trade</button>
-                        <button class="btn-topup" id="topup-appraise">💀 Appraise</button>
-                        <button class="btn-topup btn-interrogate" id="topup-interrogate">🧠 Interrogate</button>
+                        <button class="btn-topup" id="topup-exchange" title="Convert currencies at dynamic exchange rates">💱 Exchange</button>
+                        <button class="btn-topup" id="topup-trade" title="Buy and sell crypto with Tickets on the stock market">📈 Trade</button>
+                        <button class="btn-topup" id="topup-appraise" title="Calculate your Human Capital Index and liquidate years">💀 Appraise</button>
+                        <button class="btn-topup btn-interrogate" id="topup-interrogate" title="Query live external APIs for real-world data">🧠 Interrogate</button>
                     </div>
                 </div>
 
