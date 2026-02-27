@@ -305,6 +305,16 @@ These features are built, wired in, and functional.
 - [x] **Democracy Feed Page** — Dedicated page with 4 live YouTube streams (C-SPAN, Sky News, ABC AU, DW News), tab switching, 16:9 responsive embed, footer link + hamburger menu item
 - [x] 5 new FEATURE_POOL entries: terms-of-service, tax-season, currency-inflation, forced-break, peer-comparison
 - [x] 2 new state fields: `tosAcceptances`, `totalTaxesPaid`
+- [x] **Democracy Feed expanded** — 4 → 12 live YouTube channels (added Al Jazeera, NBC, France 24, NHK World, UN TV, Arirang, India Today, TRT World)
+- [x] **Leaderboard overhaul** — World's Richest format: top 8 real billionaires (Musk, Bezos, Zuckerberg, etc.) with net worth × 100M as clicks, #9 = count ahead, #10 = YOU, #11 = count below
+- [x] **Live news ticker** — Fetches real headlines from 8 RSS feeds (NPR, Politico, WaPo, NYT, The Hill, Fox News, BBC, CBS) via rss2json.com API; 1-hour localStorage cache; mixes ~30 live headlines with 10 satirical ones; graceful fallback to static headlines on failure
+
+### Session 7 — UI Polish + Democracy Feed Overhaul (Feb 26, 2026)
+- [x] **Currency conversion quantity controls** — Replaced TRANSMUTE/SMUGGLE/PETITION all-at-once buttons with +All/+10/+1/input/-1/-10/-All qty row + convert button; partial conversion support in Currencies module
+- [x] **Age verification Life Appraisal ad** — "SPONSORED CONTENT" ad in age verification modal promoting Human Capital Appraisal with CTA button that opens it
+- [x] **Billing page credits display** — Shows all currency balances (EU/ST/CC/Doubloons/Tickets) with "Total Assessed Value: $0.00"; locked "Enhanced AI Processing" checkbox ($4.99/mo) that refuses to uncheck with escalating messages
+- [x] **Democracy Feed overhaul** — 4 content categories (Surveillance, Productivity, Pacification, Re-Education); fixed 4 broken channel embeds using direct video IDs (Sky News, Al Jazeera, France 24, India Today); dropped 4 non-embeddable channels (C-SPAN, NBC, UN TV, TRT); added music streams (Lofi Girl, Synthwave, Jazz, Classical), ambient loops (Rain 10hr, Fireplace 10hr), and meme loops (Baby Shark, Nyan Cat 10hr, Rickroll); category bar + channel tabs within each category
+- [x] **Democracy Feed promo popup** — FEATURE_POOL entry (minClicks: 120, maxShows: 3) with "CHECK OUT WHAT'S ON RIGHT NOW" CTA that opens the feed
 
 ### Session 4 — Engagement & UX (Feb 26, 2026)
 - [x] Ad blocker nag drastically reduced (60s delay, 3% chance, 30min interval, 5/session cap)

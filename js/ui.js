@@ -446,10 +446,10 @@ const UI = (() => {
 
     // ── Rate Charts (SVG Sparklines) ──────────────────────────
     const CHART_PAIRS = [
-        { key: 'EU_TO_ST', label: 'EU → ST', color: '#4a6fa5', rateText: 'EU → 1 ST', btnLabel: 'TRANSMUTE', btnClass: '', convert: 'doConvertEU', logLabel: 'EU → ST' },
-        { key: 'ST_TO_CC', label: 'ST → CC', color: '#c4a035', rateText: 'ST → 1 CC', btnLabel: 'TRANSMUTE', btnClass: '', convert: 'doConvertST', logLabel: 'ST → CC' },
-        { key: 'CC_TO_DB', label: 'CC → ☠️',  color: '#8b3a3a', rateText: 'CC → 1 ☠️', btnLabel: 'SMUGGLE', btnClass: 'btn-pirate', convert: 'doConvertCC', logLabel: 'CC → DB' },
-        { key: 'DB_TO_TK', label: '☠️ → 🎫',  color: '#3a6b3a', rateText: '☠️ → 1 🎫', btnLabel: 'PETITION', btnClass: 'btn-pirate', convert: 'doConvertDB', logLabel: 'DB → TK' },
+        { key: 'EU_TO_ST', label: 'EU → ST', color: '#4a6fa5', rateText: 'EU → 1 ST', btnLabel: 'TRANSMUTE', btnClass: '', convert: 'doConvertEU', logLabel: 'EU → ST', fromKey: 'eu' },
+        { key: 'ST_TO_CC', label: 'ST → CC', color: '#c4a035', rateText: 'ST → 1 CC', btnLabel: 'TRANSMUTE', btnClass: '', convert: 'doConvertST', logLabel: 'ST → CC', fromKey: 'st' },
+        { key: 'CC_TO_DB', label: 'CC → ☠️',  color: '#8b3a3a', rateText: 'CC → 1 ☠️', btnLabel: 'SMUGGLE', btnClass: 'btn-pirate', convert: 'doConvertCC', logLabel: 'CC → DB', fromKey: 'cc' },
+        { key: 'DB_TO_TK', label: '☠️ → 🎫',  color: '#3a6b3a', rateText: '☠️ → 1 🎫', btnLabel: 'PETITION', btnClass: 'btn-pirate', convert: 'doConvertDB', logLabel: 'DB → TK', fromKey: 'doubloons' },
     ];
 
     function renderRateCharts() {
@@ -498,15 +498,55 @@ const UI = (() => {
                 </svg>
                 <div class="rate-chart-footer">
                     <span class="rate-chart-rate">${currentRate} ${pair.rateText}</span>
+                    <div class="chart-qty-row" data-pair="${pair.key}">
+                        <button class="chart-qty-btn" data-delta="-all">-All</button>
+                        <button class="chart-qty-btn" data-delta="-10">-10</button>
+                        <button class="chart-qty-btn" data-delta="-1">-1</button>
+                        <input type="number" min="0" value="1" class="chart-qty-input" data-pair="${pair.key}">
+                        <button class="chart-qty-btn" data-delta="+1">+1</button>
+                        <button class="chart-qty-btn" data-delta="+10">+10</button>
+                        <button class="chart-qty-btn" data-delta="+all">+All</button>
+                    </div>
                     <button class="btn-chart-convert ${pair.btnClass}${favorable ? ' rate-pulse' : ''}" data-pair="${pair.key}">${pair.btnLabel}</button>
                 </div>
             `;
 
+            // Wire quantity buttons
+            chartDiv.querySelectorAll('.chart-qty-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const input = chartDiv.querySelector('.chart-qty-input');
+                    const delta = btn.dataset.delta;
+                    const state = Game.getState();
+                    const balance = state[pair.fromKey] || 0;
+                    const rate = Currencies.getDynamicRate(pair.key);
+                    const maxOutput = Math.floor(balance / rate);
+                    let current = parseInt(input.value) || 0;
+
+                    if (delta === '+1') current += 1;
+                    else if (delta === '+10') current += 10;
+                    else if (delta === '+all') current = maxOutput;
+                    else if (delta === '-1') current = Math.max(0, current - 1);
+                    else if (delta === '-10') current = Math.max(0, current - 10);
+                    else if (delta === '-all') current = 0;
+
+                    input.value = Math.max(0, Math.min(current, maxOutput));
+                });
+            });
+
             // Wire convert button
             chartDiv.querySelector('.btn-chart-convert').addEventListener('click', () => {
-                Currencies[pair.convert]();
+                const input = chartDiv.querySelector('.chart-qty-input');
+                const qty = parseInt(input.value) || 0;
+                const rate = Currencies.getDynamicRate(pair.key);
+                if (qty <= 0) {
+                    Narrator.queueMessage("You specified zero. Bold strategy. Nothing was converted. Nothing was gained. Perfect metaphor.");
+                    return;
+                }
+                const inputAmount = qty * rate;
+                Currencies[pair.convert](inputAmount);
                 updateStats(Game.getState());
-                logAction(`CONVERSION: ${pair.logLabel}`);
+                logAction(`CONVERSION: ${pair.logLabel} (×${qty})`);
+                input.value = 1;
             });
 
             container.appendChild(chartDiv);

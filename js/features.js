@@ -2443,12 +2443,35 @@ const Features = (() => {
             <div class="feature-content">
                 <div class="feature-header" style="color:${color};">${title}</div>
                 <div class="adblock-modal-body">${body}</div>
+                <div class="age-verify-ad" id="age-verify-ad">
+                    <div class="age-ad-label">SPONSORED CONTENT</div>
+                    <div class="age-ad-body">
+                        <span class="age-ad-icon">💀</span>
+                        <div class="age-ad-text">
+                            <strong>How much is YOUR life worth?</strong>
+                            <span>The Human Capital Appraisal calculates your remaining value to the Enrichment Program. Liquidate years for EU. It's like a reverse life insurance policy, but worse.</span>
+                        </div>
+                        <button class="btn-feature age-ad-cta" id="age-ad-appraise">APPRAISE ME</button>
+                    </div>
+                </div>
                 <button class="btn-feature btn-close-feature" id="age-verify-close">${btnText}</button>
             </div>
         `;
 
         document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
+
+        // Wire ad CTA to open appraisal
+        const adBtn = modal.querySelector('#age-ad-appraise');
+        if (adBtn) {
+            adBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.remove();
+                    showMortalityCalculator();
+                }, 300);
+            });
+        }
 
         // Delay enabling the close button to prevent fast-click dismissal
         const closeBtn = modal.querySelector('#age-verify-close');
@@ -2507,15 +2530,85 @@ const Features = (() => {
         "LIFESTYLE: 7 ways to optimize your clicking — Number 4 will disappoint you (they all will)",
     ];
 
-    function showNewsTicker() {
-        if (document.getElementById('news-ticker')) return;
+    // ── Live News Headlines via RSS ──────────────────────────
+    const NEWS_FEEDS = [
+        'https://feeds.npr.org/1001/rss.xml',
+        'https://rss.politico.com/politics-news.xml',
+        'https://feeds.washingtonpost.com/rss/politics',
+        'https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
+        'https://thehill.com/feed/',
+        'https://feeds.foxnews.com/foxnews/politics',
+        'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml',
+        'https://www.cbsnews.com/latest/rss/politics',
+    ];
+    const NEWS_CACHE_KEY = 'enrichment_news_cache';
+    const NEWS_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+    function getCachedNews() {
+        try {
+            const raw = localStorage.getItem(NEWS_CACHE_KEY);
+            if (!raw) return null;
+            const cached = JSON.parse(raw);
+            if (Date.now() - cached.timestamp < NEWS_CACHE_TTL && cached.headlines.length > 0) {
+                return cached.headlines;
+            }
+        } catch (e) { /* corrupted cache */ }
+        return null;
+    }
+
+    function setCachedNews(headlines) {
+        try {
+            localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({
+                timestamp: Date.now(),
+                headlines,
+            }));
+        } catch (e) { /* storage full */ }
+    }
+
+    async function fetchLiveHeadlines() {
+        // Check cache first
+        const cached = getCachedNews();
+        if (cached) return cached;
+
+        // Pick 3 random feeds to avoid hammering all 8
+        const picks = [...NEWS_FEEDS].sort(() => Math.random() - 0.5).slice(0, 3);
+        const headlines = [];
+
+        const fetches = picks.map(feedUrl =>
+            fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'ok' && data.items) {
+                        data.items.forEach(item => {
+                            if (item.title && item.title.length > 10) {
+                                headlines.push(item.title.trim());
+                            }
+                        });
+                    }
+                })
+                .catch(() => { /* feed failed, that's fine */ })
+        );
+
+        await Promise.allSettled(fetches);
+
+        if (headlines.length > 0) {
+            // Deduplicate
+            const unique = [...new Set(headlines)];
+            setCachedNews(unique);
+            return unique;
+        }
+        return null; // fallback to static
+    }
+
+    function renderTicker(headlines) {
+        const existing = document.getElementById('news-ticker');
+        if (existing) existing.remove();
 
         const ticker = document.createElement('div');
         ticker.id = 'news-ticker';
         ticker.className = 'news-ticker';
 
-        // Shuffle headlines for variety
-        const shuffled = [...TICKER_HEADLINES].sort(() => Math.random() - 0.5);
+        const shuffled = [...headlines].sort(() => Math.random() - 0.5);
         const content = shuffled.join('  ◆  ');
 
         ticker.innerHTML = `
@@ -2525,11 +2618,28 @@ const Features = (() => {
             </div>
         `;
 
-        // Insert after tab-bar
         const tabBar = document.getElementById('tab-bar');
         if (tabBar && tabBar.parentNode) {
             tabBar.parentNode.insertBefore(ticker, tabBar.nextSibling);
         }
+    }
+
+    function showNewsTicker() {
+        if (document.getElementById('news-ticker')) return;
+
+        // Show static headlines immediately
+        const staticShuffled = [...TICKER_HEADLINES].sort(() => Math.random() - 0.5);
+        renderTicker(staticShuffled);
+
+        // Then try to mix in live headlines
+        fetchLiveHeadlines().then(liveHeadlines => {
+            if (liveHeadlines && liveHeadlines.length > 0) {
+                // Mix: all live headlines + ~10 satirical ones for flavor
+                const satirical = [...TICKER_HEADLINES].sort(() => Math.random() - 0.5).slice(0, 10);
+                const mixed = [...liveHeadlines, ...satirical];
+                renderTicker(mixed);
+            }
+        }).catch(() => { /* static ticker already showing, we're fine */ });
     }
 
 
@@ -3848,6 +3958,44 @@ const Features = (() => {
             minClicks: 250,
             weight: 0.5,
             cooldown: 200000,
+        },
+        {
+            id: 'democracy-promo',
+            name: 'Democracy Feed Promo',
+            fn: () => {
+                const categories = ['surveillance feeds', 'productivity audio', 'pacification streams', 're-education content'];
+                const pick = categories[Math.floor(Math.random() * categories.length)];
+                const modal = document.createElement('div');
+                modal.className = 'feature-modal';
+                modal.innerHTML = `
+                    <div class="feature-overlay"></div>
+                    <div class="feature-content" style="max-width:380px;">
+                        <div class="feature-header" style="color:var(--accent-gold);">📺 ENRICHMENT BROADCAST</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin:12px 0;line-height:1.6;">
+                            <p>The Enrichment Program's media division is now streaming live ${pick}.</p>
+                            <p style="margin-top:8px;font-size:10px;color:var(--text-muted);">8 global news channels. Lofi beats. 10-hour loops. Baby Shark. Everything a compliant participant could want.</p>
+                        </div>
+                        <button class="btn-feature" id="democracy-promo-go" style="border-color:var(--accent-gold);color:var(--accent-gold);width:100%;margin-bottom:6px;">CHECK OUT WHAT'S ON RIGHT NOW</button>
+                        <button class="btn-feature btn-close-feature" id="democracy-promo-close">MAYBE LATER</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                requestAnimationFrame(() => modal.classList.add('active'));
+                modal.querySelector('#democracy-promo-go').addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    setTimeout(() => { modal.remove(); Pages.showDemocracyFeed(); }, 300);
+                });
+                modal.querySelector('#democracy-promo-close').addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    setTimeout(() => modal.remove(), 300);
+                    Narrator.queueMessage("You declined the broadcast. The feeds will continue without you. They always do.");
+                });
+                UI.logAction('DEMOCRACY PROMO: Broadcast invitation displayed');
+            },
+            minClicks: 120,
+            weight: 0.5,
+            cooldown: 300000,
+            maxShows: 3,
         },
     ];
 

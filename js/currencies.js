@@ -160,9 +160,10 @@ const Currencies = (() => {
     }
 
     // ── Perform EU → ST Conversion ─────────────────────────────
-    function doConvertEU() {
+    function doConvertEU(inputAmount) {
         const state = Game.getState();
-        const result = convertEUtoST(state.eu);
+        const euToUse = inputAmount !== undefined ? Math.min(inputAmount, state.eu) : state.eu;
+        const result = convertEUtoST(euToUse);
 
         if (result.tokensGained === 0) {
             Game.emit('conversionFailed', {
@@ -201,9 +202,10 @@ const Currencies = (() => {
     }
 
     // ── Perform ST → CC Conversion ─────────────────────────────
-    function doConvertST() {
+    function doConvertST(inputAmount) {
         const state = Game.getState();
-        const result = convertSTtoCC(state.st);
+        const stToUse = inputAmount !== undefined ? Math.min(inputAmount, state.st) : state.st;
+        const result = convertSTtoCC(stToUse);
 
         if (result.creditsGained === 0) {
             Game.emit('conversionFailed', {
@@ -242,9 +244,10 @@ const Currencies = (() => {
     }
 
     // ── Perform CC → Doubloon Conversion ─────────────────────
-    function doConvertCC() {
+    function doConvertCC(inputAmount) {
         const state = Game.getState();
-        const result = convertCCtoDB(state.cc);
+        const ccToUse = inputAmount !== undefined ? Math.min(inputAmount, state.cc) : state.cc;
+        const result = convertCCtoDB(ccToUse);
 
         if (result.gained === 0) {
             Game.emit('conversionFailed', {
@@ -277,15 +280,18 @@ const Currencies = (() => {
     }
 
     // ── Perform Doubloon → Ticket Conversion ─────────────────
-    function doConvertDB() {
+    function doConvertDB(inputAmount) {
         const state = Game.getState();
+        const dbToUse = inputAmount !== undefined ? Math.min(inputAmount, state.doubloons || 0) : (state.doubloons || 0);
 
         // Crown seizure check BEFORE conversion
-        const crownResult = checkCrownSeizure(state.doubloons || 0);
+        const totalDB = state.doubloons || 0;
+        const crownResult = checkCrownSeizure(dbToUse);
         let availableDB = crownResult.amount;
+        const seized = dbToUse - availableDB;
         if (crownResult.seized) {
-            // Crown takes from your total doubloons
-            Game.setState({ doubloons: availableDB });
+            // Crown takes from total doubloons, not just the conversion portion
+            Game.setState({ doubloons: totalDB - seized });
         }
 
         const result = convertDBtoTK(availableDB);
@@ -303,8 +309,9 @@ const Currencies = (() => {
         const fee = Math.max(0, Math.floor(gained / 3));
         gained = Math.max(1, gained - fee);
 
+        const currentDB = Game.getState().doubloons || 0;
         Game.setState({
-            doubloons: availableDB - result.spent,
+            doubloons: currentDB - result.spent,
             tickets: (state.tickets || 0) + gained,
             lifetimeTickets: (state.lifetimeTickets || 0) + gained,
         });

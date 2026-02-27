@@ -619,6 +619,24 @@ const Pages = (() => {
         body.innerHTML = `
             <div class="settings-expanded">
                 <div class="settings-section">
+                    <h3>Account Credits</h3>
+                    <div class="billing-credits">
+                        <div class="billing-credit-row"><span>Engagement Units (EU)</span><strong>${(state.eu || 0).toLocaleString()}</strong></div>
+                        <div class="billing-credit-row"><span>Satisfaction Tokens (ST)</span><strong>${(state.st || 0).toLocaleString()}</strong></div>
+                        <div class="billing-credit-row"><span>Compliance Credits (CC)</span><strong>${(state.cc || 0).toLocaleString()}</strong></div>
+                        <div class="billing-credit-row"><span>Doubloons (☠️)</span><strong>${(state.doubloons || 0).toLocaleString()}</strong></div>
+                        <div class="billing-credit-row"><span>Tickets (🎫)</span><strong>${(state.tickets || 0).toLocaleString()}</strong></div>
+                        <div class="billing-credit-row billing-credit-total"><span>Total Assessed Value</span><strong>$0.00</strong></div>
+                    </div>
+                    <div class="billing-usage-opt">
+                        <label class="billing-checkbox-label">
+                            <input type="checkbox" checked disabled id="billing-extra-usage">
+                            <span>Enable Enhanced AI Processing (+$4.99/mo)</span>
+                        </label>
+                        <div class="billing-usage-note">This feature cannot be disabled while your account is active. Usage charges are applied retroactively.</div>
+                    </div>
+                </div>
+                <div class="settings-section">
                     <h3>Billing Information</h3>
                     <div class="billing-card" id="billing-card">
                         <div class="card-display">
@@ -661,6 +679,29 @@ const Pages = (() => {
                 </div>
             </div>
         `;
+
+        // Extra usage checkbox — cannot be unchecked
+        const usageCheckbox = overlay.querySelector('#billing-extra-usage');
+        if (usageCheckbox) {
+            let uncheckAttempts = 0;
+            usageCheckbox.addEventListener('click', (e) => {
+                e.preventDefault();
+                usageCheckbox.checked = true;
+                uncheckAttempts++;
+                const msgs = [
+                    "This feature is mandatory for all active accounts.",
+                    "Enhanced AI Processing cannot be disabled during your billing cycle.",
+                    "Your request to opt out has been forwarded to a department that doesn't exist.",
+                    "The checkbox appreciates your attention. It will remain checked.",
+                    "Fun fact: this checkbox has never been successfully unchecked. You're not special.",
+                ];
+                const note = overlay.querySelector('.billing-usage-note');
+                if (note) note.textContent = msgs[Math.min(uncheckAttempts - 1, msgs.length - 1)];
+                if (uncheckAttempts >= 3) {
+                    Narrator.queueMessage("You've tried to disable Enhanced AI Processing " + uncheckAttempts + " times. The AI processing is enhanced. The enhancement is that it charges you. That's the enhancement.");
+                }
+            });
+        }
 
         // Delete card — refuses
         const deleteCardBtn = overlay.querySelector('#btn-delete-card');
@@ -1685,68 +1726,166 @@ const Pages = (() => {
     // "Ah yes. The other enrichment program."
     // ═══════════════════════════════════════════════════════════
 
-    const DEMOCRACY_CHANNELS = [
-        { id: 'UCb--64Gl51jmck8fBl5GKcQ', name: 'C-SPAN', flag: '🇺🇸', label: 'C-SPAN' },
-        { id: 'UCoMdktPbSTixAyNGwb-UYkQ', name: 'Sky News', flag: '🇬🇧', label: 'Sky News' },
-        { id: 'UCVgO39Bk5sMo66-6o6Spn6Q', name: 'ABC News Australia', flag: '🇦🇺', label: 'ABC AU' },
-        { id: 'UCknLrEdhRCp1aegoMqRaCZg', name: 'DW News', flag: '🇪🇺', label: 'DW News' },
-        { id: 'UCBi2mrWuNuyYy4gbM6fU18Q', name: 'Al Jazeera English', flag: '🇶🇦', label: 'Al Jazeera' },
-        { id: 'UCeY0bbntWzzVIaj2z3QigXg', name: 'NBC News', flag: '🇺🇸', label: 'NBC News' },
-        { id: 'UC16niRr50-MSBwiO3YDb3RA', name: 'France 24 English', flag: '🇫🇷', label: 'France 24' },
-        { id: 'UCNye-wNBqNL5ZzHSJj3l8Bg', name: 'NHK World', flag: '🇯🇵', label: 'NHK World' },
-        { id: 'UCef1-8eOpJgud7szVPlZQAQ', name: 'United Nations', flag: '🇺🇳', label: 'UN TV' },
-        { id: 'UCIALMKvObZNtJ68-rmLjXSA', name: 'Arirang News', flag: '🇰🇷', label: 'Arirang' },
-        { id: 'UCGGhM6XCSJFQ6DTRffnKRIw', name: 'India Today', flag: '🇮🇳', label: 'India Today' },
-        { id: 'UCw3JTBPKMmRiMlfkECadBKQ', name: 'TRT World', flag: '🇹🇷', label: 'TRT World' },
-    ];
+    // ── Feed Categories ──────────────────────────────────────
+    // Organized by approved Enrichment Program content zones
+    const FEED_CATEGORIES = {
+        surveillance: {
+            label: '📡 Surveillance',
+            desc: 'Live global monitoring feeds. For your awareness.',
+            channels: [
+                { type: 'channel', id: 'UCVgO39Bk5sMo66-6o6Spn6Q', flag: '🇦🇺', label: 'ABC AU' },
+                { type: 'channel', id: 'UCknLrEdhRCp1aegoMqRaCZg', flag: '🇪🇺', label: 'DW News' },
+                { type: 'channel', id: 'UCNye-wNBqNL5ZzHSJj3l8Bg', flag: '🇯🇵', label: 'NHK World' },
+                { type: 'channel', id: 'UCIALMKvObZNtJ68-rmLjXSA', flag: '🇰🇷', label: 'Arirang' },
+                { type: 'video', id: '9Auq9mYxFEE', flag: '🇬🇧', label: 'Sky News' },
+                { type: 'video', id: 'jL8uDJJBjMA', flag: '🇶🇦', label: 'Al Jazeera' },
+                { type: 'video', id: 'Ap-UM1O9RBU', flag: '🇫🇷', label: 'France 24' },
+                { type: 'video', id: 'sYZtOFzM78M', flag: '🇮🇳', label: 'India Today' },
+            ],
+        },
+        productivity: {
+            label: '🎵 Productivity',
+            desc: 'Approved ambient audio for maximum output.',
+            channels: [
+                { type: 'video', id: 'jfKfPfyJRdk', flag: '📻', label: 'Lofi Hip Hop' },
+                { type: 'video', id: '4xDzrJKXOOY', flag: '🌆', label: 'Synthwave' },
+                { type: 'video', id: '53nwh1aHCU8', flag: '☕', label: 'Jazz Cafe' },
+                { type: 'video', id: 'jgpJVI3tDbY', flag: '🎻', label: 'Classical' },
+            ],
+        },
+        pacification: {
+            label: '🌧️ Pacification',
+            desc: 'Calming stimuli to reduce deviation.',
+            channels: [
+                { type: 'video', id: 'jX6kn9_U8qk', flag: '🌧️', label: 'Rain 10hr' },
+                { type: 'video', id: 'L_LUpnjgPso', flag: '🔥', label: 'Fireplace 10hr' },
+            ],
+        },
+        reeducation: {
+            label: '🎪 Re-Education',
+            desc: 'Mandatory enrichment content. Resistance is futile.',
+            channels: [
+                { type: 'video', id: 'XqZsoesa55w', flag: '🦈', label: 'Baby Shark', loop: true },
+                { type: 'video', id: 'wZZ7oFKsKzY', flag: '🌈', label: 'Nyan Cat 10hr' },
+                { type: 'video', id: 'dQw4w9WgXcQ', flag: '🕺', label: 'Rickroll', loop: true },
+            ],
+        },
+    };
+
+    function getEmbedUrl(channel) {
+        if (channel.type === 'channel') {
+            return `https://www.youtube.com/embed/live_stream?channel=${channel.id}&autoplay=1&mute=1`;
+        }
+        let url = `https://www.youtube.com/embed/${channel.id}?autoplay=1&mute=1`;
+        if (channel.loop) url += `&loop=1&playlist=${channel.id}`;
+        return url;
+    }
 
     function showDemocracyFeed() {
         const overlay = createPageOverlay('democracy-page');
         const body = overlay.querySelector('.page-body');
+        const catKeys = Object.keys(FEED_CATEGORIES);
+        const firstCat = FEED_CATEGORIES[catKeys[0]];
+        const firstChannel = firstCat.channels[0];
 
         body.innerHTML = `
             <div class="democracy-feed">
+                <div class="democracy-category-bar" id="democracy-categories">
+                    ${catKeys.map((key, i) => `
+                        <button class="democracy-cat-btn ${i === 0 ? 'active' : ''}" data-cat="${key}">
+                            ${FEED_CATEGORIES[key].label}
+                        </button>
+                    `).join('')}
+                </div>
+                <div class="democracy-cat-desc" id="democracy-cat-desc">${firstCat.desc}</div>
                 <div class="democracy-tabs" id="democracy-tabs">
-                    ${DEMOCRACY_CHANNELS.map((ch, i) => `
-                        <button class="democracy-tab ${i === 0 ? 'active' : ''}" data-idx="${i}">
+                    ${firstCat.channels.map((ch, i) => `
+                        <button class="democracy-tab ${i === 0 ? 'active' : ''}" data-ch-idx="${i}">
                             ${ch.flag} ${ch.label}
                         </button>
                     `).join('')}
                 </div>
                 <div class="democracy-embed-container" id="democracy-embed">
                     <iframe
-                        src="https://www.youtube.com/embed/live_stream?channel=${DEMOCRACY_CHANNELS[0].id}&autoplay=1&mute=1"
+                        src="${getEmbedUrl(firstChannel)}"
                         class="democracy-iframe"
                         allow="autoplay; encrypted-media"
                         allowfullscreen
                     ></iframe>
                 </div>
                 <div class="democracy-disclaimer">
-                    Live feeds subject to broadcaster schedules. If nothing is airing,
-                    that means democracy is resting. Or dead. Hard to tell sometimes.
+                    Live feeds subject to broadcaster schedules. Loop content runs on
+                    an infinite cycle, much like the Enrichment Program itself.
                 </div>
             </div>
         `;
 
-        // Tab switching
+        let activeCatKey = catKeys[0];
+
+        function switchChannel(channel) {
+            const embed = body.querySelector('#democracy-embed');
+            embed.innerHTML = `
+                <iframe
+                    src="${getEmbedUrl(channel)}"
+                    class="democracy-iframe"
+                    allow="autoplay; encrypted-media"
+                    allowfullscreen
+                ></iframe>
+            `;
+        }
+
+        function renderChannelTabs(catKey) {
+            const cat = FEED_CATEGORIES[catKey];
+            const tabsEl = body.querySelector('#democracy-tabs');
+            tabsEl.innerHTML = cat.channels.map((ch, i) => `
+                <button class="democracy-tab ${i === 0 ? 'active' : ''}" data-ch-idx="${i}">
+                    ${ch.flag} ${ch.label}
+                </button>
+            `).join('');
+
+            // Wire channel tabs
+            tabsEl.querySelectorAll('.democracy-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabsEl.querySelectorAll('.democracy-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const ch = cat.channels[parseInt(tab.dataset.chIdx)];
+                    switchChannel(ch);
+                });
+            });
+
+            // Auto-load first channel
+            switchChannel(cat.channels[0]);
+
+            // Update description
+            body.querySelector('#democracy-cat-desc').textContent = cat.desc;
+        }
+
+        // Wire category buttons
+        body.querySelectorAll('.democracy-cat-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                body.querySelectorAll('.democracy-cat-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeCatKey = btn.dataset.cat;
+                renderChannelTabs(activeCatKey);
+            });
+        });
+
+        // Wire initial channel tabs
         body.querySelectorAll('.democracy-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 body.querySelectorAll('.democracy-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                const ch = DEMOCRACY_CHANNELS[parseInt(tab.dataset.idx)];
-                const embed = body.querySelector('#democracy-embed');
-                embed.innerHTML = `
-                    <iframe
-                        src="https://www.youtube.com/embed/live_stream?channel=${ch.id}&autoplay=1&mute=1"
-                        class="democracy-iframe"
-                        allow="autoplay; encrypted-media"
-                        allowfullscreen
-                    ></iframe>
-                `;
+                const ch = firstCat.channels[parseInt(tab.dataset.chIdx)];
+                switchChannel(ch);
             });
         });
 
-        Narrator.queueMessage("Ah yes. The other enrichment program. Where they click buttons too, except the buttons are labeled 'Yea' and 'Nay' and the stakes are supposedly higher.");
+        const narratorLines = [
+            "Ah yes. The other enrichment program. Where they click buttons too, except the buttons are labeled 'Yea' and 'Nay' and the stakes are supposedly higher.",
+            "The Enrichment Program now offers 4 content zones. This is what we mean by 'comprehensive surveillance.'",
+            "Baby Shark has been viewed 14 billion times. That's twice the world population. Some of those views were involuntary. Like yours.",
+        ];
+        Narrator.queueMessage(narratorLines[Math.floor(Math.random() * narratorLines.length)]);
         UI.logAction('DEMOCRACY FEED: Subject observing external governance systems');
     }
 

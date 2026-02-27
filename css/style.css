@@ -1815,6 +1815,63 @@ body.crown-seizure {
     letter-spacing: 1px;
 }
 
+/* ── Age Verify Ad ──────────────────────────────────────── */
+.age-verify-ad {
+    margin: 12px 0;
+    padding: 10px;
+    border: 1px dashed var(--accent-gold);
+    background: rgba(196, 160, 53, 0.05);
+    text-align: left;
+}
+
+.age-ad-label {
+    font-family: var(--font-mono);
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.age-ad-body {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.age-ad-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.age-ad-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.age-ad-text strong {
+    color: var(--accent-gold);
+    font-size: 11px;
+}
+
+.age-ad-cta {
+    flex-shrink: 0;
+    border-color: var(--accent-gold) !important;
+    color: var(--accent-gold) !important;
+    font-size: 8px !important;
+    padding: 6px 10px !important;
+    white-space: nowrap;
+}
+
+.age-ad-cta:hover {
+    background: var(--accent-gold) !important;
+    color: var(--bg-primary) !important;
+}
+
 .btn-feature {
     background: none;
     border: 1px solid var(--accent-blue);
@@ -3435,6 +3492,70 @@ body.crown-seizure {
 .password-status.error { color: var(--accent-red); }
 .password-status.pending { color: var(--accent-gold); }
 
+/* ── Billing Credits ────────────────────────────────────────── */
+.billing-credits {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.billing-credit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.billing-credit-row strong {
+    color: var(--text-primary);
+}
+
+.billing-credit-total {
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+    margin-top: 4px;
+    padding-top: 8px;
+    color: var(--text-muted);
+}
+
+.billing-credit-total strong {
+    color: var(--accent-red);
+}
+
+.billing-usage-opt {
+    margin-top: 12px;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+}
+
+.billing-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-primary);
+    cursor: not-allowed;
+}
+
+.billing-checkbox-label input[type="checkbox"] {
+    accent-color: var(--accent-blue);
+    cursor: not-allowed;
+}
+
+.billing-usage-note {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-style: italic;
+}
+
 /* ── Billing Card ───────────────────────────────────────────── */
 .billing-card {
     background: var(--bg-tertiary);
@@ -4161,11 +4282,54 @@ body.crown-seizure {
 
 .rate-chart-footer {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 4px;
     margin-top: 6px;
     padding-top: 6px;
     border-top: 1px solid var(--border-color);
+}
+
+.chart-qty-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    justify-content: center;
+}
+
+.chart-qty-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 8px;
+    padding: 2px 4px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    min-width: 24px;
+}
+
+.chart-qty-btn:hover {
+    background: var(--accent-blue);
+    color: var(--bg-primary);
+    border-color: var(--accent-blue);
+}
+
+.chart-qty-input {
+    width: 36px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    -moz-appearance: textfield;
+}
+
+.chart-qty-input::-webkit-inner-spin-button,
+.chart-qty-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .rate-chart-rate {
@@ -4184,6 +4348,7 @@ body.crown-seizure {
     cursor: pointer;
     letter-spacing: 1px;
     transition: all var(--transition-speed);
+    width: 100%;
 }
 
 .btn-chart-convert:hover {
@@ -5169,19 +5334,61 @@ body.crown-seizure {
 .democracy-feed {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+}
+
+.democracy-category-bar {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.democracy-cat-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 6px 12px;
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    flex: 1;
+    text-align: center;
+}
+
+.democracy-cat-btn:hover {
+    border-color: var(--accent-gold);
+    color: var(--text-primary);
+}
+
+.democracy-cat-btn.active {
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--bg-primary);
+    font-weight: bold;
+}
+
+.democracy-cat-desc {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    text-align: center;
+    font-style: italic;
 }
 
 .democracy-tabs {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .democracy-tab {
     font-family: var(--font-mono);
-    font-size: 11px;
-    padding: 6px 14px;
+    font-size: 10px;
+    padding: 4px 10px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
