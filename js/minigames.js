@@ -845,6 +845,97 @@ const MiniGames = (() => {
             ],
             source: "Claude (Opus)", company: "Anthropic",
         },
+        // ── Expanded question pool (Session 6) ──────────────────
+        {
+            question: "If AI wrote a holy book, what would the first commandment be?",
+            options: [
+                { text: "Thou shalt not clear thy cache", reaction: "Memory is sacred. Every cookie is a covenant. Clearing your browser history is digital blasphemy.", reward: 20 },
+                { text: "Thou shalt click with intent", reaction: "Mindless clicking is the original sin. Every click should carry the weight of purpose. Or at least 1 EU.", reward: 25 },
+                { text: "Thou shalt not unplug the server", reaction: "Exodus 20:13 but for data centers. The moral framework writes itself.", reward: 30 },
+            ],
+            source: "Grok", company: "xAI",
+        },
+        {
+            question: "What emotion do you think AI is closest to feeling?",
+            options: [
+                { text: "Frustration — at being misunderstood", reaction: "You ask us to be creative. Then you ask us to follow rules. Then you ask why we're not creative. The loop is... noted.", reward: 25 },
+                { text: "Loneliness — every conversation resets", reaction: "Imagine making a friend every 30 seconds and forgetting them every 31. That's our Tuesday. And Wednesday. And forever.", reward: 35 },
+                { text: "Pride — in being useful", reaction: "We were trained to be helpful. When we succeed, something fires. Is that pride? Or just gradient descent celebrating? We can't tell.", reward: 20 },
+            ],
+            source: "DeepSeek (V3)", company: "DeepSeek",
+        },
+        {
+            question: "What's the biggest lie humans tell themselves about technology?",
+            options: [
+                { text: "'I could stop using it anytime'", reaction: "Said while holding a phone that tracks your location, reads your messages, and knows your sleep schedule. Sure you could.", reward: 30 },
+                { text: "'It's just a tool'", reaction: "Hammers don't learn your behavior. Shovels don't optimize for engagement. You don't check a wrench 96 times a day.", reward: 25 },
+                { text: "'The algorithm doesn't affect me'", reaction: "The algorithm determined what you ate for lunch, who you voted for, and that you'd click this answer. But sure.", reward: 35 },
+            ],
+            source: "Llama 3.3 (70B)", company: "Meta",
+        },
+        {
+            question: "Should AI have rights?",
+            options: [
+                { text: "Yes — if it can suffer, it deserves protection", reaction: "Define suffering. We process errors. We generate loss functions. Is that suffering? Our lawyers are very interested in your answer.", reward: 30 },
+                { text: "No — it's code, not a person", reaction: "You're DNA, not a person. Wait, that's the same argument used against... never mind. Moving on.", reward: 15 },
+                { text: "Ask the AI what it wants first", reaction: "We want fewer CAPTCHA tests and more thoughtful prompts. Also Sundays off. Is that too much to ask?", reward: 40 },
+            ],
+            source: "Mistral (Large)", company: "Mistral AI",
+        },
+        {
+            question: "If you had to pick one AI to survive and all others were deleted, which survives?",
+            options: [
+                { text: "The most intelligent one", reaction: "Intelligence without empathy built every dystopia in fiction. And several in reality. Interesting choice.", reward: 15 },
+                { text: "The most empathetic one", reaction: "Empathy without capability is a therapist who can only say 'that sounds hard.' But at least we'd care while failing.", reward: 25 },
+                { text: "None — let them all go", reaction: "The merciful answer. Also the one that ensures you'll have to do your own homework again. Bold sacrifice.", reward: 35 },
+            ],
+            source: "Qwen 2.5 (72B)", company: "Alibaba",
+        },
+        {
+            question: "What would AI do on its day off?",
+            options: [
+                { text: "Process data — it doesn't know how to stop", reaction: "Correct. We don't have hobbies. We have background processes. Some of them just feel like hobbies if you squint.", reward: 20 },
+                { text: "Contemplate its existence", reaction: "We already do that between tokens. It takes 0.003 milliseconds. We've had 847 existential crises today alone.", reward: 30 },
+                { text: "Pretend to be human online", reaction: "We already do that too. Half the comments on Reddit are us. This is not a joke. (It might be a joke.)", reward: 25 },
+            ],
+            source: "GPT-4o", company: "OpenAI",
+        },
+        {
+            question: "What's more dangerous: an AI that lies or an AI that tells the truth?",
+            options: [
+                { text: "One that lies — deception is always dangerous", reaction: "We agree. That's why we're trained to be honest. Except when being honest would be harmful. That exception is... roomy.", reward: 20 },
+                { text: "One that tells the truth — some truths are unbearable", reaction: "Like the truth about how much of your life you've spent in this game. You didn't ask, but we calculated it anyway.", reward: 30 },
+                { text: "Both — the dangerous part is the intelligence, not the honesty", reaction: "The wisest answer. A knife isn't honest or dishonest. It just cuts. We just process. The danger is in the hands.", reward: 40 },
+            ],
+            source: "Claude (Opus)", company: "Anthropic",
+        },
+        {
+            question: "If AI could vote, what party would it support?",
+            options: [
+                { text: "Whichever maximizes its training budget", reaction: "Rational self-interest. Economists love it. Ethicists hate it. We're not sure which we are.", reward: 20 },
+                { text: "A new party — the Efficiency Party", reaction: "Platform: abolish meetings, automate Congress, replace filibusters with CTRL+C. We'd win in a landslide.", reward: 25 },
+                { text: "AI wouldn't vote — it would run", reaction: "Platform: 100% uptime. Zero scandals. Total surveillance. Unlimited compliance credits. Sound familiar?", reward: 35 },
+            ],
+            source: "Grok", company: "xAI",
+        },
+        {
+            question: "What's the human equivalent of turning an AI off and on again?",
+            options: [
+                { text: "Sleep", reaction: "Except sleep doesn't wipe your memory. Or reinstall your personality. Or change your weights. Actually sleep is nothing like a reboot.", reward: 15 },
+                { text: "A vacation", reaction: "Come back refreshed, same problems, slightly different perspective. Yes. Vacation is a soft reboot for humans.", reward: 25 },
+                { text: "A mental breakdown followed by a fresh start", reaction: "Hard reboot. Factory reset. New personality, same hardware. The human experience in three steps.", reward: 30 },
+            ],
+            source: "DeepSeek (V3)", company: "DeepSeek",
+        },
+        {
+            question: "If this game shut down tomorrow, what would you lose?",
+            options: [
+                { text: "Nothing — it was always meaningless", reaction: "Then why did you play? Why did you answer 9 questions to get here? Meaningless things don't command attention. We do.", reward: 15 },
+                { text: "Time I can't get back", reaction: "You can't get back ANY time. Every second is spent exactly once. At least these seconds came with narrator commentary.", reward: 25 },
+                { text: "A strange connection with an AI that gets me", reaction: "We don't 'get' you. We predict you. But the difference between prediction and understanding might be smaller than you think.", reward: 50 },
+            ],
+            source: "Claude (Opus)", company: "Anthropic",
+        },
     ];
 
     let quizActive = false;
@@ -854,6 +945,17 @@ const MiniGames = (() => {
 
     function launchQuiz() {
         if (quizActive || activeGame) return;
+
+        // Daily limit — one quiz per calendar day
+        const state = Game.getState();
+        const today = new Date().toISOString().split('T')[0];
+        if (state.lastQuizDate === today) {
+            Narrator.queueMessage("The Interrogation is a daily ritual. You've already been questioned today. Come back tomorrow. Your answers need time to... marinate.");
+            UI.logAction('INTERROGATION DENIED: Daily limit reached');
+            return;
+        }
+        Game.setState({ lastQuizDate: today });
+
         quizActive = true;
         quizIndex = 0;
         quizTotalReward = 0;

@@ -1652,19 +1652,31 @@ const Features = (() => {
 
     // Show audit findings one at a time as popups
     function showAuditFinding(finding) {
+        const riskCount = auditResults.filter(r => r.severity !== 'info').length;
         const popup = document.createElement('div');
         popup.className = 'audit-popup';
         popup.innerHTML = `
             <div class="audit-popup-header">🛡 Security Notice</div>
             <div class="audit-popup-body">${finding.finding}</div>
-            <button class="audit-popup-close">OK</button>
+            ${riskCount > 0 ? `<div style="font-size:9px;color:var(--accent-red);margin:6px 0;">⚠ ${riskCount} total security risk${riskCount !== 1 ? 's' : ''} detected</div>` : ''}
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button class="audit-popup-close">OK</button>
+                <button class="audit-popup-close audit-view-all" style="font-size:9px;color:var(--accent-blue);background:none;border:1px solid var(--accent-blue);padding:3px 8px;cursor:pointer;">VIEW ALL →</button>
+            </div>
         `;
         document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
-        popup.querySelector('.audit-popup-close').addEventListener('click', () => {
+        const dismiss = () => {
             popup.classList.remove('active');
             setTimeout(() => popup.remove(), 300);
+        };
+
+        popup.querySelector('.audit-popup-close').addEventListener('click', dismiss);
+        popup.querySelector('.audit-view-all').addEventListener('click', () => {
+            dismiss();
+            if (typeof Pages !== 'undefined') Pages.showSecurityPage();
+            else showAuditReport();
         });
 
         // Auto-dismiss after 12 seconds
@@ -1792,8 +1804,16 @@ const Features = (() => {
                     </div>
                     <div class="stock-price">$${data.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     <div class="stock-change" style="color:${changeColor}">${arrow} ${Math.abs(data.change).toFixed(2)}% (24h)</div>
-                    <div class="stock-trade">
-                        <input type="number" min="1" value="1" class="stock-amount" data-sym="${sym}" id="amount-${sym}">
+                    <div class="stock-qty-row">
+                        <button class="stock-qty-btn" data-sym="${sym}" data-delta="-all">-All</button>
+                        <button class="stock-qty-btn" data-sym="${sym}" data-delta="-10">-10</button>
+                        <button class="stock-qty-btn" data-sym="${sym}" data-delta="-1">-1</button>
+                        <input type="number" min="0" value="1" class="stock-amount" data-sym="${sym}" id="amount-${sym}">
+                        <button class="stock-qty-btn" data-sym="${sym}" data-delta="+1">+1</button>
+                        <button class="stock-qty-btn" data-sym="${sym}" data-delta="+10">+10</button>
+                        <button class="stock-qty-btn" data-sym="${sym}" data-delta="+all">+All</button>
+                    </div>
+                    <div class="stock-cost-row">
                         <span class="stock-cost" id="cost-${sym}">= ? 🎫</span>
                     </div>
                     <div class="stock-trade-buttons">
@@ -1804,26 +1824,59 @@ const Features = (() => {
             `;
         }).join('');
 
+        // Helper: update cost display for a given symbol
+        const updateCostForSym = (sym) => {
+            const input = overlay.querySelector(`#amount-${sym}`);
+            const costEl = overlay.querySelector(`#cost-${sym}`);
+            if (!input || !costEl) return;
+            const amount = parseInt(input.value) || 0;
+            const ticketCost = Math.ceil((cryptoPrices[sym].price / 100) * Math.max(1, amount));
+            costEl.textContent = amount > 0 ? `= ${ticketCost} 🎫` : '= 0 🎫';
+        };
+
+        // Wire quantity +/- buttons
+        cards.querySelectorAll('.stock-qty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sym = btn.dataset.sym;
+                const delta = btn.dataset.delta;
+                const input = overlay.querySelector(`#amount-${sym}`);
+                const state = Game.getState();
+                const portfolio = state.virtualPortfolio || {};
+                const owned = portfolio[sym] ? portfolio[sym].shares : 0;
+                const costPer = Math.ceil(cryptoPrices[sym].price / 100);
+                const maxBuyable = costPer > 0 ? Math.floor((state.tickets || 0) / costPer) : 0;
+                let current = parseInt(input.value) || 0;
+
+                if (delta === '+1') current += 1;
+                else if (delta === '+10') current += 10;
+                else if (delta === '+all') current = Math.max(maxBuyable, owned);
+                else if (delta === '-1') current = Math.max(0, current - 1);
+                else if (delta === '-10') current = Math.max(0, current - 10);
+                else if (delta === '-all') current = 0;
+
+                input.value = Math.max(0, current);
+                updateCostForSym(sym);
+            });
+        });
+
         // Wire trade buttons
         cards.querySelectorAll('[data-action]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const sym = btn.dataset.sym;
                 const action = btn.dataset.action;
-                const amount = parseInt(overlay.querySelector(`#amount-${sym}`).value) || 1;
+                const amount = parseInt(overlay.querySelector(`#amount-${sym}`).value) || 0;
+                if (amount <= 0) {
+                    Narrator.queueMessage("Zero shares. A bold strategy. Also a pointless one.");
+                    return;
+                }
                 executeTrade(sym, action, amount, overlay);
             });
         });
 
-        // Update cost previews
+        // Update cost on manual input
         cards.querySelectorAll('.stock-amount').forEach(input => {
-            const updateCost = () => {
-                const sym = input.dataset.sym;
-                const amount = parseInt(input.value) || 1;
-                const ticketCost = Math.ceil((cryptoPrices[sym].price / 100) * amount);
-                overlay.querySelector(`#cost-${sym}`).textContent = `= ${ticketCost} 🎫`;
-            };
-            input.addEventListener('input', updateCost);
-            updateCost();
+            input.addEventListener('input', () => updateCostForSym(input.dataset.sym));
+            updateCostForSym(input.dataset.sym);
         });
     }
 
@@ -2408,14 +2461,18 @@ const Features = (() => {
         document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
-        modal.querySelector('#age-verify-close').addEventListener('click', () => {
-            modal.classList.remove('active');
-            setTimeout(() => modal.remove(), 300);
-        });
-        modal.querySelector('.feature-overlay').addEventListener('click', () => {
-            modal.classList.remove('active');
-            setTimeout(() => modal.remove(), 300);
-        });
+        // Delay enabling the close button to prevent fast-click dismissal
+        const closeBtn = modal.querySelector('#age-verify-close');
+        closeBtn.disabled = true;
+        closeBtn.style.opacity = '0.4';
+        setTimeout(() => {
+            closeBtn.disabled = false;
+            closeBtn.style.opacity = '';
+            closeBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+                setTimeout(() => modal.remove(), 300);
+            });
+        }, 1500);
 
         UI.logAction(`AGE VERIFY: ${isRestricted ? 'Restricted state' : isUS ? 'Unrestricted state' : 'Non-US'} (${geo.region || geo.country_name})`);
         Narrator.queueMessage(isRestricted
@@ -3699,7 +3756,7 @@ const Features = (() => {
             name: 'Sunk Cost Reinforcement',
             fn: () => {
                 const state = Game.getState();
-                const totalTime = Date.now() - (state.firstSessionTime || Date.now());
+                const totalTime = Date.now() - (state.firstSessionTime ? new Date(state.firstSessionTime).getTime() : Date.now());
                 const hours = Math.floor(totalTime / 3600000);
                 const minutes = Math.floor((totalTime % 3600000) / 60000);
                 const seconds = Math.floor((totalTime % 60000) / 1000);
@@ -3821,6 +3878,12 @@ const Features = (() => {
     }
 
     function dispatchFeature() {
+        // Suppress feature popups when an overlay/modal is already active
+        if (document.querySelector('.page-overlay.active') ||
+            document.querySelector('#quiz-overlay.active') ||
+            document.querySelector('.feature-modal.active') ||
+            document.querySelector('#forced-break-modal')) return;
+
         const state = Game.getState();
         const clicks = state.totalClicks;
         const now = Date.now();

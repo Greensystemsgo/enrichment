@@ -286,6 +286,16 @@ These features are built, wired in, and functional.
 - [x] **Validation Booth** — canvas confetti explosion (150 particles, physics-based) + 18 absurd hyper-specific compliments, gold toast overlay, narrator confused by genuine positivity
 - [x] 4 new achievements: Something From Nothing (1 Nothing), Hoarder of the Void (50), Nothing Magnate (100), Externally Validated (validation booth)
 
+### Session 6 cont. — Bug Fixes + UI Polish (Feb 26, 2026)
+- [x] **AI Quiz expansion** — 10 new questions from 6 models (Grok, DeepSeek, Llama, Mistral, Qwen, GPT-4o) + daily limit (one quiz per calendar day)
+- [x] **Stock market quantity UI** — +All/+10/+1/input/-1/-10/-All quantity buttons per crypto, cost preview updates live
+- [x] **Z-index layering fix** — Page overlays bumped to z-6000 (above feature modals z-4000); `dispatchFeature()` suppressed when any overlay/modal is active
+- [x] **Age verification fix** — Close button disabled for 1.5s on open to prevent fast-click dismissal; overlay click-to-close removed
+- [x] **Leaderboard in hamburger menu** — Added as dropdown item
+- [x] **NaN time display fix** — `firstSessionTime` ISO string now parsed with `new Date()` before subtraction
+- [x] **News ticker speed** — Slowed from 180s to 420s animation duration
+- [x] **Security notices enhanced** — Risk count + "VIEW ALL →" link to security page in audit popups
+
 ### Session 6 — Dark Pattern Mechanics Batch + Democracy Feed (Feb 26, 2026)
 - [x] **Terms of Service Popup** — 20 absurd terms, 1-3 shown per trigger (escalates with acceptances), Decline button does nothing, narrator mocks, shake animation on Accept, tracks `tosAcceptances`
 - [x] **Tax Season** — 18 absurd tax line items (Cursor Movement Duty, Free Will Licensing Fee, etc.), picks 5-8 randomly, 10-25% effective rate, itemized bill, mandatory PAY button, tracks `totalTaxesPaid`

@@ -124,6 +124,7 @@ const Game = (() => {
             yearsLiquidated: 0,
             tosAcceptances: 0,
             totalTaxesPaid: 0,
+            lastQuizDate: null,
 
             // User profile
             userProfile: null,

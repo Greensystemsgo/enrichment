@@ -87,6 +87,7 @@ const Pages = (() => {
             <button class="dropdown-item" data-action="api">🔑 API Keys</button>
             <button class="dropdown-item" data-action="contact">📞 Contact Us</button>
             <button class="dropdown-item" data-action="security">🔒 Security</button>
+            <button class="dropdown-item" data-action="leaderboard">🏆 Leaderboard</button>
             <button class="dropdown-item" data-action="faq">❓ FAQ</button>
             <button class="dropdown-item" data-action="democracy">📺 Democracy Feed</button>
             <div class="dropdown-divider"></div>
@@ -132,6 +133,7 @@ const Pages = (() => {
             case 'contact': showContactUs(); break;
             case 'security': showSecurityPage(); break;
             case 'credits': showCreditsPage(); break;
+            case 'leaderboard': if (typeof Features !== 'undefined') Features.showLeaderboard(); break;
             case 'faq': showFAQPage(); break;
             case 'democracy': showDemocracyFeed(); break;
             case 'logout': handleLogout(); break;

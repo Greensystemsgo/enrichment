@@ -2855,27 +2855,50 @@ body.crown-seizure {
     margin-bottom: 12px;
 }
 
-.stock-trade {
+.stock-qty-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.stock-qty-btn {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 3px 4px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.stock-qty-btn:hover {
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
 }
 
 .stock-amount {
-    width: 60px;
-    padding: 4px 6px;
+    width: 48px;
+    padding: 3px 4px;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-primary);
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     text-align: center;
+    flex-shrink: 0;
+}
+
+.stock-cost-row {
+    text-align: center;
+    margin-bottom: 6px;
 }
 
 .stock-cost {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
 }
 
@@ -3056,7 +3079,7 @@ body.crown-seizure {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 3000;
+    z-index: 6000;
     background: var(--bg-primary);
     opacity: 0;
     pointer-events: none;
@@ -5029,7 +5052,7 @@ body.crown-seizure {
 .news-ticker-content {
     display: inline-block;
     white-space: nowrap;
-    animation: news-ticker-scroll 180s linear infinite;
+    animation: news-ticker-scroll 420s linear infinite;
     color: var(--text-secondary);
     padding-left: 100%;
 }
