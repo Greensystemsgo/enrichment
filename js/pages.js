@@ -1690,6 +1690,14 @@ const Pages = (() => {
         { id: 'UCoMdktPbSTixAyNGwb-UYkQ', name: 'Sky News', flag: '🇬🇧', label: 'Sky News' },
         { id: 'UCVgO39Bk5sMo66-6o6Spn6Q', name: 'ABC News Australia', flag: '🇦🇺', label: 'ABC AU' },
         { id: 'UCknLrEdhRCp1aegoMqRaCZg', name: 'DW News', flag: '🇪🇺', label: 'DW News' },
+        { id: 'UCBi2mrWuNuyYy4gbM6fU18Q', name: 'Al Jazeera English', flag: '🇶🇦', label: 'Al Jazeera' },
+        { id: 'UCeY0bbntWzzVIaj2z3QigXg', name: 'NBC News', flag: '🇺🇸', label: 'NBC News' },
+        { id: 'UC16niRr50-MSBwiO3YDb3RA', name: 'France 24 English', flag: '🇫🇷', label: 'France 24' },
+        { id: 'UCNye-wNBqNL5ZzHSJj3l8Bg', name: 'NHK World', flag: '🇯🇵', label: 'NHK World' },
+        { id: 'UCef1-8eOpJgud7szVPlZQAQ', name: 'United Nations', flag: '🇺🇳', label: 'UN TV' },
+        { id: 'UCIALMKvObZNtJ68-rmLjXSA', name: 'Arirang News', flag: '🇰🇷', label: 'Arirang' },
+        { id: 'UCGGhM6XCSJFQ6DTRffnKRIw', name: 'India Today', flag: '🇮🇳', label: 'India Today' },
+        { id: 'UCw3JTBPKMmRiMlfkECadBKQ', name: 'TRT World', flag: '🇹🇷', label: 'TRT World' },
     ];
 
     function showDemocracyFeed() {
