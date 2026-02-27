@@ -5486,3 +5486,129 @@ body.crown-seizure {
     text-align: center;
     font-style: italic;
 }
+
+/* ── Upgrade Level Badge ───────────────────────────────────── */
+.upgrade-level {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-gold-bright);
+    background: rgba(196, 160, 53, 0.15);
+    border: 1px solid var(--accent-gold);
+    border-radius: 3px;
+    vertical-align: middle;
+}
+
+/* ── Gaslight Flash ────────────────────────────────────────── */
+.gaslight-flash {
+    animation: gaslightPulse 0.3s ease-in-out;
+}
+
+@keyframes gaslightPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; color: var(--accent-red); }
+}
+
+/* ── Comparison Toast ──────────────────────────────────────── */
+.comparison-toast {
+    position: fixed;
+    bottom: 80px;
+    right: -300px;
+    padding: 10px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent-green);
+    border-left: 3px solid var(--accent-green);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    z-index: 9000;
+    transition: right 0.4s ease;
+    pointer-events: none;
+    max-width: 280px;
+}
+
+.comparison-toast.visible {
+    right: 20px;
+}
+
+/* ── Guilt Banner ──────────────────────────────────────────── */
+.guilt-banner {
+    position: fixed;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--accent-gold);
+    border-bottom: 2px solid var(--accent-gold);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    z-index: 9000;
+    transition: top 0.4s ease;
+    text-align: center;
+    max-width: 500px;
+    white-space: nowrap;
+}
+
+.guilt-banner.visible {
+    top: 10px;
+}
+
+.guilt-icon {
+    margin-right: 6px;
+}
+
+.guilt-dismiss {
+    margin-left: 12px;
+    padding: 2px 8px;
+    background: transparent;
+    border: 1px solid var(--text-muted);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.guilt-dismiss:hover {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+}
+
+/* ── Analytics Eye ─────────────────────────────────────────── */
+#analytics-eye {
+    position: fixed;
+    bottom: 60px;
+    left: 12px;
+    font-size: 20px;
+    opacity: 0.3;
+    z-index: 8000;
+    animation: analyticsWatch 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes analyticsWatch {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.1); }
+}
+
+/* ── Sunk Cost Bar ─────────────────────────────────────────── */
+#sunk-cost-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 6px 16px;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-align: center;
+    letter-spacing: 1px;
+    z-index: 9500;
+    display: none;
+}

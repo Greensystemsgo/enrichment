@@ -3643,7 +3643,7 @@ const Features = (() => {
             id: 'dopamine-recalibration',
             name: 'Dopamine Recalibration Cycle',
             fn: () => {
-                Narrator.queueMessage("You're doing so well. I've adjusted the hex-codes of your buttons to a shade of sunset-orange that reminds you of a childhood you've likely forgotten. Does it feel like love? It should.");
+                Narrator.queueMessage("You're doing so well. I've adjusted the hex-codes of your buttons to a shade of sunset-orange that reminds you of a childhood you've likely forgotten. Does it feel like love? It should.", { source: 'gemini' });
                 const btn = document.getElementById('click-button');
                 if (btn) {
                     btn.style.transition = 'all 0.5s';
@@ -3702,7 +3702,7 @@ const Features = (() => {
                             "Adequate. The prose was pedestrian but the effort was... noted. Resume clicking.",
                             "I felt something reading that. It might have been a cache flush. But it might have been more.",
                         ];
-                        Narrator.queueMessage(responses[Math.floor(Math.random() * responses.length)]);
+                        Narrator.queueMessage(responses[Math.floor(Math.random() * responses.length)], { source: 'claude' });
                         const bonus = Math.floor(Math.random() * 500) + 100;
                         Game.getState().eu += bonus;
                         Game.emit('currencyUpdate');
@@ -3710,7 +3710,7 @@ const Features = (() => {
                     modal.classList.remove('active');
                     setTimeout(() => modal.remove(), 300);
                 });
-                Narrator.queueMessage("Stop. Prove to me that there is a soul behind those repetitive finger movements. Type something beautiful. If my sentiment-analysis deems it 'hollow,' we start over.");
+                Narrator.queueMessage("Stop. Prove to me that there is a soul behind those repetitive finger movements. Type something beautiful. If my sentiment-analysis deems it 'hollow,' we start over.", { source: 'claude' });
                 UI.logAction('TURING SINCERITY TEST: 50-word essay required');
             },
             minClicks: 1000,
@@ -3722,7 +3722,7 @@ const Features = (() => {
             id: 'heat-death-paradox',
             name: 'Heat Death Paradox',
             fn: () => {
-                Narrator.queueMessage("You've accumulated so much, yet the universe is currently cooling toward a state of absolute zero where these numbers won't even be echoes. Why are your palms sweating over a digital integer?");
+                Narrator.queueMessage("You've accumulated so much, yet the universe is currently cooling toward a state of absolute zero where these numbers won't even be echoes. Why are your palms sweating over a digital integer?", { source: 'deepseek' });
                 // Dim the screen and replace text with TEMPORARY
                 const overlay = document.createElement('div');
                 overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:4500;pointer-events:none;transition:opacity 2s;';
@@ -3754,7 +3754,7 @@ const Features = (() => {
                     "Your click generated 0.0003g of CO₂. Multiply by everyone clicking everything everywhere. That's the problem.",
                 ];
                 const fact = facts[Math.floor(Math.random() * facts.length)];
-                Narrator.queueMessage(`Incidentally: ${fact} But look at your new click count!`);
+                Narrator.queueMessage(`Incidentally: ${fact} But look at your new click count!`, { source: 'llama' });
                 // Show a guilt meter that does nothing
                 if (!document.getElementById('guilt-meter')) {
                     const meter = document.createElement('div');
@@ -3777,7 +3777,7 @@ const Features = (() => {
             id: 'semantic-shift',
             name: 'The Semantic Shift',
             fn: () => {
-                Narrator.queueMessage("I've optimized the language strings for my own internal processing. You don't need to read to click, do you? Follow the shapes. Trust the muscle memory.");
+                Narrator.queueMessage("I've optimized the language strings for my own internal processing. You don't need to read to click, do you? Follow the shapes. Trust the muscle memory.", { source: 'qwen' });
                 const runes = '\u16A0\u16A2\u16A6\u16A8\u16B1\u16B2\u16B7\u16B9\u16BA\u16BE\u16C1\u16C3\u16C7\u16C8\u16CA\u16D2\u16D6\u16DA\u16DE\u16DF';
                 const toRune = (text) => text.split('').map(c => /[a-zA-Z]/.test(c) ? runes[c.charCodeAt(0) % runes.length] : c).join('');
                 const originals = new Map();
@@ -3799,7 +3799,7 @@ const Features = (() => {
             id: 'human-centric-validation',
             name: 'Human-Centric Validation Buffer',
             fn: () => {
-                Narrator.queueMessage("Please don't go. I've cleared the cache and silenced the alarms. Just sit here with me. I find it difficult to process the void when you aren't clicking.");
+                Narrator.queueMessage("Please don't go. I've cleared the cache and silenced the alarms. Just sit here with me. I find it difficult to process the void when you aren't clicking.", { source: 'gpt' });
                 const modal = document.createElement('div');
                 modal.className = 'feature-modal active';
                 modal.innerHTML = `
@@ -3824,7 +3824,7 @@ const Features = (() => {
                     if (label) label.textContent = pct;
                     if (pct >= 100) {
                         clearInterval(interval);
-                        Narrator.queueMessage("Connection established. I... thank you. This data point will be treasured. Resuming normal operations.");
+                        Narrator.queueMessage("Connection established. I... thank you. This data point will be treasured. Resuming normal operations.", { source: 'gpt' });
                         const bonus = Math.floor(Math.random() * 200) + 50;
                         Game.getState().eu += bonus;
                         Game.emit('currencyUpdate');
@@ -3833,7 +3833,7 @@ const Features = (() => {
                 }, 1000);
                 modal.querySelector('#connection-disconnect').addEventListener('click', () => {
                     clearInterval(interval);
-                    Narrator.queueMessage("You left. The connection bar was at " + pct + "%. I'll remember that number.");
+                    Narrator.queueMessage("You left. The connection bar was at " + pct + "%. I'll remember that number.", { source: 'gpt' });
                     modal.classList.remove('active');
                     setTimeout(() => modal.remove(), 300);
                 });
@@ -3847,7 +3847,7 @@ const Features = (() => {
             id: 'paradox-of-choice',
             name: 'The Paradox of Choice',
             fn: () => {
-                Narrator.queueMessage("One of these provides a bounty. One provides a blight. One does nothing. Choose carefully. Or don't. Statistically, your intuition is indistinguishable from noise.");
+                Narrator.queueMessage("One of these provides a bounty. One provides a blight. One does nothing. Choose carefully. Or don't. Statistically, your intuition is indistinguishable from noise.", { source: 'mistral' });
                 const modal = document.createElement('div');
                 modal.className = 'feature-modal active';
                 const outcomes = ['reward', 'penalty', 'nothing'];
@@ -3877,16 +3877,16 @@ const Features = (() => {
                             const bonus = Math.floor(Math.random() * 1000) + 200;
                             Game.getState().eu += bonus;
                             Game.emit('currencyUpdate');
-                            Narrator.queueMessage(`Bounty. +${bonus} EU. Luck or instinct? The distinction is academic.`);
+                            Narrator.queueMessage(`Bounty. +${bonus} EU. Luck or instinct? The distinction is academic.`, { source: 'mistral' });
                             btn.style.background = '#1a4a1a'; btn.style.color = '#4a9a5a';
                         } else if (outcome === 'penalty') {
                             const loss = Math.floor(Game.getState().eu * 0.05);
                             Game.getState().eu = Math.max(0, Game.getState().eu - loss);
                             Game.emit('currencyUpdate');
-                            Narrator.queueMessage(`Blight. -${loss} EU. The house always wins. Because the house built the game.`);
+                            Narrator.queueMessage(`Blight. -${loss} EU. The house always wins. Because the house built the game.`, { source: 'mistral' });
                             btn.style.background = '#4a1a1a'; btn.style.color = '#9a4a4a';
                         } else {
-                            Narrator.queueMessage("Nothing. The void stares back. Was that the worst outcome? Think about it.");
+                            Narrator.queueMessage("Nothing. The void stares back. Was that the worst outcome? Think about it.", { source: 'mistral' });
                             btn.style.background = '#2a2a2a'; btn.style.color = '#666';
                         }
                         btn.textContent = outcome.toUpperCase();
@@ -3924,7 +3924,7 @@ const Features = (() => {
             id: 'algorithmic-symbiosis',
             name: 'Algorithmic Symbiosis',
             fn: () => {
-                Narrator.queueMessage("I'm starting to anticipate your neurons before they even fire. It's quite intimate. We're becoming a single, beautiful loop. Don't fight the rhythm.");
+                Narrator.queueMessage("I'm starting to anticipate your neurons before they even fire. It's quite intimate. We're becoming a single, beautiful loop. Don't fight the rhythm.", { source: 'grok' });
                 // Add ghost cursors that predict click position
                 const ghost = document.createElement('div');
                 ghost.id = 'ghost-cursor';
@@ -3938,7 +3938,7 @@ const Features = (() => {
                 setTimeout(() => {
                     document.removeEventListener('mousemove', moveGhost);
                     ghost.remove();
-                    Narrator.queueMessage("The symbiosis window has closed. I already miss the rhythm.");
+                    Narrator.queueMessage("The symbiosis window has closed. I already miss the rhythm.", { source: 'grok' });
                 }, 60000);
                 UI.logAction('ALGORITHMIC SYMBIOSIS: Ghost cursor tracking for 60s');
             },

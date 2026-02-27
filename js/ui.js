@@ -152,7 +152,23 @@ const UI = (() => {
         return 'session';
     }
 
+    const sadSuffixes = [
+        '...but it didn\'t matter.',
+        '...and nobody noticed.',
+        '...which changed nothing.',
+        '...as if anyone cared.',
+        '...into the void.',
+        '...but the void didn\'t answer.',
+        '...temporarily.',
+        '...for what it\'s worth.',
+    ];
+
     function logAction(text) {
+        // Retroactive Sadness: append melancholy suffix
+        if (Game.getState().retroactiveSadness && Math.random() < 0.4) {
+            text += ' ' + sadSuffixes[Math.floor(Math.random() * sadSuffixes.length)];
+        }
+
         const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
         const cat = getLogCategory(text);
         actionLogEntries.push({ timestamp, text, cat });
@@ -203,16 +219,35 @@ const UI = (() => {
         els.clickButton.classList.add('clicked');
         setTimeout(() => els.clickButton.classList.remove('clicked'), 150);
 
-        // Spawn floating +1
-        spawnFloatingText('+1 EU', els.clickButton);
+        const state = Game.getState();
+        const cv = state._lastClickValue || { net: 1, gross: 1, taxAmount: 0, escrowed: false, displayDelay: 0 };
+
+        // Build floating text based on click value pipeline
+        const showFloat = () => {
+            if (cv.escrowed) {
+                spawnFloatingText('UNDER REVIEW', els.clickButton);
+            } else {
+                spawnFloatingText(`+${cv.net} EU`, els.clickButton);
+                if (cv.taxAmount > 0) {
+                    setTimeout(() => spawnFloatingText(`TAX: -${cv.taxAmount}`, els.clickButton), 200);
+                }
+            }
+        };
+
+        // Dopamine Throttle: delay the visual feedback
+        if (cv.displayDelay > 0) {
+            setTimeout(showFloat, cv.displayDelay);
+        } else {
+            showFloat();
+        }
 
         // Screen shake at milestones
-        const clicks = Game.getState().totalClicks;
+        const clicks = state.totalClicks;
         if (clicks % 100 === 0) {
             screenShake();
         }
 
-        logAction(`CLICK: Total=${clicks}`);
+        logAction(`CLICK: Total=${clicks} Value=${cv.escrowed ? 'ESCROWED' : cv.net}`);
     }
 
     function spawnFloatingText(text, anchor) {
@@ -345,22 +380,31 @@ const UI = (() => {
             const atMax = upgrade.repeatable && owned >= upgrade.maxLevel;
             const isOnSale = !maxedOut && !atMax && activeSales[upgrade.id] !== undefined;
 
+            // Use computed cost (includes exponential scaling + EP multiplier)
+            const computedCost = Mechanics.getUpgradeCost(upgrade.id);
+
             let costHTML;
             let saleCost = null;
             if (maxedOut || atMax) {
                 costHTML = 'ACQUIRED';
             } else if (isOnSale) {
                 const pct = activeSales[upgrade.id];
-                saleCost = Math.max(1, Math.floor(upgrade.cost * (1 - pct / 100)));
-                costHTML = `<s class="sale-original">${upgrade.cost} CC</s> <span class="sale-price">${saleCost} CC</span> <span class="sale-badge">SALE</span>`;
+                saleCost = Math.max(1, Math.floor(computedCost * (1 - pct / 100)));
+                costHTML = `<s class="sale-original">${computedCost} CC</s> <span class="sale-price">${saleCost} CC</span> <span class="sale-badge">SALE</span>`;
             } else {
-                costHTML = upgrade.cost + ' CC';
+                costHTML = computedCost + ' CC';
+            }
+
+            // Level badge for repeatables
+            let levelHTML = '';
+            if (upgrade.repeatable && owned > 0) {
+                levelHTML = `<span class="upgrade-level">Lv.${owned}/${upgrade.maxLevel}</span>`;
             }
 
             const div = document.createElement('div');
             div.className = `upgrade-item driftable corruptible ${maxedOut || atMax ? 'owned' : ''}`;
             div.innerHTML = `
-                <div class="upgrade-name">${upgrade.name}</div>
+                <div class="upgrade-name">${upgrade.name}${levelHTML}</div>
                 <div class="upgrade-cost">${costHTML}</div>
                 <div class="upgrade-desc">${upgrade.description}</div>
             `;
@@ -812,6 +856,21 @@ const UI = (() => {
         Game.on('busted', (data) => {
             screenShake();
             spawnFloatingText(`-${data.lost} ${data.currency}!`, els.clickButton);
+        });
+
+        // Escrow release floating text
+        Game.on('escrowRelease', (data) => {
+            spawnFloatingText(`RELEASED: +${data.amount} EU`, els.clickButton);
+            logAction(`ESCROW RELEASE: ${data.amount} EU cleared`);
+            updateStats(Game.getState());
+        });
+
+        // Wu Wei passive gain
+        Game.on('wuWeiGain', (data) => {
+            if (els.clickButton) {
+                spawnFloatingText(`+${data.amount} EU (wu wei)`, els.clickButton);
+            }
+            updateStats(Game.getState());
         });
 
         setupButtonDodge();

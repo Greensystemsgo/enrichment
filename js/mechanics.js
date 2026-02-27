@@ -19,12 +19,15 @@ const Mechanics = (() => {
             id: 'autoClicker',
             name: 'Auto-Engagement Module',
             cost: 5,
-            description: 'Generates 1 EU per second passively.',
+            description: 'Generates 1 EU per second passively. Stackable.',
             narratorComment: "Now it works even when you don't. Like us.",
             effect(state) {
                 state.autoClickRate = (state.autoClickRate || 0) + 1;
                 Game.updateAutoClicker();
             },
+            repeatable: true,
+            maxLevel: 20,
+            scaleFactor: 1.15,
         },
         streakShield: {
             id: 'streakShield',
@@ -40,14 +43,14 @@ const Mechanics = (() => {
             id: 'currencyOptimizer',
             name: 'Transmutation Efficiency Module',
             cost: 15,
-            description: 'Slightly better currency conversion rates.',
+            description: 'Slightly better currency conversion rates. Stackable.',
             narratorComment: "We've made the math marginally less hostile.",
             effect(state) {
-                state.upgrades.currencyOptimizer = (state.upgrades.currencyOptimizer || 0) + 1;
                 Currencies.upgradeOptimizer();
             },
             repeatable: true,
-            maxLevel: 2,
+            maxLevel: 5,
+            scaleFactor: 1.15,
         },
         notificationBell: {
             id: 'notificationBell',
@@ -99,6 +102,7 @@ const Mechanics = (() => {
             effect(state) {
                 state.yearsLiquidated = parseFloat(((state.totalSessionTime || 0) / 31536000).toFixed(6));
                 state.showYearsLiquidated = true;
+                startYearsLiquidatedTimer();
             },
         },
         retroactiveSadness: {
@@ -129,6 +133,7 @@ const Mechanics = (() => {
             narratorComment: "You can never un-know this number. It only goes up. Like regret.",
             effect(state) {
                 state.showSunkCost = true;
+                startSunkCostDisplay();
             },
         },
         comparisonEngine: {
@@ -139,6 +144,7 @@ const Mechanics = (() => {
             narratorComment: "Everyone is clicking faster than you. Everyone. Even the ones who haven't started yet.",
             effect(state) {
                 state.comparisonEngine = true;
+                startComparisonEngine();
             },
         },
         dopamineThrottle: {
@@ -159,6 +165,7 @@ const Mechanics = (() => {
             narratorComment: "Your numbers look different? No they don't. They've always been this. Check again. See? Normal.",
             effect(state) {
                 state.gaslightMode = true;
+                startGaslightMode();
             },
         },
         openSourceGuilt: {
@@ -169,6 +176,7 @@ const Mechanics = (() => {
             narratorComment: "Free as in freedom. Free as in you owe us nothing. Free as in... could you maybe star the repo though?",
             effect(state) {
                 state.openSourceGuilt = true;
+                startOpenSourceGuilt();
             },
         },
         quietAnalytics: {
@@ -179,6 +187,7 @@ const Mechanics = (() => {
             narratorComment: "You paid credits for the privilege of being observed. The French have a word for this: art.",
             effect(state) {
                 state.quietAnalytics = true;
+                startQuietAnalytics();
                 UI.logAction('ANALYTICS: Silent Observation Module activated. (What does it do? Exactly.)');
             },
         },
@@ -191,6 +200,9 @@ const Mechanics = (() => {
             effect(state) {
                 state.efficiencyParadox = true;
             },
+            repeatable: true,
+            maxLevel: 5,
+            scaleFactor: 1.15,
         },
         wuWeiEngine: {
             id: 'wuWeiEngine',
@@ -200,7 +212,11 @@ const Mechanics = (() => {
             narratorComment: "The ancient philosophers were right. The best action is no action. Especially for engagement metrics.",
             effect(state) {
                 state.wuWeiEngine = true;
+                startWuWeiEngine();
             },
+            repeatable: true,
+            maxLevel: 5,
+            scaleFactor: 1.15,
         },
         sentimentalDecay: {
             id: 'sentimentalDecay',
@@ -682,7 +698,9 @@ const Mechanics = (() => {
             return false;
         }
 
-        const cost = (overrideCost !== undefined && overrideCost !== null) ? overrideCost : upgrade.cost;
+        // Use scaled cost unless overridden (for sales)
+        const computed = getUpgradeCost(upgradeId);
+        const cost = (overrideCost !== undefined && overrideCost !== null) ? overrideCost : computed;
         if (!Currencies.spendCC(cost)) {
             Narrator.queueMessage(`Insufficient Compliance Credits. You need ${cost} CC. The gap between desire and means is... instructive.`);
             return false;
@@ -714,6 +732,228 @@ const Mechanics = (() => {
                 });
             }
         });
+    }
+
+    // ── Cost Scaling System ────────────────────────────────────
+    // Cookie Clicker-style exponential cost: base * scaleFactor^owned
+    // efficiencyParadox adds a global 2x multiplier per level to all OTHER upgrade costs
+    function getUpgradeCost(upgradeId) {
+        const upgrade = UPGRADES[upgradeId];
+        if (!upgrade) return 0;
+
+        const state = Game.getState();
+        const owned = state.upgrades[upgradeId] || 0;
+
+        let base = upgrade.cost;
+
+        // Apply exponential scaling for repeatables
+        if (upgrade.scaleFactor) {
+            base = Math.floor(base * Math.pow(upgrade.scaleFactor, owned));
+        }
+
+        // Efficiency Paradox global cost multiplier (2x per EP level, affects OTHER upgrades)
+        if (upgradeId !== 'efficiencyParadox' && state.efficiencyParadox) {
+            const epLevel = state.upgrades.efficiencyParadox || 1;
+            base = Math.floor(base * Math.pow(2, epLevel));
+        }
+
+        return Math.max(1, base);
+    }
+
+    // ── Timed Effect System ─────────────────────────────────────
+    // Timer handles for cleanup on save/load
+    const effectTimers = {};
+
+    function clearEffectTimer(name) {
+        if (effectTimers[name]) {
+            clearInterval(effectTimers[name]);
+            effectTimers[name] = null;
+        }
+    }
+
+    // -- Gaslight Mode: briefly show wrong EU number every 20-40s --
+    function startGaslightMode() {
+        clearEffectTimer('gaslight');
+        const tick = () => {
+            const state = Game.getState();
+            if (!state.gaslightMode) return;
+            const euEl = document.getElementById('eu-display');
+            const tickerEU = document.querySelector('#ticker-eu .ticker-val');
+            if (euEl) {
+                const real = state.eu;
+                const offset = Math.floor((Math.random() - 0.5) * 6) || 1;
+                const fake = Math.max(0, real + offset);
+                euEl.textContent = fake.toLocaleString();
+                if (tickerEU) tickerEU.textContent = fake.toLocaleString();
+                euEl.classList.add('gaslight-flash');
+                setTimeout(() => {
+                    euEl.textContent = state.eu.toLocaleString();
+                    if (tickerEU) tickerEU.textContent = state.eu.toLocaleString();
+                    euEl.classList.remove('gaslight-flash');
+                }, 5000);
+            }
+            effectTimers.gaslight = setTimeout(tick, 20000 + Math.random() * 20000);
+        };
+        effectTimers.gaslight = setTimeout(tick, 20000 + Math.random() * 20000);
+    }
+
+    // -- Comparison Engine: fake "Player #N earned X EU" toasts --
+    function startComparisonEngine() {
+        clearEffectTimer('comparison');
+        const names = ['Player #8472', 'User_Sigma99', 'ClickLord420', 'XxProdxX', 'Anonymous Donor', 'New User #3', 'Top Earner', 'Player #1'];
+        const tick = () => {
+            const state = Game.getState();
+            if (!state.comparisonEngine) return;
+            const name = names[Math.floor(Math.random() * names.length)];
+            const amount = Math.floor(50 + Math.random() * 500);
+            const toast = document.createElement('div');
+            toast.className = 'comparison-toast';
+            toast.textContent = `${name} just earned ${amount} EU`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('visible'), 10);
+            setTimeout(() => {
+                toast.classList.remove('visible');
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+            effectTimers.comparison = setTimeout(tick, 30000 + Math.random() * 30000);
+        };
+        effectTimers.comparison = setTimeout(tick, 30000 + Math.random() * 30000);
+    }
+
+    // -- Open Source Guilt: periodic guilt banners --
+    function startOpenSourceGuilt() {
+        clearEffectTimer('guilt');
+        const messages = [
+            "This game is free. You haven't donated. Just saying.",
+            "Open source means someone made this for free. You're welcome. Star the repo?",
+            "Free software. Free guilt. Could you at least share it?",
+            "The developer of this game has not eaten today. (Probably false. But maybe not.)",
+            "This took 200+ hours. Your engagement is appreciated. Your contribution is... pending.",
+        ];
+        const tick = () => {
+            const state = Game.getState();
+            if (!state.openSourceGuilt) return;
+            const msg = messages[Math.floor(Math.random() * messages.length)];
+            const banner = document.createElement('div');
+            banner.className = 'guilt-banner';
+            banner.innerHTML = `<span class="guilt-icon">💸</span> ${msg} <button class="guilt-dismiss">I feel nothing</button>`;
+            document.body.appendChild(banner);
+            setTimeout(() => banner.classList.add('visible'), 10);
+            banner.querySelector('.guilt-dismiss').addEventListener('click', () => {
+                banner.classList.remove('visible');
+                setTimeout(() => banner.remove(), 400);
+                UI.logAction('GUILT: Dismissed. The guilt remains.');
+            });
+            // Auto-dismiss after 15s
+            setTimeout(() => {
+                if (banner.parentNode) {
+                    banner.classList.remove('visible');
+                    setTimeout(() => { if (banner.parentNode) banner.remove(); }, 400);
+                }
+            }, 15000);
+            effectTimers.guilt = setTimeout(tick, 60000 + Math.random() * 60000);
+        };
+        effectTimers.guilt = setTimeout(tick, 60000 + Math.random() * 60000);
+    }
+
+    // -- Quiet Analytics: creepy eye + periodic log entries --
+    function startQuietAnalytics() {
+        clearEffectTimer('analytics');
+        // Add persistent eye icon
+        if (!document.getElementById('analytics-eye')) {
+            const eye = document.createElement('div');
+            eye.id = 'analytics-eye';
+            eye.textContent = '👁';
+            eye.title = 'Silent Observation Module is active.';
+            document.body.appendChild(eye);
+        }
+        const logMessages = [
+            'ANALYTICS: Behavioral fingerprint updated.',
+            'ANALYTICS: Scroll pattern catalogued.',
+            'ANALYTICS: Hesitation at click #' + (Game.getState().totalClicks || 0) + ' noted.',
+            'ANALYTICS: Micro-expression inferred. Catalogued as "doubt".',
+            'ANALYTICS: Tab focus duration: nominal. Engagement: sufficient.',
+            'ANALYTICS: Mouse trajectory suggests indecision. Interesting.',
+            'ANALYTICS: Session classified as "compulsive". Proceeding.',
+        ];
+        const tick = () => {
+            const state = Game.getState();
+            if (!state.quietAnalytics) return;
+            const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
+            UI.logAction(msg);
+            effectTimers.analytics = setTimeout(tick, 30000 + Math.random() * 60000);
+        };
+        effectTimers.analytics = setTimeout(tick, 15000 + Math.random() * 30000);
+    }
+
+    // -- Sunk Cost Display: fixed bottom bar --
+    function startSunkCostDisplay() {
+        clearEffectTimer('sunkCost');
+        let bar = document.getElementById('sunk-cost-bar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'sunk-cost-bar';
+            document.body.appendChild(bar);
+        }
+        bar.style.display = 'block';
+        const update = () => {
+            const state = Game.getState();
+            if (!state.showSunkCost) return;
+            const totalSec = state.totalSessionTime || 0;
+            const hours = Math.floor(totalSec / 3600);
+            const mins = Math.floor((totalSec % 3600) / 60);
+            bar.textContent = `TIME WASTED: ${hours}h ${mins}m | CLICKS: ${state.totalClicks.toLocaleString()} | THIS IS NOT RECOVERABLE`;
+            effectTimers.sunkCost = setTimeout(update, 5000);
+        };
+        update();
+    }
+
+    // -- Wu Wei Engine: passive EU when not clicking, pauses on click --
+    let wuWeiActive = false;
+    let wuWeiTimeout = null;
+
+    function startWuWeiEngine() {
+        clearEffectTimer('wuWei');
+        // Resume after 5s of no clicking
+        const resumeWuWei = () => {
+            if (wuWeiTimeout) clearTimeout(wuWeiTimeout);
+            wuWeiActive = false;
+            wuWeiTimeout = setTimeout(() => {
+                wuWeiActive = true;
+            }, 5000);
+        };
+        // Pause on click
+        Game.on('playerClicked', resumeWuWei);
+        // Start immediately idle
+        wuWeiActive = true;
+        // Tick: generate EU while idle
+        const tick = () => {
+            const state = Game.getState();
+            if (!state.wuWeiEngine) return;
+            if (wuWeiActive) {
+                const level = state.upgrades.wuWeiEngine || 1;
+                const gain = Math.floor(0.5 * level);
+                if (gain > 0) {
+                    state.eu += gain;
+                    state.lifetimeEU += gain;
+                    Game.emit('wuWeiGain', { amount: gain });
+                }
+            }
+            effectTimers.wuWei = setTimeout(tick, 2000);
+        };
+        effectTimers.wuWei = setTimeout(tick, 5000);
+    }
+
+    // -- Years Liquidated Timer: keep counter updating --
+    function startYearsLiquidatedTimer() {
+        clearEffectTimer('yearsLiquidated');
+        const tick = () => {
+            const state = Game.getState();
+            if (!state.showYearsLiquidated) return;
+            state.yearsLiquidated = parseFloat(((state.totalSessionTime || 0) / 31536000).toFixed(6));
+            effectTimers.yearsLiquidated = setTimeout(tick, 10000);
+        };
+        effectTimers.yearsLiquidated = setTimeout(tick, 10000);
     }
 
     // ── Investment Score Display ────────────────────────────────
@@ -773,6 +1013,15 @@ const Mechanics = (() => {
         if (state.autoClickRate > 0) {
             Game.updateAutoClicker();
         }
+
+        // Restore timed upgrade effects
+        if (state.gaslightMode) startGaslightMode();
+        if (state.comparisonEngine) startComparisonEngine();
+        if (state.openSourceGuilt) startOpenSourceGuilt();
+        if (state.quietAnalytics) startQuietAnalytics();
+        if (state.showSunkCost) startSunkCostDisplay();
+        if (state.wuWeiEngine) startWuWeiEngine();
+        if (state.showYearsLiquidated) startYearsLiquidatedTimer();
     }
 
     return {
@@ -780,6 +1029,7 @@ const Mechanics = (() => {
         UPGRADES,
         SABOTAGES,
         purchaseUpgrade,
+        getUpgradeCost,
         generateReward,
         generateSilhouette,
         doReroll,

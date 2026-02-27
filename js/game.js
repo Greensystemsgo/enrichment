@@ -215,15 +215,77 @@ const Game = (() => {
         emit('gameReset');
     }
 
+    // ── Click Value Pipeline ────────────────────────────────────
+    // Reads all upgrade modifier flags and computes final click value.
+    // Returns { gross, net, taxAmount, escrowed, displayDelay }
+    function computeClickValue() {
+        let base = 1;
+
+        // Efficiency Paradox: 2x click value per level
+        const epLevel = state.efficiencyParadox ? (state.upgrades.efficiencyParadox || 1) : 0;
+        if (epLevel > 0) base *= Math.pow(2, epLevel);
+
+        // Sentimental Decay: -0.5% per collectible owned, floored at 50%
+        if (state.sentimentalDecay) {
+            const collectibleCount = (state.collectibles || []).length;
+            const penalty = Math.max(0.50, 1 - collectibleCount * 0.005);
+            base *= penalty;
+        }
+
+        // Click Depreciation: 0.99^N within a 100-click window, resets every 100
+        let depreciationN = 0;
+        if (state.clickDepreciation) {
+            depreciationN = state.totalClicks % 100;
+            base *= Math.pow(0.99, depreciationN);
+        }
+
+        let gross = Math.max(1, Math.round(base));
+
+        // Existential Tax: 10% of gross
+        let taxAmount = 0;
+        if (state.existentialTaxRate > 0) {
+            taxAmount = Math.floor(gross * state.existentialTaxRate);
+        }
+
+        // Click Audit: 20% chance escrowed (released after 10s)
+        let escrowed = false;
+        if (state.clickAuditActive && Math.random() < 0.20) {
+            escrowed = true;
+        }
+
+        // Dopamine Throttle: random 0-2s display delay
+        let displayDelay = 0;
+        if (state.dopamineThrottle) {
+            displayDelay = Math.floor(Math.random() * 2000);
+        }
+
+        const net = escrowed ? 0 : Math.max(1, gross - taxAmount);
+
+        return { gross, net, taxAmount, escrowed, displayDelay };
+    }
+
     // ── Click Handling ─────────────────────────────────────────
     function click() {
         const now = Date.now();
 
+        const clickVal = computeClickValue();
+        state._lastClickValue = clickVal;
+
         state.totalClicks++;
         state.sessionClicks++;
-        state.eu++;
-        state.lifetimeEU++;
         state.clicksSinceLastReward++;
+
+        if (clickVal.escrowed) {
+            // EU held in escrow — released after 10s
+            setTimeout(() => {
+                state.eu += clickVal.gross;
+                state.lifetimeEU += clickVal.gross;
+                emit('escrowRelease', { amount: clickVal.gross });
+            }, 10000);
+        } else {
+            state.eu += clickVal.net;
+            state.lifetimeEU += clickVal.net;
+        }
 
         // Update investment score
         updateInvestmentScore();
@@ -246,10 +308,14 @@ const Game = (() => {
         // Reset idle timer
         resetIdleTimer();
 
+        // Notify Wu Wei engine of click activity
+        if (state.wuWeiEngine) emit('playerClicked');
+
         emit('click', {
             totalClicks: state.totalClicks,
             sessionClicks: state.sessionClicks,
             eu: state.eu,
+            clickValue: clickVal,
         });
 
         // Check for reward threshold
@@ -444,6 +510,7 @@ const Game = (() => {
         off,
         emit,
         click,
+        computeClickValue,
         getState,
         setState,
         save,

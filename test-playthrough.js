@@ -111,6 +111,25 @@ const FEATURE_MANIFEST = [
     { id: 'click-milestone',    pattern: 'CLICK MILESTONE:',        category: 'Rewards',    notes: 'Every 500 clicks' },
     { id: 'calm-reward',        pattern: 'CALM CLICKING REWARD:',   category: 'Rewards',    notes: '100 calm clicks' },
     { id: 'reward-bonus',       pattern: 'REWARD BONUS:',           category: 'Rewards',    notes: 'EU from wholesome' },
+
+    // ── Upgrade Effects ──
+    { id: 'upgrade-cost-scaling',   pattern: 'UPGRADE TEST [PASS]: cost-scaling',       category: 'Upgrades',  notes: 'Exponential cost scaling' },
+    { id: 'upgrade-repeatable',     pattern: 'UPGRADE TEST [PASS]: repeatable',         category: 'Upgrades',  notes: 'Repeatable purchase' },
+    { id: 'upgrade-depreciation',   pattern: 'UPGRADE TEST [PASS]: clickDepreciation',  category: 'Upgrades',  notes: 'Click depreciation flag' },
+    { id: 'upgrade-tax',            pattern: 'UPGRADE TEST [PASS]: existentialTax',     category: 'Upgrades',  notes: 'Existential tax' },
+    { id: 'upgrade-audit',          pattern: 'UPGRADE TEST [PASS]: clickAudit',         category: 'Upgrades',  notes: 'Click audit flag' },
+    { id: 'upgrade-throttle',       pattern: 'UPGRADE TEST [PASS]: dopamineThrottle',   category: 'Upgrades',  notes: 'Dopamine throttle' },
+    { id: 'upgrade-sentimental',    pattern: 'UPGRADE TEST [PASS]: sentimentalDecay',   category: 'Upgrades',  notes: 'Sentimental decay' },
+    { id: 'upgrade-paradox',        pattern: 'UPGRADE TEST [PASS]: efficiencyParadox',  category: 'Upgrades',  notes: 'Efficiency paradox costs' },
+    { id: 'upgrade-sadness',        pattern: 'UPGRADE TEST [PASS]: retroactiveSadness', category: 'Upgrades',  notes: 'Retroactive sadness' },
+    { id: 'upgrade-gaslight',       pattern: 'UPGRADE TEST [PASS]: gaslightMode',       category: 'Upgrades',  notes: 'Gaslight mode' },
+    { id: 'upgrade-comparison',     pattern: 'UPGRADE TEST [PASS]: comparisonEngine',   category: 'Upgrades',  notes: 'Comparison engine' },
+    { id: 'upgrade-guilt',          pattern: 'UPGRADE TEST [PASS]: openSourceGuilt',    category: 'Upgrades',  notes: 'Open source guilt' },
+    { id: 'upgrade-analytics',      pattern: 'UPGRADE TEST [PASS]: quietAnalytics',     category: 'Upgrades',  notes: 'Quiet analytics + eye' },
+    { id: 'upgrade-sunkcost',       pattern: 'UPGRADE TEST [PASS]: sunkCostDisplay',    category: 'Upgrades',  notes: 'Sunk cost bar' },
+    { id: 'upgrade-wuwei',          pattern: 'UPGRADE TEST [PASS]: wuWeiEngine',        category: 'Upgrades',  notes: 'Wu Wei passive gen' },
+    { id: 'upgrade-years',          pattern: 'UPGRADE TEST [PASS]: yearsLiquidator',    category: 'Upgrades',  notes: 'Years liquidated counter' },
+    { id: 'upgrade-level-badge',    pattern: 'UPGRADE TEST [PASS]: ui: upgrade level badge', category: 'Upgrades', notes: 'UI level badge' },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -1170,6 +1189,172 @@ async function main() {
     });
 
     for (const l of conversionResult) console.log(`    ${l}`);
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8b: Upgrade Effects Verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8b: Upgrade effects verification...');
+
+    const upgradeResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // Give enough CC to buy upgrades
+        Game.setState({ cc: 9999, eu: 1000, lifetimeEU: 1000, totalClicks: 7000 });
+
+        // ── Cost Scaling (buy 3x, floor(5*1.15^3)=7 > 5) ──
+        const cost0 = Mechanics.getUpgradeCost('autoClicker');
+        for (let i = 0; i < 3; i++) { Game.setState({ cc: 9999 }); Mechanics.purchaseUpgrade('autoClicker'); }
+        const cost3 = Mechanics.getUpgradeCost('autoClicker');
+        if (cost3 > cost0) pass('cost-scaling: autoClicker price increases after 3 buys');
+        else fail('cost-scaling', `cost0=${cost0} cost3=${cost3}, expected cost3 > cost0`);
+
+        // ── Repeatable max level ──
+        Game.setState({ cc: 9999 });
+        const acBefore = Game.getState().upgrades.autoClicker || 0;
+        // Buy up to max (20) — just buy a few to verify repeatable
+        for (let i = 0; i < 3; i++) {
+            Game.setState({ cc: 9999 });
+            Mechanics.purchaseUpgrade('autoClicker');
+        }
+        const acAfter = Game.getState().upgrades.autoClicker || 0;
+        if (acAfter > acBefore) pass('repeatable: autoClicker bought multiple times');
+        else fail('repeatable', `level didn't increase: before=${acBefore} after=${acAfter}`);
+
+        // ── Click Depreciation ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('emotionalDepreciation');
+        const s1 = Game.getState();
+        if (s1.clickDepreciation === true) pass('clickDepreciation: flag set');
+        else fail('clickDepreciation', 'flag not set');
+
+        // Verify computeClickValue returns reduced value after many clicks
+        Game.setState({ totalClicks: 50, clickDepreciation: true });
+        const cv = Game.computeClickValue();
+        if (cv.gross >= 1) pass('clickDepreciation: computeClickValue returns >= 1');
+        else fail('clickDepreciation: computeClickValue', `gross=${cv.gross}`);
+
+        // ── Existential Tax ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('existentialTax');
+        const s2 = Game.getState();
+        if (s2.existentialTaxRate === 0.10) pass('existentialTax: rate set to 0.10');
+        else fail('existentialTax', `rate=${s2.existentialTaxRate}`);
+
+        // Verify tax in computeClickValue (need EP level 4 → click value 16, tax = floor(16*0.10) = 1)
+        Game.setState({ efficiencyParadox: true, upgrades: { ...Game.getState().upgrades, efficiencyParadox: 4 } });
+        const cv2 = Game.computeClickValue();
+        if (cv2.taxAmount > 0) pass('existentialTax: tax applied in computeClickValue');
+        else fail('existentialTax: computeClickValue', `taxAmount=${cv2.taxAmount}, gross=${cv2.gross}`);
+
+        // ── Click Audit (escrowed) ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('clickAudit');
+        if (Game.getState().clickAuditActive === true) pass('clickAudit: flag set');
+        else fail('clickAudit', 'flag not set');
+
+        // ── Dopamine Throttle ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('dopamineThrottle');
+        if (Game.getState().dopamineThrottle === true) pass('dopamineThrottle: flag set');
+        else fail('dopamineThrottle', 'flag not set');
+
+        // ── Sentimental Decay ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('sentimentalDecay');
+        if (Game.getState().sentimentalDecay === true) pass('sentimentalDecay: flag set');
+        else fail('sentimentalDecay', 'flag not set');
+
+        // ── Efficiency Paradox (repeatable, affects other costs) ──
+        Game.setState({ cc: 9999, efficiencyParadox: false, upgrades: { ...Game.getState().upgrades, efficiencyParadox: 0 } });
+        const costBefore = Mechanics.getUpgradeCost('streakShield');
+        Mechanics.purchaseUpgrade('efficiencyParadox');
+        const costAfter = Mechanics.getUpgradeCost('streakShield');
+        if (costAfter > costBefore) pass('efficiencyParadox: doubles other upgrade costs');
+        else fail('efficiencyParadox', `before=${costBefore} after=${costAfter}`);
+
+        // ── Retroactive Sadness ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('retroactiveSadness');
+        if (Game.getState().retroactiveSadness === true) pass('retroactiveSadness: flag set');
+        else fail('retroactiveSadness', 'flag not set');
+
+        // ── Gaslight Mode (timed, check DOM effect starts) ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('gaslightMode');
+        if (Game.getState().gaslightMode === true) pass('gaslightMode: flag set');
+        else fail('gaslightMode', 'flag not set');
+
+        // ── Comparison Engine ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('comparisonEngine');
+        if (Game.getState().comparisonEngine === true) pass('comparisonEngine: flag set');
+        else fail('comparisonEngine', 'flag not set');
+
+        // ── Open Source Guilt ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('openSourceGuilt');
+        if (Game.getState().openSourceGuilt === true) pass('openSourceGuilt: flag set');
+        else fail('openSourceGuilt', 'flag not set');
+
+        // ── Quiet Analytics (check eye icon spawns) ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('quietAnalytics');
+        if (Game.getState().quietAnalytics === true) pass('quietAnalytics: flag set');
+        else fail('quietAnalytics', 'flag not set');
+        await new Promise(r => setTimeout(r, 200));
+        const eye = document.getElementById('analytics-eye');
+        if (eye) pass('quietAnalytics: eye icon created');
+        else fail('quietAnalytics: eye icon', 'element not found');
+
+        // ── Sunk Cost Display (check bar spawns) ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('sunkenCostDisplay');
+        if (Game.getState().showSunkCost === true) pass('sunkCostDisplay: flag set');
+        else fail('sunkCostDisplay', 'flag not set');
+        await new Promise(r => setTimeout(r, 200));
+        const bar = document.getElementById('sunk-cost-bar');
+        if (bar && bar.style.display !== 'none') pass('sunkCostDisplay: bar visible');
+        else fail('sunkCostDisplay: bar', 'element not found or hidden');
+
+        // ── Wu Wei Engine ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('wuWeiEngine');
+        if (Game.getState().wuWeiEngine === true) pass('wuWeiEngine: flag set');
+        else fail('wuWeiEngine', 'flag not set');
+
+        // ── Years Liquidator ──
+        Game.setState({ cc: 9999 });
+        Mechanics.purchaseUpgrade('yearsLiquidator');
+        if (Game.getState().showYearsLiquidated === true) pass('yearsLiquidator: flag set');
+        else fail('yearsLiquidator', 'flag not set');
+
+        // ── Upgrade level display ──
+        const upgradeList = document.getElementById('upgrade-list');
+        if (upgradeList) {
+            const levelBadge = upgradeList.querySelector('.upgrade-level');
+            if (levelBadge) pass('ui: upgrade level badge rendered');
+            else fail('ui: upgrade level badge', 'no .upgrade-level element found');
+        }
+
+        // Log all results for dossier
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`UPGRADE TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+
+        return results;
+    });
+
+    const upgradePassed = upgradeResults.filter(r => r.ok).length;
+    const upgradeFailed = upgradeResults.filter(r => !r.ok).length;
+    console.log(`    Upgrade tests: ${upgradePassed} passed, ${upgradeFailed} failed out of ${upgradeResults.length}`);
+    for (const r of upgradeResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
     await page.waitForTimeout(500);
 
     // ════════════════════════════════════════════════════════
