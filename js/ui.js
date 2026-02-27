@@ -856,6 +856,7 @@ const UI = (() => {
         Game.on('busted', (data) => {
             screenShake();
             spawnFloatingText(`-${data.lost} ${data.currency}!`, els.clickButton);
+            if (typeof SoundEngine !== 'undefined') SoundEngine.playBusted();
         });
 
         // Escrow release floating text
@@ -863,6 +864,7 @@ const UI = (() => {
             spawnFloatingText(`RELEASED: +${data.amount} EU`, els.clickButton);
             logAction(`ESCROW RELEASE: ${data.amount} EU cleared`);
             updateStats(Game.getState());
+            if (typeof SoundEngine !== 'undefined') SoundEngine.playEscrowRelease();
         });
 
         // Wu Wei passive gain

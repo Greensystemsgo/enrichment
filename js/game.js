@@ -149,6 +149,10 @@ const Game = (() => {
             // User profile
             userProfile: null,
 
+            // Sound
+            soundVolume: 0.5,
+            soundMuted: false,
+
             // Version for migration
             saveVersion: 2,
         };
@@ -277,6 +281,7 @@ const Game = (() => {
 
         if (clickVal.escrowed) {
             // EU held in escrow — released after 10s
+            emit('escrowHeld', { amount: clickVal.gross });
             setTimeout(() => {
                 state.eu += clickVal.gross;
                 state.lifetimeEU += clickVal.gross;

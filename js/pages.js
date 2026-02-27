@@ -405,7 +405,7 @@ const Pages = (() => {
                     </div>
                     <div class="setting-field">
                         <label>Sound Effects</label>
-                        <input type="range" min="0" max="100" value="73" style="pointer-events: none; opacity: 0.5;">
+                        <input type="range" min="0" max="100" value="50" id="pref-volume">
                         <span class="field-note">Volume is system-managed</span>
                     </div>
                     <div class="setting-field">
@@ -503,6 +503,15 @@ const Pages = (() => {
                     setTimeout(() => { e.target.checked = true; }, 3000);
                     UI.logAction('LIGHT MODE ATTEMPTED: Flashbang deployed');
                 }
+            });
+        }
+
+        // Volume slider — actually functional (the "system-managed" note is a lie)
+        const volSlider = overlay.querySelector('#pref-volume');
+        if (volSlider && typeof SoundEngine !== 'undefined') {
+            volSlider.value = Math.round(SoundEngine.getVolume() * 100);
+            volSlider.addEventListener('input', function() {
+                SoundEngine.setVolume(this.value / 100);
             });
         }
 

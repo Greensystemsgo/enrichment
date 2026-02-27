@@ -1058,43 +1058,10 @@ const Features = (() => {
 
 
     // ═══════════════════════════════════════════════════════════
-    // SOUND EFFECTS — Screaming Sun and button clicks
+    // SOUND EFFECTS — now handled by SoundEngine (js/sounds.js)
+    // Click sounds, achievement jingles, and all procedural audio
+    // are centralized in SoundEngine to avoid duplicate AudioContexts.
     // ═══════════════════════════════════════════════════════════
-
-    let audioCtx = null;
-    let soundEnabled = true;
-    let clickSoundCount = 0;
-
-    function getAudioCtx() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        return audioCtx;
-    }
-
-    function playClickSound() {
-        if (!soundEnabled) return;
-        clickSoundCount++;
-
-        try {
-            const ctx = getAudioCtx();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-
-            // Vary the sound slightly each time — pitch creeps up over many clicks
-            const baseFreq = 300 + Math.min(clickSoundCount * 0.1, 200);
-            osc.frequency.value = baseFreq + (Math.random() - 0.5) * 40;
-            osc.type = ['sine', 'triangle', 'square'][Math.floor(Math.random() * 3)];
-
-            gain.gain.value = 0.03;
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.1);
-        } catch (e) { /* Audio not available */ }
-    }
 
     // Screaming Sun gag — AI tries to be funny
     function screaminSunGag() {
@@ -4174,10 +4141,7 @@ const Features = (() => {
         // Ad blocker detection — check if our AADS iframe loaded
         setTimeout(() => detectAdBlocker(), 5000);
 
-        // Sound effects on click
-        Game.on('click', () => {
-            playClickSound();
-        });
+        // Sound effects on click — now handled by SoundEngine.init()
 
         // ── UNIFIED FEATURE POOL — one handler to rule them all ──
         Game.on('click', dispatchFeature);
@@ -4645,6 +4609,13 @@ const Features = (() => {
         }
         achievementShowing = true;
         const ach = achievementQueue.shift();
+
+        // Sound + title flash + browser notification
+        if (typeof SoundEngine !== 'undefined') {
+            SoundEngine.playAchievement();
+            SoundEngine.flashTitle(ach.name);
+        }
+        Game.emit('achievementUnlocked', { name: ach.name, icon: ach.icon });
 
         const toast = document.createElement('div');
         toast.className = 'achievement-toast';

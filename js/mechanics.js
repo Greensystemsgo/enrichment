@@ -499,6 +499,7 @@ const Mechanics = (() => {
     }
 
     function getAudioContext() {
+        if (typeof SoundEngine !== 'undefined') return SoundEngine.getContext();
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
@@ -732,6 +733,8 @@ const Mechanics = (() => {
                 });
             }
         });
+
+        // Additional notifications are handled by SoundEngine.setupExpandedNotifications()
     }
 
     // ── Cost Scaling System ────────────────────────────────────

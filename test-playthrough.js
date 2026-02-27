@@ -130,6 +130,14 @@ const FEATURE_MANIFEST = [
     { id: 'upgrade-wuwei',          pattern: 'UPGRADE TEST [PASS]: wuWeiEngine',        category: 'Upgrades',  notes: 'Wu Wei passive gen' },
     { id: 'upgrade-years',          pattern: 'UPGRADE TEST [PASS]: yearsLiquidator',    category: 'Upgrades',  notes: 'Years liquidated counter' },
     { id: 'upgrade-level-badge',    pattern: 'UPGRADE TEST [PASS]: ui: upgrade level badge', category: 'Upgrades', notes: 'UI level badge' },
+
+    // ── SoundEngine ──
+    { id: 'sound-engine-loaded',    pattern: 'SOUND TEST [PASS]: module loaded',       category: 'Sound', notes: 'SoundEngine exists' },
+    { id: 'sound-context',          pattern: 'SOUND TEST [PASS]: AudioContext',         category: 'Sound', notes: 'getContext() works' },
+    { id: 'sound-volume',           pattern: 'SOUND TEST [PASS]: volume control',       category: 'Sound', notes: 'get/setVolume' },
+    { id: 'sound-title-phase',      pattern: 'SOUND TEST [PASS]: title phase',          category: 'Sound', notes: 'Title updates on phase' },
+    { id: 'sound-title-hidden',     pattern: 'SOUND TEST [PASS]: title hidden cycle',   category: 'Sound', notes: 'Title cycles when hidden' },
+    { id: 'sound-notifications',    pattern: 'SOUND TEST [PASS]: notifications',        category: 'Sound', notes: 'sendNotification exists' },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -1352,6 +1360,80 @@ async function main() {
     const upgradeFailed = upgradeResults.filter(r => !r.ok).length;
     console.log(`    Upgrade tests: ${upgradePassed} passed, ${upgradeFailed} failed out of ${upgradeResults.length}`);
     for (const r of upgradeResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8c: SoundEngine Verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8c: SoundEngine verification...');
+
+    const soundResults = await page.evaluate(() => {
+        const results = [];
+        function pass(name) { results.push({ ok: true, name }); }
+        function fail(name, reason) { results.push({ ok: false, name, reason }); }
+
+        // Module loaded
+        if (typeof SoundEngine !== 'undefined') pass('module loaded');
+        else { fail('module loaded', 'SoundEngine undefined'); return results; }
+
+        // getContext returns AudioContext
+        try {
+            const ctx = SoundEngine.getContext();
+            if (ctx && typeof ctx.createOscillator === 'function') pass('AudioContext');
+            else fail('AudioContext', 'no createOscillator method');
+        } catch (e) { fail('AudioContext', e.message); }
+
+        // Volume control
+        try {
+            const orig = SoundEngine.getVolume();
+            SoundEngine.setVolume(0.75);
+            const after = SoundEngine.getVolume();
+            SoundEngine.setVolume(orig); // restore
+            if (Math.abs(after - 0.75) < 0.01) pass('volume control');
+            else fail('volume control', `expected 0.75, got ${after}`);
+        } catch (e) { fail('volume control', e.message); }
+
+        // Title changes on phase
+        try {
+            Game.setState({ narratorPhase: 4 });
+            Game.emit('phaseChange', { from: 3, to: 4 });
+            const title = document.title;
+            if (title.includes('COMPLIANCE')) pass('title phase');
+            else fail('title phase', `title was "${title}"`);
+        } catch (e) { fail('title phase', e.message); }
+
+        // Title cycles when tab hidden
+        try {
+            Game.emit('tabHidden');
+            // Wait a tick for the first message to apply
+            const hiddenTitle = document.title;
+            Game.emit('tabVisible');
+            if (hiddenTitle !== '' && !hiddenTitle.includes('Voluntary')) pass('title hidden cycle');
+            else fail('title hidden cycle', `title was "${hiddenTitle}"`);
+        } catch (e) { fail('title hidden cycle', e.message); }
+
+        // sendNotification exists and doesn't throw
+        try {
+            if (typeof SoundEngine.sendNotification === 'function') pass('notifications');
+            else fail('notifications', 'sendNotification not a function');
+        } catch (e) { fail('notifications', e.message); }
+
+        // Log results to dossier
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`SOUND TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+
+        return results;
+    });
+
+    const soundPassed = soundResults.filter(r => r.ok).length;
+    const soundFailed = soundResults.filter(r => !r.ok).length;
+    console.log(`    Sound tests: ${soundPassed} passed, ${soundFailed} failed out of ${soundResults.length}`);
+    for (const r of soundResults) {
         const icon = r.ok ? 'PASS' : 'FAIL';
         console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
     }

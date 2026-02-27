@@ -211,6 +211,7 @@
 
     <!-- Scripts (order matters — game.js first, then systems, then UI last) -->
     <script src="js/game.js"></script>
+    <script src="js/sounds.js"></script>
     <script src="js/narrator.js"></script>
     <script src="js/currencies.js"></script>
     <script src="js/mechanics.js"></script>
@@ -227,6 +228,7 @@
     <script>
         // Initialize all systems
         document.addEventListener('DOMContentLoaded', () => {
+            SoundEngine.init();
             Narrator.init();
             Currencies.init();
             Mechanics.init();
