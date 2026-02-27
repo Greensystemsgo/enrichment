@@ -4055,24 +4055,10 @@ body.crown-seizure {
     color: var(--text-muted);
 }
 
-.lb-gap {
-    text-align: center;
-    padding: 12px 0;
-    color: var(--text-muted);
-}
-
-.lb-gap-dots {
-    font-size: 16px;
-    letter-spacing: 8px;
-    opacity: 0.4;
-}
-
-.lb-gap-text {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--accent-red);
-    padding: 6px 0;
-    letter-spacing: 1px;
+.lb-gap-row,
+.lb-below-row {
+    opacity: 0.6;
+    border-style: dashed;
 }
 
 .lb-you {
