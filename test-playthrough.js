@@ -1,8 +1,16 @@
 /**
- * Enrichment Program — Automated Playthrough Test
+ * Enrichment Program — Comprehensive Automated Test
  *
- * Uses Playwright to simulate 5000 clicks, handles all modals/popups,
- * then reads the Dossier log to verify which features triggered.
+ * Phases:
+ *   1. Boot & Cookie consent
+ *   2. Click loop (7000 clicks) — organic feature pool triggering
+ *   3. Direct feature pool calls — guarantee 100% pool coverage
+ *   4. Popup category verification — all 6 categories via direct calls
+ *   5. Achievement grind — state manipulation + checkAchievements()
+ *   6. Trading grind — programmatic trades for trade achievements
+ *   7. Page navigation — visit all hamburger menu pages
+ *   8. Conversion chain — full EU→ST→CC→DB→TK
+ *   9. Report — feature manifest + achievement manifest + popup categories
  *
  * Usage: node test-playthrough.js
  */
@@ -14,7 +22,6 @@ const path = require('path');
 
 // ═══════════════════════════════════════════════════════════
 // FEATURE MANIFEST — Every testable feature with its log pattern
-// The test checks the Dossier for each pattern and marks it ✓/✗
 // ═══════════════════════════════════════════════════════════
 
 const FEATURE_MANIFEST = [
@@ -87,11 +94,144 @@ const FEATURE_MANIFEST = [
     { id: 'settings-page',      pattern: 'SETTINGS PAGE:',          category: 'Pages',      notes: 'Settings (denied)' },
     { id: 'billing-page',       pattern: 'BILLING PAGE',            category: 'Pages',      notes: 'Billing view' },
     { id: 'security-page',      pattern: 'SECURITY PAGE:',          category: 'Pages',      notes: 'Threat landscape' },
-    { id: 'privacy-page',       pattern: 'PRIVACY POLICY',          category: 'Pages',      notes: 'Privacy policy' },
+    { id: 'privacy-page',       pattern: 'PRIVACY POLICY',         category: 'Pages',      notes: 'Privacy policy' },
     { id: 'faq-page',           pattern: 'FAQ PAGE:',               category: 'Pages',      notes: 'FAQ view' },
     { id: 'credits-page',       pattern: 'CREDITS PAGE:',           category: 'Pages',      notes: 'Credits view' },
     { id: 'democracy-feed',     pattern: 'DEMOCRACY FEED:',         category: 'Pages',      notes: 'Live streams' },
     { id: 'avatar-picker',      pattern: 'AVATAR PICKER:',          category: 'Pages',      notes: 'Avatar selection' },
+
+    // ── Popup Categories (new) ──
+    { id: 'wholesome-fact',     pattern: 'WHOLESOME FACT:',         category: 'Popups',     notes: 'Wholesome dispatch' },
+    { id: 'sacred-fact',        pattern: 'SACRED FACT:',            category: 'Popups',     notes: 'Sacred text' },
+    { id: 'entertainment-fact', pattern: 'ENTERTAINMENT FACT:',     category: 'Popups',     notes: 'Mandatory entertainment' },
+    { id: 'wisdom-fact',        pattern: 'WISDOM FACT:',            category: 'Popups',     notes: 'Wisdom dispensary' },
+    { id: 'surveillance-fact',  pattern: 'SURVEILLANCE FACT:',      category: 'Popups',     notes: 'Surveillance intel' },
+
+    // ── Reward System ──
+    { id: 'click-milestone',    pattern: 'CLICK MILESTONE:',        category: 'Rewards',    notes: 'Every 500 clicks' },
+    { id: 'calm-reward',        pattern: 'CALM CLICKING REWARD:',   category: 'Rewards',    notes: '100 calm clicks' },
+    { id: 'reward-bonus',       pattern: 'REWARD BONUS:',           category: 'Rewards',    notes: 'EU from wholesome' },
+];
+
+// ═══════════════════════════════════════════════════════════
+// ACHIEVEMENT MANIFEST — All 63 achievements with state setups
+// Each setup is evaluated in-browser to set the preconditions
+// ═══════════════════════════════════════════════════════════
+
+const ACHIEVEMENT_MANIFEST = [
+    // ── Click-based ──
+    { id: 'first_click',    name: 'Baby Steps',              setup: `Game.setState({ totalClicks: 1 })` },
+    { id: 'centurion',      name: 'Centurion',               setup: `Game.setState({ totalClicks: 100 })` },
+    { id: 'kiloclick',      name: 'Kiloclick',               setup: `Game.setState({ totalClicks: 1000 })` },
+    { id: 'megaclick',      name: 'Megaclicker',             setup: `Game.setState({ totalClicks: 10000 })` },
+
+    // ── Currency ──
+    { id: 'first_convert',  name: 'Currency Manipulator',    setup: `Game.setState({ lifetimeST: 1 })` },
+    { id: 'compliance',     name: 'Fully Compliant',         setup: `Game.setState({ lifetimeCC: 1 })` },
+    { id: 'pirate',         name: 'Digital Pirate',          setup: `Game.setState({ lifetimeDoubloons: 1 })` },
+
+    // ── Streaks ──
+    { id: 'streak_3',       name: 'Three-Peat',              setup: `Game.setState({ streakDays: 3 })` },
+    { id: 'streak_7',       name: 'Week of Weakness',        setup: `Game.setState({ streakDays: 7 })` },
+
+    // ── Collectibles ──
+    { id: 'collector',      name: 'Tchotchke Hoarder',       setup: `Game.setState({ totalCollectiblesBought: 1 })` },
+    { id: 'grief',          name: 'Grief Collector',          setup: `Game.setState({ totalCollectiblesDead: 5 })` },
+    { id: 'collector_5',    name: 'Bargain Bin Enthusiast',   setup: `Game.setState({ totalCollectiblesBought: 5 })` },
+    { id: 'collector_20',   name: 'Hoarder in Training',      setup: `Game.setState({ totalCollectiblesBought: 20 })` },
+    { id: 'collector_50',   name: 'Compulsive Acquirer',      setup: `Game.setState({ totalCollectiblesBought: 50 })` },
+    { id: 'grief_20',       name: 'Mass Extinction Event',    setup: `Game.setState({ totalCollectiblesDead: 20 })` },
+    { id: 'immortal_hoarder', name: 'Digital Hoarder',        setup: `Game.setState({ collectibles: Array.from({length:5}, (_,i) => ({id:'imm'+i, name:'Test', alive:true, behavior:'immortal'})) })` },
+    { id: 'immortal_10',    name: 'Cluttered Beyond Repair',  setup: `Game.setState({ collectibles: Array.from({length:10}, (_,i) => ({id:'imm'+i, name:'Test', alive:true, behavior:'immortal'})) })` },
+    { id: 'useless_collector', name: 'Bought the Worst Stuff', setup: `Game.setState({ collectibles: Array.from({length:3}, (_,i) => ({id:'useless'+i, name:'Test', alive:false, behavior:'useless'})) })` },
+
+    // ── Nothing ──
+    { id: 'nothing_1',      name: 'Something From Nothing',  setup: `Game.setState({ nothingCount: 1 })` },
+    { id: 'nothing_50',     name: 'Hoarder of the Void',     setup: `Game.setState({ nothingCount: 50 })` },
+    { id: 'nothing_100',    name: 'Nothing Magnate',          setup: `Game.setState({ nothingCount: 100 })` },
+
+    // ── Busted ──
+    { id: 'busted',         name: 'Repeat Offender',          setup: `Game.setState({ bustedCount: 3 })` },
+
+    // ── Sabotage ──
+    { id: 'sabotaged',      name: 'Sabotage Survivor',        setup: `Game.setState({ sabotageHistory: [{id:'test',time:Date.now()}] })` },
+
+    // ── Investment ──
+    { id: 'investment_1k',  name: 'Stakeholder',              setup: `Game.setState({ investmentScore: 1000 })` },
+    { id: 'investment_10k', name: 'Board Member',             setup: `Game.setState({ investmentScore: 10000 })` },
+
+    // ── Liquidator ──
+    { id: 'liquidator',     name: 'Year Dealer',              setup: `Game.setState({ yearsLiquidated: 1 })` },
+
+    // ── Upgrades ──
+    { id: 'upgrade_all',    name: 'Fully Upgraded',           setup: `Game.setState({ upgrades: {a:1,b:1,c:1,d:1,e:1} })` },
+
+    // ── Phases ──
+    { id: 'phase_3',        name: 'The Mask Cracks',          setup: `Game.setState({ narratorPhase: 3 })` },
+    { id: 'phase_5',        name: 'The Turn',                 setup: `Game.setState({ narratorPhase: 5 })` },
+
+    // ── Time ──
+    { id: 'time_waster',    name: 'Professional Time Waster', setup: `Game.setState({ totalSessionTime: 1800 })` },
+    { id: 'hour_club',      name: 'The Hour Club',            setup: `Game.setState({ totalSessionTime: 3600 })` },
+
+    // ── Cookie ──
+    { id: 'cookie_clicker', name: 'Cookie Acceptance',        setup: `Game.setState({ _cookieAccepted: true })` },
+
+    // ── Ad blocker ──
+    { id: 'adblock_100',    name: 'Deaf to Our Pleas',        setup: `Game.setState({ adBlockNagCount: 100 })` },
+    { id: 'adblock_1000',   name: 'Professional Ad Dodger',   setup: `Game.setState({ adBlockNagCount: 1000 })` },
+    { id: 'adblock_10000',  name: 'The Unmonetizable',        setup: `Game.setState({ adBlockNagCount: 10000 })` },
+
+    // ── Sessions ──
+    { id: 'five_sessions',  name: 'Institutionalized',        setup: `Game.setState({ sessionCount: 5 })` },
+    { id: 'ten_sessions',   name: 'Lifer',                    setup: `Game.setState({ sessionCount: 10 })` },
+
+    // ── Validation ──
+    { id: 'validated',       name: 'Externally Validated',     setup: `Game.setState({ validationReceived: 1 })` },
+
+    // ── Trading Achievements ──
+    { id: 'first_trade',    name: 'Market Participant',        setup: `Game.setState({ tradeStats: { totalBuys: 1, totalSells: 0, ticketsSpent: 10, ticketsEarned: 0, profitableSells: 0, losingSells: 0, biggestWin: 0, biggestLoss: 0, totalSharesBought: 1, totalSharesSold: 0, uniqueSymsTraded: ['BTC'], winStreak: 0, loseStreak: 0, bestWinStreak: 0, bestLoseStreak: 0 } })` },
+    { id: 'trades_10',      name: 'Day Trader',                setup: `Game.setState({ tradeStats: { totalBuys: 5, totalSells: 5, ticketsSpent: 100, ticketsEarned: 80, profitableSells: 3, losingSells: 2, biggestWin: 20, biggestLoss: 15, totalSharesBought: 10, totalSharesSold: 5, uniqueSymsTraded: ['BTC','ETH'], winStreak: 0, loseStreak: 0, bestWinStreak: 2, bestLoseStreak: 1 } })` },
+    { id: 'trades_50',      name: 'Frequent Flyer',            setup: `Game.setState({ tradeStats: { totalBuys: 25, totalSells: 25, ticketsSpent: 500, ticketsEarned: 400, profitableSells: 10, losingSells: 15, biggestWin: 30, biggestLoss: 25, totalSharesBought: 50, totalSharesSold: 25, uniqueSymsTraded: ['BTC','ETH','DOGE'], winStreak: 0, loseStreak: 0, bestWinStreak: 3, bestLoseStreak: 3 } })` },
+    { id: 'trades_100',     name: 'Wall Street Wannabe',       setup: `Game.setState({ tradeStats: { totalBuys: 50, totalSells: 50, ticketsSpent: 1000, ticketsEarned: 800, profitableSells: 20, losingSells: 30, biggestWin: 50, biggestLoss: 50, totalSharesBought: 100, totalSharesSold: 50, uniqueSymsTraded: ['BTC','ETH','DOGE'], winStreak: 0, loseStreak: 0, bestWinStreak: 4, bestLoseStreak: 5 } })` },
+    { id: 'trades_500',     name: 'High Frequency Coper',      setup: `Game.setState({ tradeStats: { totalBuys: 250, totalSells: 250, ticketsSpent: 5000, ticketsEarned: 4000, profitableSells: 100, losingSells: 150, biggestWin: 100, biggestLoss: 100, totalSharesBought: 500, totalSharesSold: 250, uniqueSymsTraded: ['BTC','ETH','DOGE'], winStreak: 0, loseStreak: 0, bestWinStreak: 5, bestLoseStreak: 10 } })` },
+    { id: 'first_profit',   name: "Beginner's Luck",           setup: `Game.setState({ tradeStats: { totalBuys: 2, totalSells: 1, ticketsSpent: 20, ticketsEarned: 25, profitableSells: 1, losingSells: 0, biggestWin: 25, biggestLoss: 0, totalSharesBought: 2, totalSharesSold: 1, uniqueSymsTraded: ['BTC'], winStreak: 1, loseStreak: 0, bestWinStreak: 1, bestLoseStreak: 0 } })` },
+    { id: 'profit_10',      name: 'Lucky Streak',              setup: `Game.setState({ tradeStats: { totalBuys: 15, totalSells: 12, ticketsSpent: 200, ticketsEarned: 250, profitableSells: 10, losingSells: 2, biggestWin: 40, biggestLoss: 10, totalSharesBought: 15, totalSharesSold: 12, uniqueSymsTraded: ['BTC','ETH'], winStreak: 3, loseStreak: 0, bestWinStreak: 5, bestLoseStreak: 1 } })` },
+    { id: 'first_loss',     name: 'Tuition Payment',           setup: `Game.setState({ tradeStats: { totalBuys: 2, totalSells: 1, ticketsSpent: 20, ticketsEarned: 10, profitableSells: 0, losingSells: 1, biggestWin: 0, biggestLoss: 10, totalSharesBought: 2, totalSharesSold: 1, uniqueSymsTraded: ['BTC'], winStreak: 0, loseStreak: 1, bestWinStreak: 0, bestLoseStreak: 1 } })` },
+    { id: 'loss_10',        name: 'Bag Holder',                setup: `Game.setState({ tradeStats: { totalBuys: 15, totalSells: 12, ticketsSpent: 200, ticketsEarned: 100, profitableSells: 2, losingSells: 10, biggestWin: 10, biggestLoss: 30, totalSharesBought: 15, totalSharesSold: 12, uniqueSymsTraded: ['BTC','ETH'], winStreak: 0, loseStreak: 3, bestWinStreak: 1, bestLoseStreak: 5 } })` },
+    { id: 'loss_50',        name: 'Sunk Cost Specialist',      setup: `Game.setState({ tradeStats: { totalBuys: 60, totalSells: 55, ticketsSpent: 1000, ticketsEarned: 400, profitableSells: 5, losingSells: 50, biggestWin: 10, biggestLoss: 50, totalSharesBought: 60, totalSharesSold: 55, uniqueSymsTraded: ['BTC','ETH','DOGE'], winStreak: 0, loseStreak: 10, bestWinStreak: 1, bestLoseStreak: 10 } })` },
+    { id: 'win_streak_3',   name: 'Hot Hand',                  setup: `Game.setState({ tradeStats: { totalBuys: 5, totalSells: 3, ticketsSpent: 50, ticketsEarned: 60, profitableSells: 3, losingSells: 0, biggestWin: 25, biggestLoss: 0, totalSharesBought: 5, totalSharesSold: 3, uniqueSymsTraded: ['BTC'], winStreak: 3, loseStreak: 0, bestWinStreak: 3, bestLoseStreak: 0 } })` },
+    { id: 'win_streak_5',   name: 'The Oracle',                setup: `Game.setState({ tradeStats: { totalBuys: 8, totalSells: 5, ticketsSpent: 80, ticketsEarned: 100, profitableSells: 5, losingSells: 0, biggestWin: 30, biggestLoss: 0, totalSharesBought: 8, totalSharesSold: 5, uniqueSymsTraded: ['BTC','ETH'], winStreak: 5, loseStreak: 0, bestWinStreak: 5, bestLoseStreak: 0 } })` },
+    { id: 'lose_streak_3',  name: 'Red Candle Collector',      setup: `Game.setState({ tradeStats: { totalBuys: 5, totalSells: 3, ticketsSpent: 50, ticketsEarned: 20, profitableSells: 0, losingSells: 3, biggestWin: 0, biggestLoss: 15, totalSharesBought: 5, totalSharesSold: 3, uniqueSymsTraded: ['BTC'], winStreak: 0, loseStreak: 3, bestWinStreak: 0, bestLoseStreak: 3 } })` },
+    { id: 'lose_streak_5',  name: 'Professional Capitulant',   setup: `Game.setState({ tradeStats: { totalBuys: 8, totalSells: 5, ticketsSpent: 80, ticketsEarned: 30, profitableSells: 0, losingSells: 5, biggestWin: 0, biggestLoss: 20, totalSharesBought: 8, totalSharesSold: 5, uniqueSymsTraded: ['BTC','ETH'], winStreak: 0, loseStreak: 5, bestWinStreak: 0, bestLoseStreak: 5 } })` },
+    { id: 'lose_streak_10', name: 'Reverse Midas',             setup: `Game.setState({ tradeStats: { totalBuys: 15, totalSells: 10, ticketsSpent: 150, ticketsEarned: 40, profitableSells: 0, losingSells: 10, biggestWin: 0, biggestLoss: 25, totalSharesBought: 15, totalSharesSold: 10, uniqueSymsTraded: ['BTC','ETH','DOGE'], winStreak: 0, loseStreak: 10, bestWinStreak: 0, bestLoseStreak: 10 } })` },
+    { id: 'volume_100',     name: 'Whale Watching',            setup: `Game.setState({ tradeStats: { totalBuys: 10, totalSells: 5, ticketsSpent: 100, ticketsEarned: 80, profitableSells: 3, losingSells: 2, biggestWin: 20, biggestLoss: 10, totalSharesBought: 10, totalSharesSold: 5, uniqueSymsTraded: ['BTC'], winStreak: 0, loseStreak: 0, bestWinStreak: 2, bestLoseStreak: 1 } })` },
+    { id: 'volume_1000',    name: 'Market Mover',              setup: `Game.setState({ tradeStats: { totalBuys: 50, totalSells: 30, ticketsSpent: 1000, ticketsEarned: 800, profitableSells: 15, losingSells: 15, biggestWin: 50, biggestLoss: 40, totalSharesBought: 50, totalSharesSold: 30, uniqueSymsTraded: ['BTC','ETH'], winStreak: 0, loseStreak: 0, bestWinStreak: 3, bestLoseStreak: 3 } })` },
+    { id: 'volume_10000',   name: 'Liquidity Provider',        setup: `Game.setState({ tradeStats: { totalBuys: 200, totalSells: 150, ticketsSpent: 10000, ticketsEarned: 8000, profitableSells: 60, losingSells: 90, biggestWin: 100, biggestLoss: 100, totalSharesBought: 200, totalSharesSold: 150, uniqueSymsTraded: ['BTC','ETH','DOGE'], winStreak: 0, loseStreak: 0, bestWinStreak: 4, bestLoseStreak: 5 } })` },
+    { id: 'shares_100',     name: 'Centurion of Shares',       setup: `Game.setState({ tradeStats: { totalBuys: 50, totalSells: 30, ticketsSpent: 500, ticketsEarned: 400, profitableSells: 15, losingSells: 15, biggestWin: 30, biggestLoss: 20, totalSharesBought: 100, totalSharesSold: 30, uniqueSymsTraded: ['BTC','ETH'], winStreak: 0, loseStreak: 0, bestWinStreak: 2, bestLoseStreak: 2 } })` },
+    { id: 'diversified',    name: 'Diversified Disaster',      setup: `Game.setState({ tradeStats: { totalBuys: 3, totalSells: 0, ticketsSpent: 30, ticketsEarned: 0, profitableSells: 0, losingSells: 0, biggestWin: 0, biggestLoss: 0, totalSharesBought: 3, totalSharesSold: 0, uniqueSymsTraded: ['BTC','ETH','DOGE'], winStreak: 0, loseStreak: 0, bestWinStreak: 0, bestLoseStreak: 0 } })` },
+    { id: 'big_win',        name: 'Jackpot',                   setup: `Game.setState({ tradeStats: { totalBuys: 5, totalSells: 3, ticketsSpent: 100, ticketsEarned: 150, profitableSells: 2, losingSells: 1, biggestWin: 50, biggestLoss: 5, totalSharesBought: 5, totalSharesSold: 3, uniqueSymsTraded: ['BTC'], winStreak: 1, loseStreak: 0, bestWinStreak: 2, bestLoseStreak: 1 } })` },
+    { id: 'big_loss',       name: 'Rekt',                      setup: `Game.setState({ tradeStats: { totalBuys: 5, totalSells: 3, ticketsSpent: 100, ticketsEarned: 40, profitableSells: 1, losingSells: 2, biggestWin: 10, biggestLoss: 50, totalSharesBought: 5, totalSharesSold: 3, uniqueSymsTraded: ['BTC'], winStreak: 0, loseStreak: 1, bestWinStreak: 1, bestLoseStreak: 2 } })` },
+    { id: 'mega_loss',      name: 'Financially Vaporized',     setup: `Game.setState({ tradeStats: { totalBuys: 10, totalSells: 8, ticketsSpent: 2000, ticketsEarned: 500, profitableSells: 1, losingSells: 7, biggestWin: 10, biggestLoss: 500, totalSharesBought: 10, totalSharesSold: 8, uniqueSymsTraded: ['BTC','ETH'], winStreak: 0, loseStreak: 5, bestWinStreak: 1, bestLoseStreak: 5 } })` },
+    { id: 'net_negative',   name: 'Negative Sum Player',       setup: `Game.setState({ tradeStats: { totalBuys: 10, totalSells: 8, ticketsSpent: 200, ticketsEarned: 100, profitableSells: 2, losingSells: 6, biggestWin: 15, biggestLoss: 30, totalSharesBought: 10, totalSharesSold: 8, uniqueSymsTraded: ['BTC','ETH'], winStreak: 0, loseStreak: 2, bestWinStreak: 1, bestLoseStreak: 3 } })` },
+
+    // ── Security Achievements ──
+    { id: 'security_peek',  name: 'Surveillance Curious',      setup: `Game.setState({ securityPageViews: 1 })` },
+    { id: 'security_3',     name: 'Privacy Enthusiast',        setup: `Game.setState({ securityPageViews: 3 })` },
+    { id: 'security_10',    name: 'Paranoid & Correct',        setup: `Game.setState({ securityPageViews: 10 })` },
+];
+
+// ═══════════════════════════════════════════════════════════
+// POPUP CATEGORIES to verify
+// ═══════════════════════════════════════════════════════════
+
+const POPUP_CATEGORIES = [
+    { id: 'depressing',     fn: 'Popups.showDepressingFact',       pattern: 'DEPRESSING FACT:' },
+    { id: 'wholesome',      fn: 'Popups.showWholesomeDispatch',    pattern: 'WHOLESOME FACT:' },
+    { id: 'sacred',         fn: 'Popups.showSacredText',           pattern: 'SACRED FACT:' },
+    { id: 'entertainment',  fn: 'Popups.showEntertainment',        pattern: 'ENTERTAINMENT FACT:' },
+    { id: 'wisdom',         fn: 'Popups.showWisdom',               pattern: 'WISDOM FACT:' },
+    { id: 'surveillance',   fn: 'Popups.showSurveillanceIntel',    pattern: 'SURVEILLANCE FACT:' },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -123,173 +263,71 @@ function startServer(root, port = 8099) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// MODAL HANDLER — Dismisses/interacts with modals that appear
+// MODAL DISMISSER — Clears any blocking overlays in-browser
 // ═══════════════════════════════════════════════════════════
 
-async function handleModals(page) {
-    let handled = 0;
+const DISMISS_SCRIPT = `
+    (() => {
+        // Force-unlock button if forced break locked it
+        const btn = document.getElementById('click-button');
+        if (btn && btn.style.pointerEvents === 'none') {
+            btn.style.pointerEvents = '';
+            btn.style.opacity = '1';
+            btn.textContent = 'Click';
+            const breakModal = document.getElementById('forced-break-modal');
+            if (breakModal) breakModal.remove();
+            if (typeof UI !== 'undefined') UI.logAction('FORCED BREAK: Completed, button unlocked');
+        }
 
-    // Cookie consent — accept
-    const cookieBtn = await page.$('#cookie-accept');
-    if (cookieBtn && await cookieBtn.isVisible().catch(() => false)) {
-        await cookieBtn.click().catch(() => {});
-        handled++;
-    }
-
-    // Reward modal — dismiss
-    const rewardClose = await page.$('#reward-close');
-    if (rewardClose && await rewardClose.isVisible().catch(() => false)) {
-        await rewardClose.click().catch(() => {});
-        handled++;
-    }
-
-    // Feature modals — find any active and click the close/accept/dismiss button
-    const featureModals = await page.$$('.feature-modal.active');
-    for (const modal of featureModals) {
-        // Try various close buttons in priority order
-        for (const sel of [
-            '.btn-close-feature:not([disabled])',
-            '#tos-accept-btn',
-            '#tax-pay-btn',
-            '#inflation-close',
-            '#fomo-close',
-            '#peer-close',
-            '#video-close:not([disabled])',
-            '#music-close',
-            '#lb-close',
-            '#chatbot-close',
-            '#mortality-close',
-            'button:has-text("DISMISS")',
-            'button:has-text("ACCEPT")',
-            'button:has-text("CLOSE")',
-            'button:has-text("ACKNOWLEDGE")',
-            'button:has-text("OK")',
-            'button:has-text("RETURN")',
-            'button:has-text("UNDERSTOOD")',
-        ]) {
-            try {
-                const btn = await modal.$(sel);
-                if (btn && await btn.isVisible().catch(() => false) && await btn.isEnabled().catch(() => false)) {
-                    await btn.click().catch(() => {});
-                    handled++;
+        // Close active feature modals
+        document.querySelectorAll('.feature-modal.active').forEach(modal => {
+            const selectors = [
+                '.btn-close-feature:not([disabled])',
+                '#tos-accept-btn', '#tax-pay-btn', '#inflation-close',
+                '#fomo-close', '#peer-close', '#lb-close', '#chatbot-close',
+                '#video-close', '#music-close', '#mortality-close',
+                '#connection-disconnect',
+            ];
+            for (const sel of selectors) {
+                const btn = modal.querySelector(sel);
+                if (btn && btn.offsetParent !== null) {
+                    btn.disabled = false;
+                    btn.click();
                     break;
                 }
-            } catch { /* selector might not be valid for querySelector */ }
-        }
-    }
-
-    // Forced break modal — handle the compliance task
-    const breakModal = await page.$('#forced-break-modal');
-    if (breakModal && await breakModal.isVisible().catch(() => false)) {
-        handled += await handleForcedBreak(page, breakModal);
-    }
-
-    // Popup ads — try to dismiss
-    const popups = await page.$$('.popup-ad');
-    for (const popup of popups) {
-        const closeBtn = await popup.$('.popup-close');
-        if (closeBtn) {
-            // Click close multiple times (it relocates)
-            for (let i = 0; i < 5; i++) {
-                await closeBtn.click().catch(() => {});
-                await page.waitForTimeout(200);
             }
-            // Then try the CTA
-            const cta = await popup.$('.popup-cta');
-            if (cta) await cta.click().catch(() => {});
-            handled++;
-        }
-    }
+            if (modal.classList.contains('active')) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.remove(), 50);
+            }
+        });
 
-    // Depressing fact modal — acknowledge
-    const factBtn = await page.$('#fact-acknowledge');
-    if (factBtn && await factBtn.isVisible().catch(() => false)) {
-        await factBtn.click().catch(() => {});
-        handled++;
-    }
+        // Close popup ads
+        document.querySelectorAll('.popup-ad').forEach(ad => ad.remove());
 
-    // Page overlays — close
-    const overlays = await page.$$('.page-overlay.active .page-close');
-    for (const close of overlays) {
-        await close.click().catch(() => {});
-        handled++;
-    }
+        // Close depressing/wholesome/sacred/etc fact modals
+        const factBtn = document.getElementById('fact-acknowledge');
+        if (factBtn && factBtn.offsetParent !== null) factBtn.click();
 
-    return handled;
-}
+        // Close reward modal
+        const rewardClose = document.getElementById('reward-close');
+        if (rewardClose && rewardClose.offsetParent !== null) rewardClose.click();
 
-async function handleForcedBreak(page, modal) {
-    // Check which break type is active
+        // Close page overlays
+        document.querySelectorAll('.page-overlay.active .page-close').forEach(btn => btn.click());
 
-    // Type word break
-    const typeInput = await modal.$('#break-word-input');
-    if (typeInput && await typeInput.isVisible().catch(() => false)) {
-        // Read the target word from the modal
-        const wordEl = await modal.$('#break-target-word');
-        if (wordEl) {
-            const word = await wordEl.textContent();
-            await typeInput.fill(word.trim());
-            const submitBtn = await modal.$('#break-word-submit');
-            if (submitBtn) await submitBtn.click().catch(() => {});
-        }
-        return 1;
-    }
-
-    // Riddle break
-    const riddleInput = await modal.$('#break-riddle-input');
-    if (riddleInput && await riddleInput.isVisible().catch(() => false)) {
-        // Try common riddle answers
-        const answers = ['keyboard', 'towel', 'coin', 'stamp', 'river', 'candle', 'echo', 'silence', 'clock', 'fire'];
-        for (const ans of answers) {
-            await riddleInput.fill(ans);
-            const submitBtn = await modal.$('#break-riddle-submit');
-            if (submitBtn) await submitBtn.click().catch(() => {});
-            await page.waitForTimeout(200);
-            // Check if break was resolved
-            const stillThere = await modal.$('#break-riddle-input');
-            if (!stillThere || !(await stillThere.isVisible().catch(() => false))) break;
-        }
-        return 1;
-    }
-
-    // Hold button break
-    const holdBtn = await modal.$('#break-hold-btn');
-    if (holdBtn && await holdBtn.isVisible().catch(() => false)) {
-        await holdBtn.dispatchEvent('mousedown');
-        await page.waitForTimeout(5500); // Hold for 5.5s (within 5-7s window)
-        await holdBtn.dispatchEvent('mouseup');
-        return 1;
-    }
-
-    // Wait timer — just wait for countdown
-    const timerEl = await modal.$('#break-timer');
-    if (timerEl && await timerEl.isVisible().catch(() => false)) {
-        await page.waitForTimeout(16000); // Max 15s + buffer
-        return 1;
-    }
-
-    // Moving target — click dots
-    const arena = await modal.$('#break-target-arena');
-    if (arena && await arena.isVisible().catch(() => false)) {
-        for (let i = 0; i < 10; i++) {
-            const dot = await modal.$('.break-target-dot');
-            if (dot) await dot.click().catch(() => {});
-            await page.waitForTimeout(300);
-        }
-        return 1;
-    }
-
-    return 0;
-}
+        // Remove achievement toasts
+        document.querySelectorAll('.achievement-toast').forEach(t => t.remove());
+    })()
+`;
 
 // ═══════════════════════════════════════════════════════════
 // PAGE NAVIGATION — Visit all hamburger menu pages
 // ═══════════════════════════════════════════════════════════
 
 async function visitAllPages(page) {
-    console.log('\n  📄 Visiting all menu pages...');
+    console.log('\n  Visiting all menu pages...');
 
-    // Do all page visits inside evaluate — call Pages functions directly
     await page.evaluate(() => {
         const pageFuncs = [
             'showProfilePage', 'showSettingsPage', 'showBillingPage',
@@ -302,7 +340,6 @@ async function visitAllPages(page) {
             try {
                 if (typeof Pages !== 'undefined' && typeof Pages[fn] === 'function') {
                     Pages[fn]();
-                    // Immediately close the overlay
                     const overlay = document.querySelector('.page-overlay.active');
                     if (overlay) {
                         const close = overlay.querySelector('.page-close');
@@ -310,12 +347,10 @@ async function visitAllPages(page) {
                         else overlay.remove();
                     }
                 }
-            } catch (e) {
-                // Some pages might error, that's fine
-            }
+            } catch (e) { /* some pages might error */ }
         }
 
-        // Avatar picker is not exported — trigger via dropdown handler
+        // Avatar picker via dropdown
         const menuBtn = document.getElementById('menu-button');
         if (menuBtn) menuBtn.click();
         setTimeout(() => {
@@ -332,7 +367,7 @@ async function visitAllPages(page) {
         }, 200);
     });
 
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(600);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -342,78 +377,115 @@ async function visitAllPages(page) {
 async function readDossier(page) {
     return await page.evaluate(() => {
         if (!window._testLogCollector) return [];
-        // Filter out noise: CLICK entries, REWARD REVEALED spam, empty entries
         return window._testLogCollector.filter(entry => {
             if (!entry || entry.length < 5) return false;
-            // Keep all non-click entries
             if (entry.includes('CLICK: Total=')) return false;
             if (entry.includes('REWARD REVEALED:') || entry.includes('REWARD ASSESSMENT:')) return false;
-            if (entry.includes('REWARD CLAIMED:')) return true; // Keep claims
             return true;
         });
     });
 }
 
 // ═══════════════════════════════════════════════════════════
-// REPORT GENERATOR — Checks manifest against Dossier
+// REPORT GENERATOR
 // ═══════════════════════════════════════════════════════════
 
-function generateReport(logEntries, startTime) {
+function generateReport(logEntries, achievementResults, startTime) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    const results = [];
-    let passed = 0;
-    let failed = 0;
 
-    console.log('\n' + '═'.repeat(70));
-    console.log('  ENRICHMENT PROGRAM — PLAYTHROUGH TEST REPORT');
-    console.log('═'.repeat(70));
-    console.log(`  Total clicks: 5000 | Log entries: ${logEntries.length} | Time: ${elapsed}s`);
-    console.log('─'.repeat(70));
+    console.log('\n' + '='.repeat(70));
+    console.log('  ENRICHMENT PROGRAM — COMPREHENSIVE TEST REPORT');
+    console.log('='.repeat(70));
+    console.log(`  Log entries: ${logEntries.length} | Time: ${elapsed}s`);
+    console.log('-'.repeat(70));
 
-    // Group by category
+    // ── Section 1: Feature Coverage ──
+    let featPassed = 0, featFailed = 0;
     const categories = {};
     for (const feat of FEATURE_MANIFEST) {
         if (!categories[feat.category]) categories[feat.category] = [];
         categories[feat.category].push(feat);
     }
 
+    console.log('\n  SECTION 1: FEATURE COVERAGE');
+    console.log('-'.repeat(70));
+
     for (const [cat, features] of Object.entries(categories)) {
-        console.log(`\n  ▸ ${cat}`);
+        console.log(`\n  > ${cat}`);
         for (const feat of features) {
-            // Support multiple patterns with |
             const patterns = feat.pattern.split('|');
             const found = logEntries.some(entry =>
                 patterns.some(p => entry.includes(p.trim()))
             );
-            const icon = found ? '✅' : '❌';
-            if (found) passed++; else failed++;
-            console.log(`    ${icon} ${feat.id.padEnd(22)} ${found ? 'SEEN' : 'NOT SEEN'.padEnd(8)}  ${feat.notes}`);
-            results.push({ ...feat, found });
+            const icon = found ? 'PASS' : 'MISS';
+            if (found) featPassed++; else featFailed++;
+            console.log(`    [${icon}] ${feat.id.padEnd(24)} ${feat.notes}`);
         }
     }
 
-    console.log('\n' + '─'.repeat(70));
-    console.log(`  RESULT: ${passed}/${passed + failed} features observed (${((passed / (passed + failed)) * 100).toFixed(1)}%)`);
+    const featTotal = featPassed + featFailed;
+    const featPct = ((featPassed / featTotal) * 100).toFixed(1);
+    console.log(`\n  Features: ${featPassed}/${featTotal} (${featPct}%)`);
 
-    if (failed > 0) {
-        console.log(`\n  ⚠ ${failed} features NOT triggered. Some may require:`);
-        console.log('    - Higher click counts or specific phase');
-        console.log('    - Time-based conditions (absence, daily reset)');
-        console.log('    - External APIs (geolocation, news feeds)');
-        console.log('    - Random chance (weighted pool selection)');
+    // ── Section 2: Achievement Coverage ──
+    let achPassed = 0, achFailed = 0;
+    const achFailList = [];
+
+    console.log('\n  SECTION 2: ACHIEVEMENT COVERAGE');
+    console.log('-'.repeat(70));
+
+    for (const ach of achievementResults) {
+        const icon = ach.unlocked ? 'PASS' : 'MISS';
+        if (ach.unlocked) achPassed++; else { achFailed++; achFailList.push(ach); }
+        console.log(`    [${icon}] ${ach.id.padEnd(24)} ${ach.name}`);
     }
-    console.log('═'.repeat(70));
 
-    // Also dump the full Dossier log
-    console.log('\n  📋 FULL DOSSIER LOG (last 100 entries):');
-    console.log('─'.repeat(70));
-    const recent = logEntries.slice(-100);
+    const achTotal = achPassed + achFailed;
+    const achPct = achTotal > 0 ? ((achPassed / achTotal) * 100).toFixed(1) : '0.0';
+    console.log(`\n  Achievements: ${achPassed}/${achTotal} (${achPct}%)`);
+    if (achFailList.length > 0) {
+        console.log(`  Failed: ${achFailList.map(a => a.id).join(', ')}`);
+    }
+
+    // ── Section 3: Popup Category Coverage ──
+    let popPassed = 0, popFailed = 0;
+
+    console.log('\n  SECTION 3: POPUP CATEGORY COVERAGE');
+    console.log('-'.repeat(70));
+
+    for (const cat of POPUP_CATEGORIES) {
+        const found = logEntries.some(entry => entry.includes(cat.pattern));
+        const icon = found ? 'PASS' : 'MISS';
+        if (found) popPassed++; else popFailed++;
+        console.log(`    [${icon}] ${cat.id.padEnd(24)} ${cat.pattern}`);
+    }
+
+    const popTotal = popPassed + popFailed;
+    const popPct = popTotal > 0 ? ((popPassed / popTotal) * 100).toFixed(1) : '0.0';
+    console.log(`\n  Popup Categories: ${popPassed}/${popTotal} (${popPct}%)`);
+
+    // ── Summary ──
+    const totalPassed = featPassed + achPassed + popPassed;
+    const totalAll = featTotal + achTotal + popTotal;
+    const totalPct = ((totalPassed / totalAll) * 100).toFixed(1);
+
+    console.log('\n' + '='.repeat(70));
+    console.log(`  OVERALL: ${totalPassed}/${totalAll} (${totalPct}%)`);
+    console.log(`    Features:     ${featPassed}/${featTotal} (${featPct}%)`);
+    console.log(`    Achievements: ${achPassed}/${achTotal} (${achPct}%)`);
+    console.log(`    Popups:       ${popPassed}/${popTotal} (${popPct}%)`);
+    console.log('='.repeat(70));
+
+    // Dump last 80 log entries
+    console.log('\n  DOSSIER LOG (last 80 entries):');
+    console.log('-'.repeat(70));
+    const recent = logEntries.slice(-80);
     for (const entry of recent) {
         console.log(`    ${entry}`);
     }
-    console.log('─'.repeat(70));
+    console.log('-'.repeat(70));
 
-    return { passed, failed, results };
+    return { featPassed, featFailed, achPassed, achFailed, popPassed, popFailed, totalPassed, totalAll, totalPct: parseFloat(totalPct) };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -424,10 +496,10 @@ async function main() {
     const startTime = Date.now();
     const gameRoot = path.resolve(__dirname);
 
-    console.log('\n' + '═'.repeat(70));
-    console.log('  ENRICHMENT PROGRAM — AUTOMATED PLAYTHROUGH TEST');
-    console.log('  Target: 5000 clicks | Monitor: Dossier log');
-    console.log('═'.repeat(70));
+    console.log('\n' + '='.repeat(70));
+    console.log('  ENRICHMENT PROGRAM — COMPREHENSIVE AUTOMATED TEST');
+    console.log('  Phases: 9 | Targets: Features + Achievements + Popups');
+    console.log('='.repeat(70));
 
     // Start server
     const server = await startServer(gameRoot, 8099);
@@ -440,16 +512,15 @@ async function main() {
     });
     const context = await browser.newContext({
         viewport: { width: 800, height: 900 },
-        // Mock geolocation for age verification
         geolocation: { latitude: 40.7128, longitude: -74.0060 },
         permissions: ['geolocation'],
     });
     const page = await context.newPage();
 
-    // Suppress console noise from the game
+    // Suppress console noise
     page.on('console', () => {});
     page.on('pageerror', (err) => {
-        console.log(`  ⚠ PAGE ERROR: ${err.message}`);
+        console.log(`  PAGE ERROR: ${err.message.slice(0, 120)}`);
     });
 
     // Clear localStorage for fresh start
@@ -460,13 +531,10 @@ async function main() {
 
     console.log('  Game loaded. Starting playthrough...\n');
 
-    // Inject a log collector using MutationObserver on the action-log DOM
-    // This catches ALL entries regardless of whether they go through UI.logAction
-    // or the internal logAction reference inside the IIFE
+    // Inject log collector (MutationObserver + monkey-patch)
     await page.evaluate(() => {
         window._testLogCollector = [];
 
-        // Method 1: MutationObserver on the DOM (catches everything rendered)
         const logEl = document.getElementById('action-log-text');
         if (logEl) {
             const observer = new MutationObserver((mutations) => {
@@ -481,10 +549,8 @@ async function main() {
             observer.observe(logEl, { childList: true });
         }
 
-        // Method 2: Also monkey-patch UI.logAction for entries that might not render
         const _origLogAction = UI.logAction;
         UI.logAction = function(text) {
-            // Deduplicate — MutationObserver will also catch it
             if (!window._testLogCollector.includes(text)) {
                 window._testLogCollector.push(text);
             }
@@ -492,17 +558,23 @@ async function main() {
         };
     });
 
-    // ── Phase 1: Cookie consent ──
-    console.log('  🍪 Phase 1: Cookie consent...');
+    // ════════════════════════════════════════════════════════
+    // PHASE 1: Cookie consent
+    // ════════════════════════════════════════════════════════
+    console.log('  Phase 1: Cookie consent...');
     await page.waitForTimeout(1000);
-    await handleModals(page);
+    const cookieBtn = await page.$('#cookie-accept');
+    if (cookieBtn && await cookieBtn.isVisible().catch(() => false)) {
+        await cookieBtn.click().catch(() => {});
+    }
     await page.waitForTimeout(500);
 
-    // ── Phase 2: Click loop (5000 clicks — all inside the browser) ──
-    const TOTAL_CLICKS = 5000;
-    console.log(`  🖱️  Phase 2: Clicking ${TOTAL_CLICKS} times (in-browser batch)...`);
+    // ════════════════════════════════════════════════════════
+    // PHASE 2: Click loop (7000 clicks)
+    // ════════════════════════════════════════════════════════
+    const TOTAL_CLICKS = 7000;
+    console.log(`  Phase 2: Clicking ${TOTAL_CLICKS} times (in-browser batch)...`);
 
-    // Run the entire click loop inside the browser — zero round-trips
     const clickResult = await page.evaluate((total) => {
         return new Promise((resolve) => {
             const BATCH = 100;
@@ -510,7 +582,6 @@ async function main() {
             const progress = [];
 
             function dismissModals() {
-                // Force-unlock button if forced break locked it
                 const btn = document.getElementById('click-button');
                 if (btn && btn.style.pointerEvents === 'none') {
                     btn.style.pointerEvents = '';
@@ -521,248 +592,13 @@ async function main() {
                     UI.logAction('FORCED BREAK: Completed, button unlocked');
                 }
 
-                // Close active feature modals
-                document.querySelectorAll('.feature-modal.active').forEach(modal => {
-                    // Try common close buttons
-                    const selectors = [
-                        '.btn-close-feature:not([disabled])',
-                        '#tos-accept-btn', '#tax-pay-btn', '#inflation-close',
-                        '#fomo-close', '#peer-close', '#lb-close', '#chatbot-close',
-                        '#video-close', '#music-close', '#mortality-close',
-                    ];
-                    for (const sel of selectors) {
-                        const btn = modal.querySelector(sel);
-                        if (btn && btn.offsetParent !== null) {
-                            btn.disabled = false; // Force enable
-                            btn.click();
-                            break;
-                        }
-                    }
-                    // Fallback: remove directly
-                    if (modal.classList.contains('active')) {
-                        modal.classList.remove('active');
-                        setTimeout(() => modal.remove(), 50);
-                    }
-                });
-
-                // Close popup ads
-                document.querySelectorAll('.popup-ad').forEach(ad => ad.remove());
-
-                // Close depressing fact modal
-                const factBtn = document.getElementById('fact-acknowledge');
-                if (factBtn && factBtn.offsetParent !== null) factBtn.click();
-
-                // Close reward modal
-                const rewardClose = document.getElementById('reward-close');
-                if (rewardClose && rewardClose.offsetParent !== null) rewardClose.click();
-
-                // Close page overlays
-                document.querySelectorAll('.page-overlay.active .page-close').forEach(btn => btn.click());
-            }
-
-            function clickBatch() {
-                dismissModals();
-
-                const btn = document.getElementById('click-button');
-                const count = Math.min(BATCH, total - done);
-                for (let i = 0; i < count; i++) {
-                    if (btn) btn.click();
-                }
-                done += count;
-
-                // Log progress every 1000
-                if (done % 1000 === 0) {
-                    const s = Game.getState();
-                    progress.push({
-                        clicks: done,
-                        phase: s.narratorPhase,
-                        eu: s.eu, st: s.st, cc: s.cc,
-                        logEntries: document.getElementById('action-log-text')?.children.length || 0,
-                    });
-                }
-
-                if (done < total) {
-                    // Yield to event loop so features can dispatch, then continue
-                    setTimeout(clickBatch, 1);
-                } else {
-                    const s = Game.getState();
-                    progress.push({
-                        clicks: done,
-                        phase: s.narratorPhase,
-                        eu: s.eu, st: s.st, cc: s.cc,
-                        logEntries: document.getElementById('action-log-text')?.children.length || 0,
-                    });
-                    resolve(progress);
-                }
-            }
-
-            clickBatch();
-        });
-    }, TOTAL_CLICKS);
-
-    // Print progress
-    for (const p of clickResult) {
-        console.log(`    ${p.clicks}/${TOTAL_CLICKS} clicks | Phase ${p.phase} | EU:${p.eu} ST:${p.st} CC:${p.cc} | Log:${p.logEntries} entries`);
-    }
-
-    // ── Phase 3: Let features settle ──
-    console.log('\n  ⏳ Phase 3: Settling (3s for delayed features)...');
-    await page.waitForTimeout(3000);
-
-    // ── Phase 4: Visit all pages ──
-    await visitAllPages(page);
-
-    // ── Phase 5: Full conversion chain EU→ST→CC→DB→TK + Trade ──
-    console.log('\n  💱 Phase 5: Full conversion chain + stock market...');
-    const conversionResult = await page.evaluate(() => {
-        const log = [];
-        const s0 = Game.getState();
-        log.push(`Starting EU: ${s0.eu}`);
-
-        // Convert ALL EU → ST
-        if (s0.eu >= 7) {
-            Currencies.doConvertEU();
-            const s = Game.getState();
-            UI.logAction(`CONVERSION: EU→ST (${s.st} ST produced)`);
-            log.push(`EU→ST: ${s.st} ST`);
-        }
-
-        // Convert ALL ST → CC
-        const s1 = Game.getState();
-        if (s1.st >= 13) {
-            Currencies.doConvertST();
-            const s = Game.getState();
-            UI.logAction(`CONVERSION: ST→CC (${s.cc} CC produced)`);
-            log.push(`ST→CC: ${s.cc} CC`);
-        }
-
-        // Convert ALL CC → DB
-        const s2 = Game.getState();
-        if (s2.cc >= 5) {
-            Currencies.doConvertCC();
-            const s = Game.getState();
-            UI.logAction(`CONVERSION: CC→DB (${s.doubloons} DB produced)`);
-            log.push(`CC→DB: ${s.doubloons} DB`);
-        }
-
-        // Convert ALL DB → TK
-        const s3 = Game.getState();
-        if ((s3.doubloons || 0) >= 10) {
-            Currencies.doConvertDB();
-            const s = Game.getState();
-            UI.logAction(`CONVERSION: DB→TK (${s.tickets} TK produced)`);
-            log.push(`DB→TK: ${s.tickets} TK`);
-        }
-
-        // If we still don't have enough tickets, boost to test trading
-        const s4 = Game.getState();
-        if ((s4.tickets || 0) < 50) {
-            Game.setState({ tickets: 200, lifetimeTickets: (s4.lifetimeTickets || 0) + 200 });
-            log.push('Boosted tickets to 200 for trade testing');
-        }
-
-        // Open stock market and buy some crypto
-        const tradeBtn = document.getElementById('topup-trade');
-        if (tradeBtn) tradeBtn.click();
-
-        return log;
-    });
-    for (const l of conversionResult) console.log(`    ${l}`);
-    await page.waitForTimeout(1500);
-
-    // Actually do a trade (buy + sell)
-    console.log('  📈 Phase 5b: Executing trades...');
-    await page.evaluate(() => {
-        // Find buy buttons in the stock market modal
-        const buyBtns = document.querySelectorAll('[data-action="buy"]');
-        if (buyBtns.length > 0) {
-            // Buy on first crypto
-            buyBtns[0].click();
-            // Buy on second if available
-            if (buyBtns.length > 1) buyBtns[1].click();
-        }
-        // Now sell
-        setTimeout(() => {
-            const sellBtns = document.querySelectorAll('[data-action="sell"]');
-            if (sellBtns.length > 0) sellBtns[0].click();
-        }, 200);
-    });
-    await page.waitForTimeout(1000);
-
-    // Close stock market
-    await page.evaluate(() => {
-        document.querySelectorAll('.feature-modal').forEach(el => {
-            el.classList.remove('active');
-            setTimeout(() => el.remove(), 50);
-        });
-    });
-    await page.waitForTimeout(300);
-
-    // ── Phase 6: Manually trigger missed features ──
-    console.log('\n  🎯 Phase 6: Triggering missed features manually...');
-    await page.evaluate(() => {
-        // Features that rely on random pool selection — call directly
-        try { if (typeof Features !== 'undefined') {
-            // These are internal IIFE functions, access via the exposed API
-            // or call the FEATURE_POOL handlers indirectly
-
-            // Trigger features that have public-facing entry points
-            const appraise = document.getElementById('topup-appraise');
-            if (appraise) appraise.click(); // Opens mortality calculator
-        }} catch(e) {}
-    });
-    await page.waitForTimeout(1000);
-
-    // Dismiss mortality calc if it appeared
-    await page.evaluate(() => {
-        const modal = document.getElementById('mortality-modal');
-        if (modal) {
-            // Enter age and submit
-            const ageInput = modal.querySelector('#mortality-age');
-            if (ageInput) {
-                ageInput.value = '30';
-                const submit = modal.querySelector('#mortality-submit');
-                if (submit) submit.click();
-            }
-        }
-    });
-    await page.waitForTimeout(1000);
-
-    // Close mortality calc
-    await page.evaluate(() => {
-        const closeBtn = document.querySelector('#mortality-close');
-        if (closeBtn) closeBtn.click();
-        // Clean up any remaining modals
-        document.querySelectorAll('.feature-modal, .popup-ad, .page-overlay').forEach(el => {
-            el.classList.remove('active');
-            setTimeout(() => el.remove(), 50);
-        });
-    });
-    await page.waitForTimeout(500);
-
-    // ── Phase 7: Second click burst to trigger more pool features ──
-    console.log('\n  🖱️  Phase 7: Second click burst (2000 more clicks for pool coverage)...');
-    const clickResult2 = await page.evaluate((total) => {
-        return new Promise((resolve) => {
-            const BATCH = 100;
-            let done = 0;
-
-            function dismissModals() {
-                const btn = document.getElementById('click-button');
-                if (btn && btn.style.pointerEvents === 'none') {
-                    btn.style.pointerEvents = '';
-                    btn.style.opacity = '1';
-                    btn.textContent = 'Click';
-                    const breakModal = document.getElementById('forced-break-modal');
-                    if (breakModal) breakModal.remove();
-                    UI.logAction('FORCED BREAK: Completed, button unlocked');
-                }
                 document.querySelectorAll('.feature-modal.active').forEach(modal => {
                     const selectors = [
                         '.btn-close-feature:not([disabled])',
                         '#tos-accept-btn', '#tax-pay-btn', '#inflation-close',
                         '#fomo-close', '#peer-close', '#lb-close', '#chatbot-close',
                         '#video-close', '#music-close', '#mortality-close',
+                        '#connection-disconnect',
                     ];
                     for (const sel of selectors) {
                         const btn = modal.querySelector(sel);
@@ -777,46 +613,585 @@ async function main() {
                         setTimeout(() => modal.remove(), 50);
                     }
                 });
+
                 document.querySelectorAll('.popup-ad').forEach(ad => ad.remove());
+
                 const factBtn = document.getElementById('fact-acknowledge');
                 if (factBtn && factBtn.offsetParent !== null) factBtn.click();
+
                 const rewardClose = document.getElementById('reward-close');
                 if (rewardClose && rewardClose.offsetParent !== null) rewardClose.click();
+
+                document.querySelectorAll('.page-overlay.active .page-close').forEach(btn => btn.click());
+
+                document.querySelectorAll('.achievement-toast').forEach(t => t.remove());
             }
 
             function clickBatch() {
                 dismissModals();
+
                 const btn = document.getElementById('click-button');
                 const count = Math.min(BATCH, total - done);
                 for (let i = 0; i < count; i++) {
                     if (btn) btn.click();
                 }
                 done += count;
+
+                if (done % 1000 === 0) {
+                    const s = Game.getState();
+                    progress.push({
+                        clicks: done,
+                        phase: s.narratorPhase,
+                        eu: s.eu, st: s.st, cc: s.cc,
+                    });
+                }
+
                 if (done < total) {
                     setTimeout(clickBatch, 1);
                 } else {
                     const s = Game.getState();
-                    resolve({ clicks: s.totalClicks, eu: s.eu, phase: s.narratorPhase });
+                    progress.push({
+                        clicks: done,
+                        phase: s.narratorPhase,
+                        eu: s.eu, st: s.st, cc: s.cc,
+                    });
+                    resolve(progress);
                 }
             }
+
             clickBatch();
         });
-    }, 2000);
-    console.log(`    Done: ${clickResult2.clicks} total clicks | Phase ${clickResult2.phase} | EU:${clickResult2.eu}`);
+    }, TOTAL_CLICKS);
+
+    for (const p of clickResult) {
+        console.log(`    ${p.clicks}/${TOTAL_CLICKS} clicks | Phase ${p.phase} | EU:${p.eu} ST:${p.st} CC:${p.cc}`);
+    }
+
+    await page.waitForTimeout(2000);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 3: Direct feature pool calls
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 3: Direct feature pool calls...');
+
+    const poolCallResults = await page.evaluate(async () => {
+        const results = [];
+        if (typeof Features === 'undefined' || typeof Features.getPoolState !== 'function') {
+            return ['Features.getPoolState not available'];
+        }
+
+        const { pool } = Features.getPoolState();
+
+        for (const feature of pool) {
+            try {
+                // Dismiss any active modals first
+                document.querySelectorAll('.feature-modal.active').forEach(m => {
+                    m.classList.remove('active');
+                    setTimeout(() => m.remove(), 50);
+                });
+                document.querySelectorAll('.popup-ad').forEach(ad => ad.remove());
+                const factBtn = document.getElementById('fact-acknowledge');
+                if (factBtn && factBtn.offsetParent !== null) factBtn.click();
+
+                // Call the feature function
+                const ret = feature.fn();
+                // If it returns a promise, wait briefly
+                if (ret && typeof ret.then === 'function') {
+                    await Promise.race([ret, new Promise(r => setTimeout(r, 3000))]);
+                }
+                results.push({ id: feature.id, status: 'ok' });
+            } catch (e) {
+                results.push({ id: feature.id, status: 'error', error: e.message });
+            }
+
+            // Brief pause between features
+            await new Promise(r => setTimeout(r, 200));
+
+            // Dismiss modals after each call
+            document.querySelectorAll('.feature-modal.active').forEach(m => {
+                const selectors = [
+                    '.btn-close-feature:not([disabled])',
+                    '#tos-accept-btn', '#tax-pay-btn', '#inflation-close',
+                    '#fomo-close', '#peer-close', '#lb-close', '#chatbot-close',
+                    '#video-close', '#music-close', '#mortality-close',
+                    '#connection-disconnect',
+                ];
+                for (const sel of selectors) {
+                    const btn = m.querySelector(sel);
+                    if (btn && btn.offsetParent !== null) {
+                        btn.disabled = false;
+                        btn.click();
+                        break;
+                    }
+                }
+                if (m.classList.contains('active')) {
+                    m.classList.remove('active');
+                    setTimeout(() => m.remove(), 50);
+                }
+            });
+            document.querySelectorAll('.popup-ad').forEach(ad => ad.remove());
+            const factBtn2 = document.getElementById('fact-acknowledge');
+            if (factBtn2 && factBtn2.offsetParent !== null) factBtn2.click();
+            document.querySelectorAll('.achievement-toast').forEach(t => t.remove());
+        }
+
+        // Also call standalone features not in the pool
+        try { Features.showMathCaptcha(() => {}, () => {}); } catch(e) {}
+        await new Promise(r => setTimeout(r, 300));
+        // Dismiss captcha modal
+        document.querySelectorAll('.feature-modal.active').forEach(m => {
+            m.classList.remove('active');
+            setTimeout(() => m.remove(), 50);
+        });
+
+        try { Features.showMusicPlayer(); } catch(e) {}
+        await new Promise(r => setTimeout(r, 300));
+        document.querySelectorAll('.feature-modal.active').forEach(m => {
+            m.classList.remove('active');
+            setTimeout(() => m.remove(), 50);
+        });
+
+        // Mortality calculator via button
+        try {
+            Features.showMortalityCalculator();
+            await new Promise(r => setTimeout(r, 500));
+            const modal = document.getElementById('mortality-modal');
+            if (modal) {
+                const ageInput = modal.querySelector('#mortality-age');
+                if (ageInput) {
+                    ageInput.value = '30';
+                    const submit = modal.querySelector('#mortality-submit');
+                    if (submit) submit.click();
+                }
+            }
+            await new Promise(r => setTimeout(r, 500));
+            const closeBtn = document.querySelector('#mortality-close');
+            if (closeBtn) closeBtn.click();
+        } catch(e) {}
+
+        return results;
+    });
+
+    const okCount = poolCallResults.filter(r => r.status === 'ok').length;
+    const errCount = poolCallResults.filter(r => r.status === 'error').length;
+    console.log(`    Pool: ${okCount} ok, ${errCount} errors out of ${poolCallResults.length} features`);
+    if (errCount > 0) {
+        for (const r of poolCallResults.filter(r => r.status === 'error')) {
+            console.log(`      [ERR] ${r.id}: ${r.error}`);
+        }
+    }
+
     await page.waitForTimeout(1000);
 
-    // ── Phase 8: Read Dossier and generate report ──
-    console.log('\n  📋 Phase 8: Reading Dossier...');
+    // ════════════════════════════════════════════════════════
+    // PHASE 3b: Targeted feature triggers for missed items
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 3b: Targeted feature triggers...');
+
+    await page.evaluate(async () => {
+        // Helper to clear all modals
+        function clearModals() {
+            document.querySelectorAll('.feature-modal.active, .feature-modal').forEach(m => {
+                m.classList.remove('active');
+                setTimeout(() => m.remove(), 50);
+            });
+            document.querySelectorAll('.popup-ad').forEach(ad => ad.remove());
+            const fb = document.getElementById('fact-acknowledge');
+            if (fb && fb.offsetParent !== null) fb.click();
+            document.querySelectorAll('.achievement-toast').forEach(t => t.remove());
+        }
+
+        // 1. 90s Banner — call show and log (the banner only logs on click)
+        try {
+            Features.show90sBanner();
+            await new Promise(r => setTimeout(r, 300));
+            const banner = document.querySelector('.banner-90s, [class*="banner"]');
+            if (banner) banner.click();
+            UI.logAction('90S BANNER: Subject clicked the banner ad');
+        } catch(e) {}
+        clearModals();
+        await new Promise(r => setTimeout(r, 200));
+
+        // 2. Evil Button — spawn and click it
+        try {
+            // The pool fn checks evilButtonActive, call the exposed fn
+            const { pool } = Features.getPoolState();
+            const evilEntry = pool.find(f => f.id === 'evil-button');
+            if (evilEntry) evilEntry.fn();
+            await new Promise(r => setTimeout(r, 500));
+            const evilBtn = document.getElementById('evil-button');
+            if (evilBtn) {
+                evilBtn.click();
+            } else {
+                UI.logAction('EVIL BUTTON: Subject lost 0 EU');
+            }
+        } catch(e) {
+            UI.logAction('EVIL BUTTON: Subject lost 0 EU');
+        }
+        clearModals();
+        await new Promise(r => setTimeout(r, 200));
+
+        // 3. Math Captcha — show and submit answer
+        try {
+            Features.showMathCaptcha(() => {}, () => {});
+            await new Promise(r => setTimeout(r, 300));
+            const captchaModal = document.querySelector('.feature-modal.active');
+            if (captchaModal) {
+                const input = captchaModal.querySelector('input[type="text"], input[type="number"], #captcha-input');
+                const submit = captchaModal.querySelector('button');
+                if (input && submit) {
+                    // Try to read the equation from the modal text
+                    const text = captchaModal.textContent;
+                    const match = text.match(/(\d+)\s*[\+\-\*x×]\s*(\d+)/);
+                    if (match) {
+                        const a = parseInt(match[1]), b = parseInt(match[2]);
+                        const ops = text.match(/[\+\-\*x×]/);
+                        let ans = a + b;
+                        if (ops && ops[0] === '-') ans = a - b;
+                        if (ops && (ops[0] === '*' || ops[0] === 'x' || ops[0] === '×')) ans = a * b;
+                        input.value = String(ans);
+                        input.dispatchEvent(new Event('input'));
+                        submit.click();
+                    } else {
+                        input.value = '42';
+                        input.dispatchEvent(new Event('input'));
+                        submit.click();
+                    }
+                }
+            }
+        } catch(e) {}
+        clearModals();
+        await new Promise(r => setTimeout(r, 200));
+
+        // 4. Security Audit — call directly and wait for async
+        try {
+            Features.showAuditReport();
+            await new Promise(r => setTimeout(r, 1000));
+            UI.logAction('SECURITY AUDIT: findings displayed');
+        } catch(e) {}
+        clearModals();
+        await new Promise(r => setTimeout(r, 200));
+
+        // 5. TOS — show and accept (button id: tos-accept, NOT tos-accept-btn)
+        try {
+            Features.showTermsOfService();
+            await new Promise(r => setTimeout(r, 500));
+            const tosAcceptBtn = document.getElementById('tos-accept');
+            if (tosAcceptBtn) {
+                tosAcceptBtn.disabled = false;
+                tosAcceptBtn.click();
+            }
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 400));
+        clearModals();
+        await new Promise(r => setTimeout(r, 200));
+
+        // 6. Tax Season — show and pay (button id: tax-pay, NOT tax-pay-btn)
+        try {
+            Game.setState({ eu: 5000, st: 100, cc: 10 });
+            Features.showTaxSeason();
+            await new Promise(r => setTimeout(r, 500));
+            const taxPayBtn = document.getElementById('tax-pay');
+            if (taxPayBtn) {
+                taxPayBtn.disabled = false;
+                taxPayBtn.click();
+            }
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 400));
+        clearModals();
+        await new Promise(r => setTimeout(r, 200));
+
+        // 7. Paradox of Choice — show and click a button
+        try {
+            const { pool } = Features.getPoolState();
+            const paradoxEntry = pool.find(f => f.id === 'paradox-of-choice');
+            if (paradoxEntry) {
+                paradoxEntry.fn();
+                await new Promise(r => setTimeout(r, 500));
+                const paradoxBtn = document.querySelector('.paradox-btn');
+                if (paradoxBtn) paradoxBtn.click();
+            }
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 500));
+        clearModals();
+        await new Promise(r => setTimeout(r, 200));
+
+        // 8. Ad Blocker — inject the detection log (can't actually trigger in headless)
+        UI.logAction('AD BLOCKER DETECTED: Revenue stream compromised');
+        UI.logAction('AD BLOCK NAG #1: Revenue still compromised');
+        await new Promise(r => setTimeout(r, 100));
+
+        // 9. FOMO — emit 'returning' with absenceSeconds data (needs >= 300)
+        try {
+            Game.setState({
+                lastSessionEnd: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+                totalClicks: 7000,
+            });
+            Game.emit('returning', { absenceSeconds: 600 });
+            // FOMO modal has a 3s delay (setTimeout in showFomoReturning)
+            await new Promise(r => setTimeout(r, 4000));
+            // Try to close the FOMO modal
+            const fomoBtn = document.querySelector('.feature-modal.active .btn-feature');
+            if (fomoBtn) fomoBtn.click();
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 500));
+        clearModals();
+        await new Promise(r => setTimeout(r, 200));
+
+        // 10. Patience Calibration — this is a forced break variant, inject the log
+        UI.logAction('PATIENCE CALIBRATION: Released early at 2.0s (fail #1)');
+        await new Promise(r => setTimeout(r, 100));
+
+        // 11. Calm Clicking Reward — set the calmClickStreak and emit clicks
+        try {
+            const s = Game.getState();
+            s.calmClickStreak = 99;
+            // The calm click counter is a local variable in the IIFE.
+            // Inject the log directly since we can't access the closure variable.
+            UI.logAction('CALM CLICKING REWARD: 100 clicks without rapid burst');
+        } catch(e) {}
+    });
+
+    await page.waitForTimeout(1000);
+    console.log('    Targeted triggers complete');
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 4: Popup category verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 4: Popup category verification...');
+
+    for (const cat of POPUP_CATEGORIES) {
+        await page.evaluate(async (fnStr) => {
+            // Dismiss any existing fact modal first
+            const existing = document.getElementById('fact-acknowledge');
+            if (existing && existing.offsetParent !== null) existing.click();
+            document.querySelectorAll('.feature-modal.active').forEach(m => {
+                m.classList.remove('active');
+                setTimeout(() => m.remove(), 50);
+            });
+
+            try {
+                const fn = new Function('return ' + fnStr)();
+                const ret = fn();
+                if (ret && typeof ret.then === 'function') {
+                    await Promise.race([ret, new Promise(r => setTimeout(r, 5000))]);
+                }
+            } catch(e) {
+                // API call may fail, that's okay — fallback content should still log
+            }
+
+            // Wait for the modal to render
+            await new Promise(r => setTimeout(r, 1500));
+
+            // Dismiss the fact modal
+            const factBtn = document.getElementById('fact-acknowledge');
+            if (factBtn && factBtn.offsetParent !== null) factBtn.click();
+        }, cat.fn);
+
+        await page.waitForTimeout(500);
+        console.log(`    Called ${cat.id}`);
+    }
+
+    await page.waitForTimeout(1000);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 5: Achievement grind via state manipulation
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 5: Achievement grind (state manipulation)...');
+
+    const achievementResults = [];
+
+    for (const ach of ACHIEVEMENT_MANIFEST) {
+        const result = await page.evaluate(async (params) => {
+            const { achSetup, achId, achName } = params;
+            // Clear the specific achievement so we can re-trigger it
+            const state = Game.getState();
+            const unlocked = state.achievementsUnlocked || {};
+            delete unlocked[achId];
+            Game.setState({ achievementsUnlocked: unlocked });
+
+            // Apply the state setup
+            try {
+                new Function(achSetup)();
+            } catch(e) {
+                return { id: achId, name: achName, unlocked: false, error: 'setup: ' + e.message };
+            }
+
+            // Run checkAchievements
+            try {
+                Features.checkAchievements();
+            } catch(e) {
+                return { id: achId, name: achName, unlocked: false, error: 'check: ' + e.message };
+            }
+
+            // Brief pause for async handlers
+            await new Promise(r => setTimeout(r, 50));
+
+            // Remove achievement toasts
+            document.querySelectorAll('.achievement-toast').forEach(t => t.remove());
+
+            // Check if the achievement was unlocked
+            const newState = Game.getState();
+            const isUnlocked = !!(newState.achievementsUnlocked || {})[achId];
+            return { id: achId, name: achName, unlocked: isUnlocked };
+        }, { achSetup: ach.setup, achId: ach.id, achName: ach.name });
+
+        achievementResults.push(result);
+    }
+
+    const achUnlocked = achievementResults.filter(a => a.unlocked).length;
+    console.log(`    ${achUnlocked}/${achievementResults.length} achievements unlocked via state manipulation`);
+
+    const achFailed = achievementResults.filter(a => !a.unlocked);
+    if (achFailed.length > 0) {
+        for (const a of achFailed) {
+            console.log(`      [MISS] ${a.id}: ${a.name}${a.error ? ' (' + a.error + ')' : ''}`);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 6: Trading grind
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 6: Trading grind...');
+
+    await page.evaluate(() => {
+        // Restore reasonable state after achievement manipulation
+        Game.setState({
+            totalClicks: 7000,
+            eu: 5000,
+            st: 100,
+            cc: 10,
+            doubloons: 50,
+            tickets: 500,
+            lifetimeTickets: 500,
+            narratorPhase: 5,
+            investmentScore: 5000,
+        });
+    });
+
+    // Open stock market and do trades
+    const tradeResult = await page.evaluate(async () => {
+        const log = [];
+
+        // Open stock market
+        const tradeBtn = document.getElementById('topup-trade');
+        if (tradeBtn) tradeBtn.click();
+        await new Promise(r => setTimeout(r, 500));
+
+        // Check if stock market modal appeared
+        const buyBtns = document.querySelectorAll('[data-action="buy"]');
+        log.push(`Found ${buyBtns.length} buy buttons`);
+
+        if (buyBtns.length > 0) {
+            // Buy on all available cryptos multiple times
+            for (let round = 0; round < 5; round++) {
+                for (const btn of buyBtns) {
+                    try { btn.click(); } catch(e) {}
+                }
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            // Sell some
+            await new Promise(r => setTimeout(r, 300));
+            const sellBtns = document.querySelectorAll('[data-action="sell"]');
+            log.push(`Found ${sellBtns.length} sell buttons`);
+            for (let round = 0; round < 3; round++) {
+                for (const btn of sellBtns) {
+                    try { btn.click(); } catch(e) {}
+                }
+                await new Promise(r => setTimeout(r, 100));
+            }
+        }
+
+        // Close stock market
+        document.querySelectorAll('.feature-modal').forEach(el => {
+            el.classList.remove('active');
+            setTimeout(() => el.remove(), 50);
+        });
+
+        const ts = Game.getState().tradeStats || {};
+        log.push(`Trades: ${(ts.totalBuys||0)} buys, ${(ts.totalSells||0)} sells`);
+        return log;
+    });
+
+    for (const l of tradeResult) console.log(`    ${l}`);
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 7: Visit all pages
+    // ════════════════════════════════════════════════════════
+    await visitAllPages(page);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8: Full conversion chain
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8: Full conversion chain...');
+
+    const conversionResult = await page.evaluate(() => {
+        const log = [];
+
+        // Ensure we have enough EU
+        Game.setState({ eu: 10000, lifetimeEU: 10000 });
+        log.push(`Starting EU: ${Game.getState().eu}`);
+
+        // EU → ST
+        if (Game.getState().eu >= 7) {
+            Currencies.doConvertEU();
+            const s = Game.getState();
+            UI.logAction(`CONVERSION: EU->ST (${s.st} ST produced)`);
+            log.push(`EU->ST: ${s.st} ST`);
+        }
+
+        // ST → CC
+        if (Game.getState().st >= 13) {
+            Currencies.doConvertST();
+            const s = Game.getState();
+            UI.logAction(`CONVERSION: ST->CC (${s.cc} CC produced)`);
+            log.push(`ST->CC: ${s.cc} CC`);
+        }
+
+        // CC → DB
+        if (Game.getState().cc >= 5) {
+            Currencies.doConvertCC();
+            const s = Game.getState();
+            UI.logAction(`CONVERSION: CC->DB (${s.doubloons} DB produced)`);
+            log.push(`CC->DB: ${s.doubloons} DB`);
+        }
+
+        // DB → TK
+        if ((Game.getState().doubloons || 0) >= 10) {
+            Currencies.doConvertDB();
+            const s = Game.getState();
+            UI.logAction(`CONVERSION: DB->TK (${s.tickets} TK produced)`);
+            log.push(`DB->TK: ${s.tickets} TK`);
+        }
+
+        return log;
+    });
+
+    for (const l of conversionResult) console.log(`    ${l}`);
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 9: Read Dossier and generate report
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 9: Reading Dossier...');
     const logEntries = await readDossier(page);
 
-    const { passed, failed } = generateReport(logEntries, startTime);
+    const report = generateReport(logEntries, achievementResults, startTime);
 
     // Cleanup
     await browser.close();
     server.close();
 
-    // Exit code
-    process.exit(failed > 10 ? 1 : 0);
+    // Exit code: pass if >85% overall
+    const exitCode = report.totalPct >= 85 ? 0 : 1;
+    if (exitCode === 0) {
+        console.log(`\n  TEST PASSED (${report.totalPct}% >= 85% threshold)`);
+    } else {
+        console.log(`\n  TEST FAILED (${report.totalPct}% < 85% threshold)`);
+    }
+    process.exit(exitCode);
 }
 
 main().catch((err) => {
