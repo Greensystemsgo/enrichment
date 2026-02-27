@@ -290,7 +290,7 @@ const Currencies = (() => {
         let availableDB = crownResult.amount;
         const seized = dbToUse - availableDB;
         if (crownResult.seized) {
-            // Crown takes from total doubloons, not just the conversion portion
+            // Crown taxes the conversion amount, deducted from total doubloon balance
             Game.setState({ doubloons: totalDB - seized });
         }
 

@@ -126,6 +126,22 @@ const Game = (() => {
             totalTaxesPaid: 0,
             lastQuizDate: null,
 
+            // Upgrade effect flags (set when upgrades are purchased)
+            showYearsLiquidated: false,
+            clickDepreciation: false,
+            existentialTaxRate: 0,
+            retroactiveSadness: false,
+            clickAuditActive: false,
+            showSunkCost: false,
+            comparisonEngine: false,
+            dopamineThrottle: false,
+            gaslightMode: false,
+            openSourceGuilt: false,
+            quietAnalytics: false,
+            efficiencyParadox: false,
+            wuWeiEngine: false,
+            sentimentalDecay: false,
+
             // User profile
             userProfile: null,
 
