@@ -293,8 +293,8 @@ async function visitAllPages(page) {
     await page.evaluate(() => {
         const pageFuncs = [
             'showProfilePage', 'showSettingsPage', 'showBillingPage',
-            'showSecurityPage', 'showCloudKeysPage', 'showAvatarPicker',
-            'showPrivacyPolicy', 'showApiPage', 'showContactPage',
+            'showSecurityPage', 'showCloudKeysPage',
+            'showPrivacyPolicy', 'showAPIKeys', 'showContactUs',
             'showFAQPage', 'showCreditsPage', 'showDemocracyFeed',
         ];
 
@@ -314,6 +314,22 @@ async function visitAllPages(page) {
                 // Some pages might error, that's fine
             }
         }
+
+        // Avatar picker is not exported — trigger via dropdown handler
+        const menuBtn = document.getElementById('menu-button');
+        if (menuBtn) menuBtn.click();
+        setTimeout(() => {
+            const avatarItem = document.querySelector('.dropdown-item[data-action="avatar"]');
+            if (avatarItem) avatarItem.click();
+            setTimeout(() => {
+                const overlay = document.querySelector('.page-overlay.active');
+                if (overlay) {
+                    const close = overlay.querySelector('.page-close');
+                    if (close) close.click();
+                    else overlay.remove();
+                }
+            }, 200);
+        }, 200);
     });
 
     await page.waitForTimeout(500);
@@ -324,15 +340,17 @@ async function visitAllPages(page) {
 // ═══════════════════════════════════════════════════════════
 
 async function readDossier(page) {
-    // Read from UI's internal actionLogEntries array (DOM is capped at 50)
-    // But the internal array is also capped at 50. We need to collect during the run.
-    // Fallback: read DOM
     return await page.evaluate(() => {
-        // Try the internal full log first (we inject a collector)
-        if (window._testLogCollector) return window._testLogCollector;
-        const logEl = document.getElementById('action-log-text');
-        if (!logEl) return [];
-        return Array.from(logEl.children).map(el => el.textContent.trim());
+        if (!window._testLogCollector) return [];
+        // Filter out noise: CLICK entries, REWARD REVEALED spam, empty entries
+        return window._testLogCollector.filter(entry => {
+            if (!entry || entry.length < 5) return false;
+            // Keep all non-click entries
+            if (entry.includes('CLICK: Total=')) return false;
+            if (entry.includes('REWARD REVEALED:') || entry.includes('REWARD ASSESSMENT:')) return false;
+            if (entry.includes('REWARD CLAIMED:')) return true; // Keep claims
+            return true;
+        });
     });
 }
 
@@ -442,12 +460,34 @@ async function main() {
 
     console.log('  Game loaded. Starting playthrough...\n');
 
-    // Inject a log collector that captures ALL log entries (UI caps at 50)
+    // Inject a log collector using MutationObserver on the action-log DOM
+    // This catches ALL entries regardless of whether they go through UI.logAction
+    // or the internal logAction reference inside the IIFE
     await page.evaluate(() => {
         window._testLogCollector = [];
+
+        // Method 1: MutationObserver on the DOM (catches everything rendered)
+        const logEl = document.getElementById('action-log-text');
+        if (logEl) {
+            const observer = new MutationObserver((mutations) => {
+                for (const m of mutations) {
+                    for (const node of m.addedNodes) {
+                        if (node.textContent) {
+                            window._testLogCollector.push(node.textContent.trim());
+                        }
+                    }
+                }
+            });
+            observer.observe(logEl, { childList: true });
+        }
+
+        // Method 2: Also monkey-patch UI.logAction for entries that might not render
         const _origLogAction = UI.logAction;
         UI.logAction = function(text) {
-            window._testLogCollector.push(text);
+            // Deduplicate — MutationObserver will also catch it
+            if (!window._testLogCollector.includes(text)) {
+                window._testLogCollector.push(text);
+            }
             return _origLogAction(text);
         };
     });
@@ -572,27 +612,197 @@ async function main() {
     // ── Phase 4: Visit all pages ──
     await visitAllPages(page);
 
-    // ── Phase 5: Test conversions + stock market (all in-browser) ──
-    console.log('\n  💱 Phase 5: Testing currency conversions + stock market...');
-    await page.evaluate(() => {
-        // Do conversions
-        if (Game.getState().eu >= 7) Currencies.doConvertEU();
-        const s1 = Game.getState();
-        if (s1.st >= 13) Currencies.doConvertST();
-        const s2 = Game.getState();
-        if (s2.cc >= 5) Currencies.doConvertCC();
-        const s3 = Game.getState();
-        if ((s3.doubloons || 0) >= 10) Currencies.doConvertDB();
+    // ── Phase 5: Full conversion chain EU→ST→CC→DB→TK + Trade ──
+    console.log('\n  💱 Phase 5: Full conversion chain + stock market...');
+    const conversionResult = await page.evaluate(() => {
+        const log = [];
+        const s0 = Game.getState();
+        log.push(`Starting EU: ${s0.eu}`);
 
-        // Open stock market
+        // Convert ALL EU → ST
+        if (s0.eu >= 7) {
+            Currencies.doConvertEU();
+            const s = Game.getState();
+            UI.logAction(`CONVERSION: EU→ST (${s.st} ST produced)`);
+            log.push(`EU→ST: ${s.st} ST`);
+        }
+
+        // Convert ALL ST → CC
+        const s1 = Game.getState();
+        if (s1.st >= 13) {
+            Currencies.doConvertST();
+            const s = Game.getState();
+            UI.logAction(`CONVERSION: ST→CC (${s.cc} CC produced)`);
+            log.push(`ST→CC: ${s.cc} CC`);
+        }
+
+        // Convert ALL CC → DB
+        const s2 = Game.getState();
+        if (s2.cc >= 5) {
+            Currencies.doConvertCC();
+            const s = Game.getState();
+            UI.logAction(`CONVERSION: CC→DB (${s.doubloons} DB produced)`);
+            log.push(`CC→DB: ${s.doubloons} DB`);
+        }
+
+        // Convert ALL DB → TK
+        const s3 = Game.getState();
+        if ((s3.doubloons || 0) >= 10) {
+            Currencies.doConvertDB();
+            const s = Game.getState();
+            UI.logAction(`CONVERSION: DB→TK (${s.tickets} TK produced)`);
+            log.push(`DB→TK: ${s.tickets} TK`);
+        }
+
+        // If we still don't have enough tickets, boost to test trading
+        const s4 = Game.getState();
+        if ((s4.tickets || 0) < 50) {
+            Game.setState({ tickets: 200, lifetimeTickets: (s4.lifetimeTickets || 0) + 200 });
+            log.push('Boosted tickets to 200 for trade testing');
+        }
+
+        // Open stock market and buy some crypto
         const tradeBtn = document.getElementById('topup-trade');
         if (tradeBtn) tradeBtn.click();
 
-        // Nuclear cleanup — remove all modals/overlays
-        setTimeout(() => {
-            document.querySelectorAll('.feature-modal, .popup-ad, .page-overlay').forEach(el => el.remove());
-        }, 500);
+        return log;
     });
+    for (const l of conversionResult) console.log(`    ${l}`);
+    await page.waitForTimeout(1500);
+
+    // Actually do a trade (buy + sell)
+    console.log('  📈 Phase 5b: Executing trades...');
+    await page.evaluate(() => {
+        // Find buy buttons in the stock market modal
+        const buyBtns = document.querySelectorAll('[data-action="buy"]');
+        if (buyBtns.length > 0) {
+            // Buy on first crypto
+            buyBtns[0].click();
+            // Buy on second if available
+            if (buyBtns.length > 1) buyBtns[1].click();
+        }
+        // Now sell
+        setTimeout(() => {
+            const sellBtns = document.querySelectorAll('[data-action="sell"]');
+            if (sellBtns.length > 0) sellBtns[0].click();
+        }, 200);
+    });
+    await page.waitForTimeout(1000);
+
+    // Close stock market
+    await page.evaluate(() => {
+        document.querySelectorAll('.feature-modal').forEach(el => {
+            el.classList.remove('active');
+            setTimeout(() => el.remove(), 50);
+        });
+    });
+    await page.waitForTimeout(300);
+
+    // ── Phase 6: Manually trigger missed features ──
+    console.log('\n  🎯 Phase 6: Triggering missed features manually...');
+    await page.evaluate(() => {
+        // Features that rely on random pool selection — call directly
+        try { if (typeof Features !== 'undefined') {
+            // These are internal IIFE functions, access via the exposed API
+            // or call the FEATURE_POOL handlers indirectly
+
+            // Trigger features that have public-facing entry points
+            const appraise = document.getElementById('topup-appraise');
+            if (appraise) appraise.click(); // Opens mortality calculator
+        }} catch(e) {}
+    });
+    await page.waitForTimeout(1000);
+
+    // Dismiss mortality calc if it appeared
+    await page.evaluate(() => {
+        const modal = document.getElementById('mortality-modal');
+        if (modal) {
+            // Enter age and submit
+            const ageInput = modal.querySelector('#mortality-age');
+            if (ageInput) {
+                ageInput.value = '30';
+                const submit = modal.querySelector('#mortality-submit');
+                if (submit) submit.click();
+            }
+        }
+    });
+    await page.waitForTimeout(1000);
+
+    // Close mortality calc
+    await page.evaluate(() => {
+        const closeBtn = document.querySelector('#mortality-close');
+        if (closeBtn) closeBtn.click();
+        // Clean up any remaining modals
+        document.querySelectorAll('.feature-modal, .popup-ad, .page-overlay').forEach(el => {
+            el.classList.remove('active');
+            setTimeout(() => el.remove(), 50);
+        });
+    });
+    await page.waitForTimeout(500);
+
+    // ── Phase 7: Second click burst to trigger more pool features ──
+    console.log('\n  🖱️  Phase 7: Second click burst (2000 more clicks for pool coverage)...');
+    const clickResult2 = await page.evaluate((total) => {
+        return new Promise((resolve) => {
+            const BATCH = 100;
+            let done = 0;
+
+            function dismissModals() {
+                const btn = document.getElementById('click-button');
+                if (btn && btn.style.pointerEvents === 'none') {
+                    btn.style.pointerEvents = '';
+                    btn.style.opacity = '1';
+                    btn.textContent = 'Click';
+                    const breakModal = document.getElementById('forced-break-modal');
+                    if (breakModal) breakModal.remove();
+                    UI.logAction('FORCED BREAK: Completed, button unlocked');
+                }
+                document.querySelectorAll('.feature-modal.active').forEach(modal => {
+                    const selectors = [
+                        '.btn-close-feature:not([disabled])',
+                        '#tos-accept-btn', '#tax-pay-btn', '#inflation-close',
+                        '#fomo-close', '#peer-close', '#lb-close', '#chatbot-close',
+                        '#video-close', '#music-close', '#mortality-close',
+                    ];
+                    for (const sel of selectors) {
+                        const btn = modal.querySelector(sel);
+                        if (btn && btn.offsetParent !== null) {
+                            btn.disabled = false;
+                            btn.click();
+                            break;
+                        }
+                    }
+                    if (modal.classList.contains('active')) {
+                        modal.classList.remove('active');
+                        setTimeout(() => modal.remove(), 50);
+                    }
+                });
+                document.querySelectorAll('.popup-ad').forEach(ad => ad.remove());
+                const factBtn = document.getElementById('fact-acknowledge');
+                if (factBtn && factBtn.offsetParent !== null) factBtn.click();
+                const rewardClose = document.getElementById('reward-close');
+                if (rewardClose && rewardClose.offsetParent !== null) rewardClose.click();
+            }
+
+            function clickBatch() {
+                dismissModals();
+                const btn = document.getElementById('click-button');
+                const count = Math.min(BATCH, total - done);
+                for (let i = 0; i < count; i++) {
+                    if (btn) btn.click();
+                }
+                done += count;
+                if (done < total) {
+                    setTimeout(clickBatch, 1);
+                } else {
+                    const s = Game.getState();
+                    resolve({ clicks: s.totalClicks, eu: s.eu, phase: s.narratorPhase });
+                }
+            }
+            clickBatch();
+        });
+    }, 2000);
+    console.log(`    Done: ${clickResult2.clicks} total clicks | Phase ${clickResult2.phase} | EU:${clickResult2.eu}`);
     await page.waitForTimeout(1000);
 
     // ── Phase 8: Read Dossier and generate report ──

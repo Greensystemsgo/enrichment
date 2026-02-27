@@ -2628,6 +2628,7 @@ const Features = (() => {
 
     function showNewsTicker() {
         if (document.getElementById('news-ticker')) return;
+        UI.logAction('NEWS TICKER: Live headline feed activated');
 
         // Show static headlines immediately
         const staticShuffled = [...TICKER_HEADLINES].sort(() => Math.random() - 0.5);
