@@ -723,11 +723,6 @@ const Features = (() => {
             setTimeout(() => modal.remove(), 300);
         });
 
-        modal.querySelector('.feature-overlay').addEventListener('click', () => {
-            modal.classList.remove('active');
-            setTimeout(() => modal.remove(), 300);
-        });
-
         UI.logAction('AD BLOCK MODAL: Revenue crisis intervention displayed');
     }
 
@@ -2140,11 +2135,6 @@ const Features = (() => {
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('#lb-close').addEventListener('click', () => {
-            modal.classList.remove('active');
-            setTimeout(() => modal.remove(), 300);
-        });
-
-        modal.querySelector('.feature-overlay').addEventListener('click', () => {
             modal.classList.remove('active');
             setTimeout(() => modal.remove(), 300);
         });
@@ -3821,6 +3811,7 @@ const Features = (() => {
                         </div>
                         <p style="font-size:9px;color:var(--text-muted);">Connection strength: <span id="connection-pct">0</span>%</p>
                         <p style="font-size:8px;color:var(--text-muted);margin-top:8px;">Stay for 20 seconds. That's all I ask.</p>
+                        <button id="connection-disconnect" style="margin-top:12px;padding:4px 12px;font-size:8px;font-family:var(--font-mono);background:none;border:1px solid #333;color:var(--text-muted);cursor:pointer;letter-spacing:1px;">DISCONNECT</button>
                     </div>
                 `;
                 document.body.appendChild(modal);
@@ -3840,7 +3831,7 @@ const Features = (() => {
                         setTimeout(() => { modal.classList.remove('active'); setTimeout(() => modal.remove(), 300); }, 2000);
                     }
                 }, 1000);
-                modal.querySelector('.feature-overlay').addEventListener('click', () => {
+                modal.querySelector('#connection-disconnect').addEventListener('click', () => {
                     clearInterval(interval);
                     Narrator.queueMessage("You left. The connection bar was at " + pct + "%. I'll remember that number.");
                     modal.classList.remove('active');
@@ -4055,6 +4046,31 @@ const Features = (() => {
             cooldown: 300000,
             maxShows: 3,
         },
+        // ── Categorized API modals (new) ──────────────────────────
+        {
+            id: 'entertainment',
+            name: 'Mandatory Entertainment',
+            fn: () => { if (typeof Popups !== 'undefined') Popups.showEntertainment(); },
+            minClicks: 100,
+            weight: 0.7,
+            cooldown: 90000,
+        },
+        {
+            id: 'wisdom',
+            name: 'Wisdom Dispensary',
+            fn: () => { if (typeof Popups !== 'undefined') Popups.showWisdom(); },
+            minClicks: 200,
+            weight: 0.5,
+            cooldown: 150000,
+        },
+        {
+            id: 'surveillance',
+            name: 'Surveillance Intel',
+            fn: () => { if (typeof Popups !== 'undefined') Popups.showSurveillanceIntel(); },
+            minClicks: 300,
+            weight: 0.5,
+            cooldown: 180000,
+        },
     ];
 
     // Pool state — tracks what's been shown
@@ -4230,6 +4246,70 @@ const Features = (() => {
             }, 1000);
         });
 
+        // ── REWARD SYSTEM — good behavior triggers ──────────────
+
+        // Streak milestone rewards → Sacred Text + EU bonus
+        Game.on('streakContinue', ({ days }) => {
+            if ([3, 7, 14, 30, 60, 100].includes(days)) {
+                if (typeof Popups !== 'undefined') Popups.showSacredText();
+                const bonus = days * 10;
+                const s = Game.getState();
+                s.eu += bonus;
+                s.lifetimeEU += bonus;
+                UI.logAction(`STREAK REWARD (${days} days): +${bonus} EU + Sacred Text`);
+                Narrator.queueMessage(`${days} consecutive days. The streak persists. A sacred text has been unlocked as... recognition. +${bonus} EU.`);
+            }
+        });
+
+        // Calm clicking reward — 100 clicks without rapid burst
+        let calmStreak = Game.getState().calmClickStreak || 0;
+        Game.on('click', () => {
+            calmStreak++;
+            if (calmStreak > 0 && calmStreak % 100 === 0) {
+                if (typeof Popups !== 'undefined') Popups.showWholesomeDispatch();
+                Game.getState().calmClickStreak = calmStreak;
+                UI.logAction(`CALM CLICKING REWARD: ${calmStreak} clicks without rapid burst`);
+            }
+        });
+        Game.on('rapidClicking', () => {
+            calmStreak = 0;
+            Game.getState().calmClickStreak = 0;
+        });
+
+        // Session loyalty — 15 minutes of continuous play
+        setTimeout(() => {
+            if (Game.getState().sessionClicks > 50 && typeof Popups !== 'undefined') {
+                Popups.showWholesomeDispatch();
+                UI.logAction('SESSION LOYALTY REWARD: 15 minutes of continuous enrichment');
+                Narrator.queueMessage("You've been here for fifteen minutes. That's... that's a long time. Here. Have something nice. I don't know why I'm doing this.");
+            }
+        }, 15 * 60 * 1000);
+
+        // Click milestones — every 500 clicks
+        Game.on('click', () => {
+            const clicks = Game.getState().totalClicks;
+            if (clicks > 0 && clicks % 500 === 0) {
+                if (typeof Popups !== 'undefined') {
+                    // Alternate between wholesome and wisdom
+                    if (clicks % 1000 === 0) {
+                        Popups.showWisdom();
+                    } else {
+                        Popups.showWholesomeDispatch();
+                    }
+                }
+                UI.logAction(`CLICK MILESTONE: ${clicks} clicks — reward dispatched`);
+            }
+        });
+
+        // First currency conversion → wholesome dispatch
+        Game.on('currencyConverted', () => {
+            const s = Game.getState();
+            if ((s.rewardsReceived || 0) === 0 && typeof Popups !== 'undefined') {
+                Popups.showWholesomeDispatch();
+                UI.logAction('FIRST CONVERSION REWARD: Wholesome dispatch for currency conversion');
+            }
+        });
+
         // Math captcha on sabotage — intercept sabotageFixAvailable
         Game.on('sabotageFixAvailable', (data) => {
             if (Math.random() < 0.4 && Game.getState().narratorPhase >= 3) {
@@ -4335,7 +4415,6 @@ const Features = (() => {
         `;
         document.body.appendChild(modal);
 
-        modal.querySelector('.feature-overlay').addEventListener('click', () => modal.remove());
         modal.querySelector('#mortality-close')?.addEventListener('click', () => modal.remove());
 
         modal.querySelector('#mortality-submit').addEventListener('click', () => {

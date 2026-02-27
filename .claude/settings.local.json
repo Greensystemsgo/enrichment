@@ -83,7 +83,17 @@
       "mcp__deepseek__chat-with-deepseek-v3",
       "mcp__huggingface__chat-with-huggingface",
       "mcp__gemini__gemini-query",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "mcp__grok__chat-with-grok",
+      "mcp__llama__chat-with-llama-3_3-70b",
+      "mcp__mistral__chat-with-mistral",
+      "mcp__gemini__gemini-search",
+      "WebFetch(domain:api.rss2json.com)",
+      "WebFetch(domain:ok.surf)",
+      "WebFetch(domain:www.youtube.com)",
+      "WebFetch(domain:www.wikidata.org)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "mcp__gemini__gemini-brainstorm"
     ]
   },
   "enabledMcpjsonServers": [

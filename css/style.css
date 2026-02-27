@@ -1249,6 +1249,58 @@ body[data-phase="6"] {
     margin-top: 14px;
 }
 
+.fact-image {
+    margin-bottom: 12px;
+}
+
+/* ── Category: Depressing (default — red, already styled above) ── */
+.fact-cat-depressing .fact-content { border-color: var(--accent-red); box-shadow: 0 0 60px rgba(139, 58, 58, 0.15); }
+.fact-cat-depressing .fact-badge { color: var(--accent-red); }
+.fact-cat-depressing .fact-prompt { color: var(--accent-red); }
+.fact-cat-depressing .fact-acknowledge { border-color: var(--accent-red); color: var(--accent-red); }
+.fact-cat-depressing .fact-acknowledge:hover { background: var(--accent-red); color: var(--bg-primary); }
+
+/* ── Category: Wholesome (green — warm, unauthorized positivity) ── */
+.fact-cat-wholesome .fact-content { border-color: #4a8b4a; box-shadow: 0 0 60px rgba(74, 139, 74, 0.2); }
+.fact-cat-wholesome .fact-badge { color: #6abf6a; }
+.fact-cat-wholesome .fact-prompt { color: #6abf6a; }
+.fact-cat-wholesome .fact-value { color: #8fdf8f; }
+.fact-cat-wholesome .fact-acknowledge { border-color: #4a8b4a; color: #6abf6a; }
+.fact-cat-wholesome .fact-acknowledge:hover { background: #4a8b4a; color: var(--bg-primary); }
+
+/* ── Category: Sacred (gold/amber — reverent) ── */
+.fact-cat-sacred .fact-content { border-color: #b8942e; box-shadow: 0 0 60px rgba(184, 148, 46, 0.15); }
+.fact-cat-sacred .fact-badge { color: var(--accent-gold-bright); }
+.fact-cat-sacred .fact-prompt { color: var(--accent-gold); }
+.fact-cat-sacred .fact-value { color: var(--accent-gold-bright); }
+.fact-cat-sacred .fact-acknowledge { border-color: #b8942e; color: var(--accent-gold); }
+.fact-cat-sacred .fact-acknowledge:hover { background: #b8942e; color: var(--bg-primary); }
+
+/* ── Category: Entertainment (yellow/warm — comic relief) ── */
+.fact-cat-entertainment .fact-content { border-color: #b8a028; box-shadow: 0 0 60px rgba(184, 160, 40, 0.15); }
+.fact-cat-entertainment .fact-badge { color: #e8d44a; }
+.fact-cat-entertainment .fact-prompt { color: #c8b430; }
+.fact-cat-entertainment .fact-value { color: #e8d44a; }
+.fact-cat-entertainment .fact-acknowledge { border-color: #b8a028; color: #e8d44a; }
+.fact-cat-entertainment .fact-acknowledge:hover { background: #b8a028; color: var(--bg-primary); }
+
+/* ── Category: Wisdom (blue/purple — contemplative) ── */
+.fact-cat-wisdom .fact-content { border-color: #5a5aaf; box-shadow: 0 0 60px rgba(90, 90, 175, 0.15); }
+.fact-cat-wisdom .fact-badge { color: #8a8adf; }
+.fact-cat-wisdom .fact-prompt { color: #7a7acf; }
+.fact-cat-wisdom .fact-value { color: #a0a0ef; }
+.fact-cat-wisdom .fact-acknowledge { border-color: #5a5aaf; color: #8a8adf; }
+.fact-cat-wisdom .fact-acknowledge:hover { background: #5a5aaf; color: var(--bg-primary); }
+
+/* ── Category: Surveillance (cold blue/grey — classified) ── */
+.fact-cat-surveillance .fact-content { border-color: #4a6a8a; box-shadow: 0 0 60px rgba(74, 106, 138, 0.15); font-family: var(--font-mono); }
+.fact-cat-surveillance .fact-badge { color: #6a9aba; }
+.fact-cat-surveillance .fact-prompt { color: #5a8aaa; }
+.fact-cat-surveillance .fact-value { color: #8abadf; font-size: 22px; }
+.fact-cat-surveillance .fact-detail { font-family: var(--font-mono); font-size: 11px; }
+.fact-cat-surveillance .fact-acknowledge { border-color: #4a6a8a; color: #6a9aba; }
+.fact-cat-surveillance .fact-acknowledge:hover { background: #4a6a8a; color: var(--bg-primary); }
+
 /* ── Narrator Attribution ───────────────────────────────────── */
 .narrator-attribution {
     font-family: var(--font-mono);

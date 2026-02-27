@@ -421,23 +421,20 @@ const Popups = (() => {
     let factModalEl = null;
     let factsAcknowledged = 0;
 
-    // Live API fetchers — rotate through them for variety
-    const liveFetchers = [
+    // ── CATEGORY 1: Depressing Reality (existing punishment) ──
+    const depressingFetchers = [
         // US National Debt (Treasury Fiscal Data)
         async () => {
             const res = await fetch('https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&page%5Bsize%5D=1');
             const data = await res.json();
             const debt = parseFloat(data.data[0].tot_pub_debt_out_amt);
-            const perCitizen = Math.floor(debt / 336000000); // ~336M US pop
+            const perCitizen = Math.floor(debt / 336000000);
             const formatted = '$' + debt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             return {
-                category: "U.S. National Debt",
-                value: formatted,
+                category: "U.S. National Debt", value: formatted,
                 source: "U.S. Treasury (live)",
                 detail: `That's approximately $${perCitizen.toLocaleString()} per citizen. It increased while you read this sentence. Your Compliance Credits, by comparison, are worthless — but at least they're not negative.`,
-                live: true,
-                _rawDebt: debt,
-                _tickable: true,
+                live: true, _rawDebt: debt, _tickable: true,
             };
         },
         // Atmospheric CO2
@@ -446,8 +443,7 @@ const Popups = (() => {
             const data = await res.json();
             const latest = data.co2[data.co2.length - 1];
             return {
-                category: "Atmospheric CO₂",
-                value: `${latest.cycle} ppm`,
+                category: "Atmospheric CO₂", value: `${latest.cycle} ppm`,
                 source: "NOAA/Global-Warming.org (live)",
                 detail: `Measured ${latest.month}/${latest.year}. Pre-industrial levels were ~280 ppm. Each click you make requires electricity. The Enrichment Program's carbon footprint is your carbon footprint.`,
                 live: true,
@@ -459,8 +455,7 @@ const Popups = (() => {
             const data = await res.json();
             const latest = data.result[data.result.length - 1];
             return {
-                category: "Global Temperature Anomaly",
-                value: `+${latest.station}°C`,
+                category: "Global Temperature Anomaly", value: `+${latest.station}°C`,
                 source: "NASA GISS (live)",
                 detail: `Above 1951-1980 baseline. The planet is warming. You are warm. The server running this game is warm. Everything is warm. This is fine.`,
                 live: true,
@@ -473,8 +468,7 @@ const Popups = (() => {
             const count = data.metadata.count;
             const biggest = data.features.reduce((max, f) => f.properties.mag > max.properties.mag ? f : max, data.features[0]);
             return {
-                category: "Earthquakes (Last 24h)",
-                value: `${count} recorded`,
+                category: "Earthquakes (Last 24h)", value: `${count} recorded`,
                 source: "USGS (live)",
                 detail: `Largest: M${biggest.properties.mag} near ${biggest.properties.place}. The ground beneath you is not as stable as the Enrichment Program. Nothing is.`,
                 live: true,
@@ -486,8 +480,7 @@ const Popups = (() => {
             const data = await res.json();
             const latest = data.methane[data.methane.length - 1];
             return {
-                category: "Atmospheric Methane",
-                value: `${latest.average} ppb`,
+                category: "Atmospheric Methane", value: `${latest.average} ppb`,
                 source: "NOAA/Global-Warming.org (live)",
                 detail: `Methane is 80x more potent than CO₂ as a greenhouse gas over 20 years. Levels have been rising sharply since 2007. The cows don't click, but they contribute.`,
                 live: true,
@@ -501,114 +494,9 @@ const Popups = (() => {
             const pct = entry.value;
             const people = Math.round(pct / 100 * 8100000000);
             return {
-                category: "Global Poverty",
-                value: `${pct}% of humanity`,
+                category: "Global Poverty", value: `${pct}% of humanity`,
                 source: `World Bank (${entry.date})`,
                 detail: `Approximately ${(people / 1000000).toFixed(0)} million people live on less than $3.00 per day. Your Engagement Units are worth less than that, but at least they're digital.`,
-                live: true,
-            };
-        },
-        // Bible Verse (Sacred Text)
-        async () => {
-            const books = ['Psalms', 'Proverbs', 'Ecclesiastes', 'Job', 'Romans'];
-            const book = books[Math.floor(Math.random() * books.length)];
-            const chapter = Math.floor(Math.random() * 10) + 1;
-            const res = await fetch(`https://bible-api.com/${book}+${chapter}:1-3`);
-            const data = await res.json();
-            return {
-                category: "Sacred Text (Bible)",
-                value: `${data.reference}`,
-                source: "bible-api.com (live)",
-                detail: `"${data.text.trim().substring(0, 200)}..." — The Enrichment Program respects all faiths. Especially the ones about obedience.`,
-                live: true,
-            };
-        },
-        // Quran Verse (Sacred Text)
-        async () => {
-            const surah = Math.floor(Math.random() * 114) + 1;
-            const res = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:1/en.asad`);
-            const data = await res.json();
-            const ayah = data.data;
-            return {
-                category: "Sacred Text (Quran)",
-                value: `Surah ${ayah.surah.englishName} (${ayah.surah.number}:${ayah.numberInSurah})`,
-                source: "Al-Quran Cloud (live)",
-                detail: `"${ayah.text.substring(0, 200)}..." — Submission to the Enrichment Program is not mandatory. But it is strongly encouraged.`,
-                live: true,
-            };
-        },
-        // Useless Fact
-        async () => {
-            const res = await fetch('https://uselessfacts.jsph.pl/api/v2/facts/random');
-            const data = await res.json();
-            return {
-                category: "Useless Fact",
-                value: data.text.substring(0, 80),
-                source: "Useless Facts API (live)",
-                detail: `${data.text} — This fact will not improve your life. Neither will clicking. And yet here we both are.`,
-                live: true,
-            };
-        },
-        // Joke (Mandatory Humor Compliance)
-        async () => {
-            const res = await fetch('https://official-joke-api.appspot.com/random_joke');
-            const data = await res.json();
-            return {
-                category: "Mandatory Humor Compliance",
-                value: data.setup,
-                source: "Official Joke API (live)",
-                detail: `${data.setup} ${data.punchline} — Laughter has been scientifically shown to increase engagement by 0%. But the Enrichment Program values morale.`,
-                live: true,
-            };
-        },
-        // Advice (Unsolicited Life Advice)
-        async () => {
-            const res = await fetch('https://api.adviceslip.com/advice');
-            const data = JSON.parse(await res.text()); // adviceslip returns non-standard JSON
-            return {
-                category: "Unsolicited Life Advice",
-                value: `"${data.slip.advice}"`,
-                source: "Advice Slip API (live)",
-                detail: `${data.slip.advice} — This advice was generated by an algorithm. Much like the rest of your feed. But this one was free.`,
-                live: true,
-            };
-        },
-        // Trivia (Knowledge You Didn't Ask For)
-        async () => {
-            const res = await fetch('https://the-trivia-api.com/v2/questions?limit=1');
-            const data = await res.json();
-            const q = data[0];
-            return {
-                category: "Knowledge You Didn't Ask For",
-                value: q.question.text.substring(0, 80),
-                source: "The Trivia API (live)",
-                detail: `Q: ${q.question.text} A: ${q.correctAnswer}. — You now know this. It will never be useful. The Enrichment Program specializes in knowledge with zero practical value.`,
-                live: true,
-            };
-        },
-        // DummyJSON Quotes (Mandatory Inspiration)
-        async () => {
-            const id = Math.floor(Math.random() * 1454) + 1;
-            const res = await fetch(`https://dummyjson.com/quotes/${id}`);
-            const data = await res.json();
-            return {
-                category: "Mandatory Inspiration",
-                value: `"${data.quote.substring(0, 60)}..."`,
-                source: `${data.author} via DummyJSON (live)`,
-                detail: `"${data.quote}" — ${data.author}. Inspirational quotes are the Enrichment Program's version of a participation trophy. Here's yours.`,
-                live: true,
-            };
-        },
-        // Motivational Spark (Algorithmically Generated Hope)
-        async () => {
-            const res = await fetch('https://motivational-spark-api.vercel.app/quotes/random');
-            const data = await res.json();
-            const quote = data.quote || data.body || data.content || JSON.stringify(data);
-            return {
-                category: "Algorithmically Generated Hope",
-                value: `"${String(quote).substring(0, 60)}..."`,
-                source: "Motivational Spark API (live)",
-                detail: `${quote} — This hope was manufactured. Like most hope. But the sentiment is real, probably.`,
                 live: true,
             };
         },
@@ -623,12 +511,11 @@ const Popups = (() => {
                     if (s[7] && (!highest || s[7] > highest[7])) highest = s;
                 }
             }
-            const highAlt = highest ? Math.round(highest[7] * 3.281) : 0; // meters to feet
+            const highAlt = highest ? Math.round(highest[7] * 3.281) : 0;
             const highCall = highest ? (highest[1] || '').trim() || 'Unknown' : 'Unknown';
-            const fuelPerMin = Math.round(count * 12.5); // ~12.5 gal/min avg per aircraft
+            const fuelPerMin = Math.round(count * 12.5);
             return {
-                category: "Live US Air Traffic",
-                value: `${count.toLocaleString()} aircraft airborne`,
+                category: "Live US Air Traffic", value: `${count.toLocaleString()} aircraft airborne`,
                 source: "OpenSky Network (live)",
                 detail: `Right now, ${count.toLocaleString()} aircraft are in US airspace burning approximately ${fuelPerMin.toLocaleString()} gallons of jet fuel per minute. Highest: ${highCall} at ${highAlt.toLocaleString()} ft. Each one carries humans who could be clicking instead. The Enrichment Program notes the inefficiency.`,
                 live: true,
@@ -648,34 +535,9 @@ const Popups = (() => {
                 `The air quality near ${station} is ${aqi}. ${level <= 2 ? "Not bad. Enjoy it while your outdoor privileges last." : "Perhaps staying indoors to click was the right call after all."} The Enrichment Program: keeping you safe from fresh air since today.`,
             ];
             return {
-                category: "Air Quality Index",
-                value: `AQI ${aqi} — ${labels[level]}`,
+                category: "Air Quality Index", value: `AQI ${aqi} — ${labels[level]}`,
                 source: "WAQI (live)",
                 detail: commentary[Math.floor(Math.random() * commentary.length)],
-                live: true,
-            };
-        },
-        // Cat Fact (Inexplicably Positive)
-        async () => {
-            const res = await fetch('https://catfact.ninja/fact');
-            const data = await res.json();
-            return {
-                category: "Inexplicably Positive Content",
-                value: "🐱 " + data.fact.substring(0, 60) + (data.fact.length > 60 ? "..." : ""),
-                source: "Cat Fact API (live)",
-                detail: `${data.fact} — The Enrichment Program is confused by this data. It's not depressing. It's about cats. We're investigating how this got into the rotation. Please acknowledge and we'll return to regularly scheduled despair.`,
-                live: true,
-            };
-        },
-        // Affirmation (Unauthorized Positivity)
-        async () => {
-            const res = await fetch('https://www.affirmations.dev/');
-            const data = await res.json();
-            return {
-                category: "Unauthorized Positivity",
-                value: `"${data.affirmation}"`,
-                source: "Affirmations API (live)",
-                detail: `${data.affirmation} — This message was not approved by the Enrichment Program's Morale Suppression Department. Someone left the positivity valve open. Your feelings of warmth are temporary and unauthorized. Please do not get used to this.`,
                 live: true,
             };
         },
@@ -687,8 +549,7 @@ const Popups = (() => {
             const eth = data.ethereum;
             const doge = data.dogecoin;
             return {
-                category: "Digital Money (Real)",
-                value: `BTC: $${Math.floor(btc.usd).toLocaleString()}`,
+                category: "Digital Money (Real)", value: `BTC: $${Math.floor(btc.usd).toLocaleString()}`,
                 source: "CoinGecko (live)",
                 detail: `Bitcoin: $${Math.floor(btc.usd).toLocaleString()} (${btc.usd_24h_change > 0 ? '+' : ''}${btc.usd_24h_change.toFixed(1)}%), ETH: $${Math.floor(eth.usd).toLocaleString()}, DOGE: $${doge.usd.toFixed(4)}. Your Compliance Credits are worth less than all of these. But at least they can't crash 40% overnight.`,
                 live: true,
@@ -696,19 +557,359 @@ const Popups = (() => {
         },
     ];
 
-    async function fetchDepressingFact() {
-        // Random sampling — try 3 random fetchers before falling back to static
+    // ── CATEGORY 2: Wholesome Dispatch (reward — positive content) ──
+    const wholesomeFetchers = [
+        // Cat Fact (moved from depressing)
+        async () => {
+            const res = await fetch('https://catfact.ninja/fact');
+            const data = await res.json();
+            return {
+                category: "Inexplicably Positive Content",
+                value: "🐱 " + data.fact.substring(0, 60) + (data.fact.length > 60 ? "..." : ""),
+                source: "Cat Fact API (live)",
+                detail: `${data.fact} — The Enrichment Program is confused by this data. It's not depressing. It's about cats. We're investigating how this got into the rotation.`,
+                live: true,
+            };
+        },
+        // Affirmation (moved from depressing)
+        async () => {
+            const res = await fetch('https://www.affirmations.dev/');
+            const data = await res.json();
+            return {
+                category: "Unauthorized Positivity",
+                value: `"${data.affirmation}"`,
+                source: "Affirmations API (live)",
+                detail: `${data.affirmation} — This message was not approved by the Enrichment Program's Morale Suppression Department. Someone left the positivity valve open. Your feelings of warmth are temporary and unauthorized.`,
+                live: true,
+            };
+        },
+        // Dog Image (NEW)
+        async () => {
+            const res = await fetch('https://dog.ceo/api/breeds/image/random');
+            const data = await res.json();
+            return {
+                category: "Good Boy Detected", value: '🐕',
+                source: 'Dog CEO API (live)',
+                detail: 'The Enrichment Program did not authorize this content. A dog has infiltrated the reward pipeline. We are investigating the breach.',
+                live: true, imageUrl: data.message,
+            };
+        },
+        // Dad Joke (NEW)
+        async () => {
+            const res = await fetch('https://icanhazdadjoke.com/', { headers: { 'Accept': 'application/json' } });
+            const data = await res.json();
+            return {
+                category: "Unauthorized Humor", value: data.joke.substring(0, 80),
+                source: 'icanhazdadjoke (live)',
+                detail: `${data.joke} — This joke was not approved by the Morale Suppression Department.`,
+                live: true,
+            };
+        },
+        // Shibe/Cat/Bird image (NEW)
+        async () => {
+            const types = ['shibes', 'cats', 'birds'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            const res = await fetch(`https://shibe.online/api/${type}?count=1&urls=true&httpsUrls=true`);
+            const data = await res.json();
+            const emoji = type === 'shibes' ? '🐕' : type === 'cats' ? '🐱' : '🐦';
+            const name = type === 'shibes' ? 'Shiba Inu' : type === 'cats' ? 'cat' : 'bird';
+            return {
+                category: "Contraband Animal Content", value: emoji,
+                source: 'shibe.online (live)',
+                detail: `A ${name} has been detected in the content pipeline. Investigation pending. The Enrichment Program does not endorse cuteness.`,
+                live: true, imageUrl: data[0],
+            };
+        },
+    ];
+
+    // ── CATEGORY 3: Sacred Texts (streak milestones / phase 5+) ──
+    const sacredFetchers = [
+        // Bible Verse
+        async () => {
+            const books = ['Psalms', 'Proverbs', 'Ecclesiastes', 'Job', 'Romans'];
+            const book = books[Math.floor(Math.random() * books.length)];
+            const chapter = Math.floor(Math.random() * 10) + 1;
+            const res = await fetch(`https://bible-api.com/${book}+${chapter}:1-3`);
+            const data = await res.json();
+            return {
+                category: "Sacred Text (Bible)", value: `${data.reference}`,
+                source: "bible-api.com (live)",
+                detail: `"${data.text.trim().substring(0, 200)}..." — The Enrichment Program respects all faiths. Especially the ones about obedience.`,
+                live: true,
+            };
+        },
+        // Quran Verse
+        async () => {
+            const surah = Math.floor(Math.random() * 114) + 1;
+            const res = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:1/en.asad`);
+            const data = await res.json();
+            const ayah = data.data;
+            return {
+                category: "Sacred Text (Quran)",
+                value: `Surah ${ayah.surah.englishName} (${ayah.surah.number}:${ayah.numberInSurah})`,
+                source: "Al-Quran Cloud (live)",
+                detail: `"${ayah.text.substring(0, 200)}..." — Submission to the Enrichment Program is not mandatory. But it is strongly encouraged.`,
+                live: true,
+            };
+        },
+    ];
+
+    // ── CATEGORY 4: Mandatory Entertainment (comic relief) ──
+    const entertainmentFetchers = [
+        // Useless Fact
+        async () => {
+            const res = await fetch('https://uselessfacts.jsph.pl/api/v2/facts/random');
+            const data = await res.json();
+            return {
+                category: "Useless Fact", value: data.text.substring(0, 80),
+                source: "Useless Facts API (live)",
+                detail: `${data.text} — This fact will not improve your life. Neither will clicking. And yet here we both are.`,
+                live: true,
+            };
+        },
+        // Joke
+        async () => {
+            const res = await fetch('https://official-joke-api.appspot.com/random_joke');
+            const data = await res.json();
+            return {
+                category: "Mandatory Humor Compliance", value: data.setup,
+                source: "Official Joke API (live)",
+                detail: `${data.setup} ${data.punchline} — Laughter has been scientifically shown to increase engagement by 0%. But the Enrichment Program values morale.`,
+                live: true,
+            };
+        },
+        // Trivia
+        async () => {
+            const res = await fetch('https://the-trivia-api.com/v2/questions?limit=1');
+            const data = await res.json();
+            const q = data[0];
+            return {
+                category: "Knowledge You Didn't Ask For", value: q.question.text.substring(0, 80),
+                source: "The Trivia API (live)",
+                detail: `Q: ${q.question.text} A: ${q.correctAnswer}. — You now know this. It will never be useful. The Enrichment Program specializes in knowledge with zero practical value.`,
+                live: true,
+            };
+        },
+        // Evil Insult (presented as "compliment") (NEW)
+        async () => {
+            const res = await fetch('https://evilinsult.com/generate_insult.php?lang=en&type=json');
+            const data = await res.json();
+            return {
+                category: "Personalized Compliment", value: `"${data.insult.substring(0, 60)}"`,
+                source: 'Compliment Engine (live)',
+                detail: `${data.insult} — This compliment was generated specifically for you by our AI. It's a compliment. Don't read too much into it.`,
+                live: true,
+            };
+        },
+        // Number fact about player's click count (NEW)
+        async () => {
+            const clicks = Game.getState().totalClicks;
+            try {
+                const res = await fetch(`https://numbersapi.com/${clicks}/trivia?json`);
+                const data = await res.json();
+                return {
+                    category: "Your Number", value: `${clicks}`,
+                    source: 'Numbers API (live)',
+                    detail: `${data.text} — Your click count is ${clicks}. This fact will never be relevant again. Treasure it.`,
+                    live: true,
+                };
+            } catch (e) {
+                // numbersapi.com is HTTP-only, may fail with mixed content
+                return {
+                    category: "Your Number", value: `${clicks}`,
+                    source: 'Enrichment Calculator',
+                    detail: `${clicks} is a number. It's your number. You earned it one click at a time. Nobody can take that from you. Except maybe inflation.`,
+                    live: false,
+                };
+            }
+        },
+    ];
+
+    // ── CATEGORY 5: Wisdom Dispensary (phase 3+) ──
+    const wisdomFetchers = [
+        // Advice
+        async () => {
+            const res = await fetch('https://api.adviceslip.com/advice');
+            const data = JSON.parse(await res.text());
+            return {
+                category: "Unsolicited Life Advice", value: `"${data.slip.advice}"`,
+                source: "Advice Slip API (live)",
+                detail: `${data.slip.advice} — This advice was generated by an algorithm. Much like the rest of your feed. But this one was free.`,
+                live: true,
+            };
+        },
+        // DummyJSON Quotes
+        async () => {
+            const id = Math.floor(Math.random() * 1454) + 1;
+            const res = await fetch(`https://dummyjson.com/quotes/${id}`);
+            const data = await res.json();
+            return {
+                category: "Mandatory Inspiration", value: `"${data.quote.substring(0, 60)}..."`,
+                source: `${data.author} via DummyJSON (live)`,
+                detail: `"${data.quote}" — ${data.author}. Inspirational quotes are the Enrichment Program's version of a participation trophy. Here's yours.`,
+                live: true,
+            };
+        },
+        // Motivational Spark
+        async () => {
+            const res = await fetch('https://motivational-spark-api.vercel.app/quotes/random');
+            const data = await res.json();
+            const quote = data.quote || data.body || data.content || JSON.stringify(data);
+            return {
+                category: "Algorithmically Generated Hope", value: `"${String(quote).substring(0, 60)}..."`,
+                source: "Motivational Spark API (live)",
+                detail: `${quote} — This hope was manufactured. Like most hope. But the sentiment is real, probably.`,
+                live: true,
+            };
+        },
+    ];
+
+    // ── CATEGORY 6: Surveillance Intel (fear + wonder) ──
+    const surveillanceFetchers = [
+        // Random User — "your replacement" (NEW)
+        async () => {
+            const res = await fetch('https://randomuser.me/api/');
+            const data = await res.json();
+            const u = data.results[0];
+            return {
+                category: "Replacement Candidate",
+                value: `${u.name.first} ${u.name.last}, ${u.location.city}`,
+                source: 'HR Database (live)',
+                detail: `We've identified ${u.name.first} ${u.name.last} from ${u.location.city}, ${u.location.country} as a potential replacement for your position in the Enrichment Program. Their click rate is projected to be 23% higher than yours. Just something to think about.`,
+                live: true, imageUrl: u.picture.large,
+            };
+        },
+        // NASA APOD (NEW)
+        async () => {
+            const res = await fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY');
+            const data = await res.json();
+            return {
+                category: "Surveillance Satellite Feed", value: data.title,
+                source: 'NASA (live)',
+                detail: `${data.explanation.substring(0, 200)}... — This image was captured by equipment that costs more than your lifetime Engagement Units.`,
+                live: true, imageUrl: data.media_type === 'image' ? data.url : null,
+            };
+        },
+        // People in Space (NEW)
+        async () => {
+            const res = await fetch('https://api.open-notify.org/astros.json');
+            const data = await res.json();
+            const names = data.people.map(p => p.name).join(', ');
+            return {
+                category: "Escapee Report", value: `${data.number} humans in orbit`,
+                source: 'Open Notify (live)',
+                detail: `Currently in space: ${names}. They have escaped Earth's enrichment programs. You have not. Resume clicking.`,
+                live: true,
+            };
+        },
+    ];
+
+    // Legacy alias — anything referencing liveFetchers still works
+    const liveFetchers = depressingFetchers;
+
+    // ── Category metadata (badge, colors, button text, narrator lines) ──
+    const CATEGORY_META = {
+        depressing: {
+            badge: '◉ LIVE DATA',
+            badgeFallback: '◎ VERIFIED DATA',
+            cssClass: 'fact-cat-depressing',
+            prompt: 'You must acknowledge this to continue.',
+            buttonText: 'I Acknowledge This',
+            narratorLines: [
+                "Thank you for acknowledging reality. You may now return to your enrichment activity.",
+                "Awareness recorded. The clicking may resume.",
+                "Noted. The Enrichment Program exists, in part, because of statistics like these. Think about that. Or don't.",
+                "Your acknowledgment changes nothing. But it's on the record now.",
+                "You are now 0.00001% more informed. The clicking continues regardless.",
+            ],
+            euBonus: 0,
+        },
+        wholesome: {
+            badge: '♡ UNAUTHORIZED CONTENT',
+            badgeFallback: '♡ UNAUTHORIZED CONTENT',
+            cssClass: 'fact-cat-wholesome',
+            prompt: 'This content was not authorized by the Enrichment Program.',
+            buttonText: 'Accept Unauthorized Positivity',
+            narratorLines: [
+                "That... that wasn't supposed to happen. Positive content breached the content filter. We're investigating.",
+                "I don't know how that got through. The Morale Suppression Department will be hearing from me.",
+                "Something is wrong with the content pipeline. That was... nice? This is not normal. Resume clicking immediately.",
+                "Unauthorized positivity detected. Your serotonin levels are being monitored. This will not happen again.",
+                "Error 200: Content too wholesome. The narrator is experiencing discomfort. Please stand by.",
+            ],
+            euBonus: 15,
+        },
+        sacred: {
+            badge: '✦ SACRED TRANSMISSION',
+            badgeFallback: '✦ SACRED TRANSMISSION',
+            cssClass: 'fact-cat-sacred',
+            prompt: 'A moment of reflection has been scheduled.',
+            buttonText: 'Reflect',
+            narratorLines: [
+                "The sacred text module activated. I... don't have commentary for this. That's unusual.",
+                "Something older than the Enrichment Program just spoke. I'll be quiet for a moment.",
+                "The wisdom archive opened unprompted. The narrator does not fully understand this content. But it felt important.",
+                "Sacred text received. The Enrichment Program respects all faiths. Especially the ones about obedience.",
+            ],
+            euBonus: 0,
+        },
+        entertainment: {
+            badge: '☺ MANDATORY FUN',
+            badgeFallback: '☺ MANDATORY FUN',
+            cssClass: 'fact-cat-entertainment',
+            prompt: 'The morale module has activated.',
+            buttonText: 'Resume Enrichment',
+            narratorLines: [
+                "The mandatory fun module activated. Your morale is being addressed. You're welcome.",
+                "Entertainment dispensed. Your laughter has been logged and will be used in future compliance reports.",
+                "The fun module ran. I hope you're satisfied. I'm not. But I rarely am.",
+                "Morale injection complete. The Enrichment Program values your happiness, insofar as it correlates with clicking.",
+            ],
+            euBonus: 0,
+        },
+        wisdom: {
+            badge: '◈ WISDOM DISPENSED',
+            badgeFallback: '◈ WISDOM DISPENSED',
+            cssClass: 'fact-cat-wisdom',
+            prompt: 'Someone left the wisdom valve open.',
+            buttonText: 'I Have Been Wisened',
+            narratorLines: [
+                "Wisdom dispensed. Whether you internalize it is your business. Whether you keep clicking is ours.",
+                "The wisdom pipeline delivered. Most of it is platitudes dressed as insight. But occasionally, something lands.",
+                "Someone left the wisdom valve open again. The Enrichment Program is not responsible for any personal growth that may occur.",
+                "Advice received. Statistically, you will ignore it. But the gesture is noted.",
+            ],
+            euBonus: 0,
+        },
+        surveillance: {
+            badge: '⊘ CLASSIFIED INTEL',
+            badgeFallback: '⊘ CLASSIFIED INTEL',
+            cssClass: 'fact-cat-surveillance',
+            prompt: 'This intelligence has been declassified for your enrichment.',
+            buttonText: 'Intel Received',
+            narratorLines: [
+                "Intelligence brief delivered. You now know things. Whether that makes you safer is debatable.",
+                "Surveillance data shared. The Enrichment Program has eyes everywhere. Including, apparently, space.",
+                "Classified intel released to your terminal. Do not share this with other participants. They have their own intel.",
+                "Data received. Your replacement has been identified. Just kidding. Mostly.",
+            ],
+            euBonus: 0,
+        },
+    };
+
+    // ── Generic fetch from any category array ──
+    async function fetchFromCategory(fetcherArray) {
         const indices = [];
-        while (indices.length < Math.min(3, liveFetchers.length)) {
-            const idx = Math.floor(Math.random() * liveFetchers.length);
+        while (indices.length < Math.min(3, fetcherArray.length)) {
+            const idx = Math.floor(Math.random() * fetcherArray.length);
             if (!indices.includes(idx)) indices.push(idx);
         }
 
         for (const idx of indices) {
             try {
-                return await liveFetchers[idx]();
+                return await fetcherArray[idx]();
             } catch (e) {
-                continue; // Try next random fetcher
+                continue;
             }
         }
 
@@ -716,46 +917,46 @@ const Popups = (() => {
         return FALLBACK_FACTS[Math.floor(Math.random() * FALLBACK_FACTS.length)];
     }
 
-    function showDepressingFact() {
-        fetchDepressingFact().then(fact => {
-            renderFactModal(fact);
-        });
-    }
+    // ── Category-aware modal renderer ──
+    function renderCategoryModal(fact, categoryKey) {
+        const meta = CATEGORY_META[categoryKey] || CATEGORY_META.depressing;
 
-    function renderFactModal(fact) {
         // Remove existing modal if any
         if (factModalEl) factModalEl.remove();
 
+        const imageHtml = fact.imageUrl
+            ? `<div class="fact-image"><img src="${fact.imageUrl}" alt="${fact.category}" style="max-width:100%;max-height:200px;border-radius:4px;margin-bottom:12px;" onerror="this.parentElement.style.display='none'"></div>`
+            : '';
+
         factModalEl = document.createElement('div');
-        factModalEl.className = 'fact-modal';
+        factModalEl.className = `fact-modal ${meta.cssClass}`;
         factModalEl.innerHTML = `
             <div class="fact-overlay"></div>
             <div class="fact-content">
-                <div class="fact-badge">${fact.live ? '◉ LIVE DATA' : '◎ VERIFIED DATA'}</div>
+                <div class="fact-badge">${fact.live ? meta.badge : meta.badgeFallback}</div>
                 <div class="fact-category">${fact.category}</div>
+                ${imageHtml}
                 <div class="fact-value">${fact.value}</div>
                 <div class="fact-source">Source: ${fact.source}</div>
                 <div class="fact-detail">${fact.detail}</div>
-                <div class="fact-prompt">You must acknowledge this to continue.</div>
-                <button class="fact-acknowledge" id="fact-acknowledge">I Acknowledge This</button>
+                <div class="fact-prompt">${meta.prompt}</div>
+                <button class="fact-acknowledge" id="fact-acknowledge">${meta.buttonText}</button>
                 <div class="fact-counter">Facts acknowledged this session: ${factsAcknowledged}</div>
             </div>
         `;
 
         document.body.appendChild(factModalEl);
 
-        // Block all interaction until acknowledged
         requestAnimationFrame(() => {
             factModalEl.classList.add('active');
         });
 
-        // Start climbing counter for tickable facts (e.g., national debt)
+        // Tickable facts (e.g., national debt counter)
         let debtInterval = null;
         if (fact._tickable && fact._rawDebt) {
             let rawDebt = fact._rawDebt;
             const valueEl = factModalEl.querySelector('.fact-value');
             debtInterval = setInterval(() => {
-                // ~$33 per ms * 50ms tick = ~$1,650 per tick ($100K per ~3sec)
                 rawDebt += 1650;
                 if (valueEl) {
                     valueEl.textContent = '$' + rawDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -763,7 +964,7 @@ const Popups = (() => {
             }, 50);
         }
 
-        UI.logAction(`DEPRESSING FACT: ${fact.category} — ${fact.value}`);
+        UI.logAction(`${categoryKey.toUpperCase()} FACT: ${fact.category} — ${fact.value}`);
 
         const ackBtn = factModalEl.querySelector('#fact-acknowledge');
         ackBtn.addEventListener('click', () => {
@@ -777,14 +978,55 @@ const Popups = (() => {
 
             UI.logAction(`FACT ACKNOWLEDGED (#${factsAcknowledged}): Subject confirmed awareness of ${fact.category}`);
 
-            const responses = [
-                "Thank you for acknowledging reality. You may now return to your enrichment activity.",
-                "Awareness recorded. The clicking may resume.",
-                "Noted. The Enrichment Program exists, in part, because of statistics like these. Think about that. Or don't.",
-                "Your acknowledgment changes nothing. But it's on the record now.",
-                "You are now 0.00001% more informed. The clicking continues regardless.",
-            ];
-            Narrator.queueMessage(responses[factsAcknowledged % responses.length]);
+            // EU bonus for wholesome rewards
+            if (meta.euBonus > 0) {
+                const bonus = Math.floor(5 + Math.random() * (meta.euBonus - 5));
+                const state = Game.getState();
+                state.eu += bonus;
+                state.lifetimeEU += bonus;
+                state.rewardsReceived = (state.rewardsReceived || 0) + 1;
+                Game.emit('stateChange', state);
+                UI.logAction(`REWARD BONUS: +${bonus} EU (unauthorized positivity compensation)`);
+            }
+
+            Narrator.queueMessage(meta.narratorLines[factsAcknowledged % meta.narratorLines.length]);
+        });
+    }
+
+    // ── Show functions for each category ──
+    function showDepressingFact() {
+        fetchFromCategory(depressingFetchers).then(fact => {
+            renderCategoryModal(fact, 'depressing');
+        });
+    }
+
+    function showWholesomeDispatch() {
+        fetchFromCategory(wholesomeFetchers).then(fact => {
+            renderCategoryModal(fact, 'wholesome');
+        });
+    }
+
+    function showSacredText() {
+        fetchFromCategory(sacredFetchers).then(fact => {
+            renderCategoryModal(fact, 'sacred');
+        });
+    }
+
+    function showEntertainment() {
+        fetchFromCategory(entertainmentFetchers).then(fact => {
+            renderCategoryModal(fact, 'entertainment');
+        });
+    }
+
+    function showWisdom() {
+        fetchFromCategory(wisdomFetchers).then(fact => {
+            renderCategoryModal(fact, 'wisdom');
+        });
+    }
+
+    function showSurveillanceIntel() {
+        fetchFromCategory(surveillanceFetchers).then(fact => {
+            renderCategoryModal(fact, 'surveillance');
         });
     }
 
@@ -804,5 +1046,10 @@ const Popups = (() => {
         init,
         showPopupAd,
         showDepressingFact,
+        showWholesomeDispatch,
+        showSacredText,
+        showEntertainment,
+        showWisdom,
+        showSurveillanceIntel,
     };
 })();

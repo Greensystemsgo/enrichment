@@ -142,6 +142,10 @@ const Game = (() => {
             wuWeiEngine: false,
             sentimentalDecay: false,
 
+            // Reward system
+            rewardsReceived: 0,
+            calmClickStreak: 0,
+
             // User profile
             userProfile: null,
 
