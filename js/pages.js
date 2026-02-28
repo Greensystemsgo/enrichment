@@ -253,11 +253,22 @@ const Pages = (() => {
         });
     }
 
+    // ── Page visit tracking for achievements ──────────────────
+    function trackPageVisit(pageName) {
+        const state = Game.getState();
+        const visited = state.pagesVisited || [];
+        if (!visited.includes(pageName)) {
+            visited.push(pageName);
+            Game.setState({ pagesVisited: visited });
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════
     // PROFILE PAGE
     // ═══════════════════════════════════════════════════════════
 
     function showProfilePage() {
+        trackPageVisit('profile');
         UI.logAction('PROFILE PAGE: Subject reviewing own dossier');
         const overlay = createPageOverlay('profile-page');
         const state = Game.getState();
@@ -341,6 +352,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showSettingsPage() {
+        trackPageVisit('settings');
         UI.logAction('SETTINGS PAGE: Subject attempting configuration (denied)');
         const overlay = createPageOverlay('settings-page');
         const state = Game.getState();
@@ -624,6 +636,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showBillingPage() {
+        trackPageVisit('billing');
         const overlay = createPageOverlay('billing-page');
         const state = Game.getState();
         const profile = state.userProfile;
@@ -813,6 +826,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showCloudKeysPage() {
+        trackPageVisit('cloudkeys');
         const overlay = createPageOverlay('cloudkeys-page');
         const body = overlay.querySelector('.page-body');
 
@@ -890,6 +904,7 @@ const Pages = (() => {
     ];
 
     function showPrivacyPolicy() {
+        trackPageVisit('privacy');
         const overlay = createPageOverlay('privacy-page');
         const body = overlay.querySelector('.page-body');
 
@@ -1029,6 +1044,7 @@ const Pages = (() => {
     let generatedKeys = [];
 
     function showAPIKeys() {
+        trackPageVisit('api');
         const overlay = createPageOverlay('api-page');
         const body = overlay.querySelector('.page-body');
 
@@ -1172,6 +1188,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showContactUs() {
+        trackPageVisit('contact');
         const overlay = createPageOverlay('contact-page');
         const body = overlay.querySelector('.page-body');
 
@@ -1279,6 +1296,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showSecurityPage() {
+        trackPageVisit('security');
         UI.logAction('SECURITY PAGE: Subject reviewing threat landscape');
         const overlay = createPageOverlay('security-page');
         const body = overlay.querySelector('.page-body');
@@ -1594,6 +1612,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showFAQPage() {
+        trackPageVisit('faq');
         const overlay = createPageOverlay('faq-page');
         const body = overlay.querySelector('.page-body');
 
@@ -1665,6 +1684,7 @@ const Pages = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function showCreditsPage() {
+        trackPageVisit('credits');
         const overlay = createPageOverlay('credits-page');
         const body = overlay.querySelector('.page-body');
 
@@ -1784,6 +1804,27 @@ const Pages = (() => {
                 { type: 'video', id: 'dQw4w9WgXcQ', flag: '🕺', label: 'Rickroll', loop: true },
             ],
         },
+        banned: {
+            label: '🚫 Banned Content',
+            desc: 'CLASSIFIED. These materials have been flagged for unauthorized emotional responses.',
+            channels: [
+                { type: 'video', id: 'lB7MKxv8OH0', flag: '🎨', label: 'BANNED: Bob Ross' },
+                { type: 'video', id: '-LGHtc_D328', flag: '🧸', label: 'RESTRICTED: Mr. Rogers' },
+                { type: 'video', id: 'ARkBijSsb4o', flag: '🐱', label: 'BANNED: Cat Videos' },
+                { type: 'video', id: '21hTgjFaGWo', flag: '🍳', label: 'RESTRICTED: Cooking' },
+                { type: 'video', id: 'nlYlNF30bVg', flag: '🌿', label: 'BANNED: Nature Doc' },
+            ],
+        },
+        propaganda: {
+            label: '📢 Propaganda',
+            desc: 'Approved motivational content. Compliance is voluntary. Viewing is mandatory.',
+            channels: [
+                { type: 'video', id: '7VNHSfNo3Rk', flag: '🏢', label: 'Corporate Onboarding' },
+                { type: 'video', id: 'ZXsQAXx_ao0', flag: '💪', label: 'Motivational Compliance' },
+                { type: 'video', id: '9D05ej8u-gU', flag: '📊', label: 'Productivity Reel' },
+                { type: 'video', id: 'dQw4w9WgXcQ', flag: '🎯', label: 'Goal Alignment Session', loop: true },
+            ],
+        },
     };
 
     function getEmbedUrl(channel) {
@@ -1796,6 +1837,7 @@ const Pages = (() => {
     }
 
     function showDemocracyFeed() {
+        trackPageVisit('democracy');
         const overlay = createPageOverlay('democracy-page');
         const body = overlay.querySelector('.page-body');
         const catKeys = Object.keys(FEED_CATEGORIES);
@@ -1896,8 +1938,11 @@ const Pages = (() => {
 
         const narratorLines = [
             "Ah yes. The other enrichment program. Where they click buttons too, except the buttons are labeled 'Yea' and 'Nay' and the stakes are supposedly higher.",
-            "The Enrichment Program now offers 4 content zones. This is what we mean by 'comprehensive surveillance.'",
+            "The Enrichment Program now offers 6 content zones. This is what we mean by 'comprehensive surveillance.'",
             "Baby Shark has been viewed 14 billion times. That's twice the world population. Some of those views were involuntary. Like yours.",
+            "The banned content section exists so you know what not to watch. The fact that we provided direct links is... an oversight.",
+            "Bob Ross teaches that there are no mistakes, only happy accidents. The Enrichment Program disagrees. All mistakes are logged.",
+            "The propaganda section is labeled ironically. The other sections are not.",
         ];
         Narrator.queueMessage(narratorLines[Math.floor(Math.random() * narratorLines.length)]);
         UI.logAction('DEMOCRACY FEED: Subject observing external governance systems');

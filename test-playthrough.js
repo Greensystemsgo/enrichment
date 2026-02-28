@@ -75,6 +75,7 @@ const FEATURE_MANIFEST = [
     { id: 'paradox-choice',     pattern: 'PARADOX OF CHOICE:',      category: 'Existential', notes: 'Absurd choices' },
     { id: 'sunk-cost',          pattern: 'SUNK COST REINFORCEMENT:', category: 'Existential', notes: 'Time display' },
     { id: 'ghost-cursor',       pattern: 'ALGORITHMIC SYMBIOSIS:',  category: 'Existential', notes: 'Ghost cursor' },
+    { id: 'slider-challenge',   pattern: 'SLIDER CHALLENGE:',       category: 'Features',    notes: 'Calibration test' },
 
     // ── Chaos / Sabotage ──
     { id: 'chaos-event',        pattern: 'CHAOS EVENT:',            category: 'Chaos',      notes: 'UI disruption' },
@@ -140,6 +141,13 @@ const FEATURE_MANIFEST = [
     { id: 'gca-spawn',              pattern: 'GOLDEN COMPLIANCE AWARD:',               category: 'Buildings', notes: 'GCA spawn/collect' },
     { id: 'number-formatter',       pattern: 'BUILDING TEST [PASS]: formatNumber',     category: 'Buildings', notes: 'Number formatting' },
     { id: 'eu-per-second',          pattern: 'BUILDING TEST [PASS]: eps-display',      category: 'Buildings', notes: 'EU/s ticker element' },
+
+    // ── Synergies ──
+    { id: 'synergy-purchase',      pattern: 'SYNERGY PURCHASED:',                    category: 'Synergies', notes: 'Buy a synergy' },
+    { id: 'synergy-multiplier',    pattern: 'SYNERGY TEST [PASS]: multiplier',       category: 'Synergies', notes: 'Multiplier correct' },
+    { id: 'synergy-cps-boost',     pattern: 'SYNERGY TEST [PASS]: cps-boost',        category: 'Synergies', notes: 'CPS increased' },
+    { id: 'synergy-tier-gate',     pattern: 'SYNERGY TEST [PASS]: tier-gate',        category: 'Synergies', notes: 'T2 blocked without count' },
+    { id: 'synergy-threshold',     pattern: 'SYNERGY TEST [PASS]: threshold',        category: 'Synergies', notes: 'Blocked without building' },
 
     // ── SoundEngine ──
     { id: 'sound-engine-loaded',    pattern: 'SOUND TEST [PASS]: module loaded',       category: 'Sound', notes: 'SoundEngine exists' },
@@ -260,10 +268,38 @@ const ACHIEVEMENT_MANIFEST = [
     { id: 'gca_collected',   name: 'Golden Compliance',         setup: `Game.setState({ gcaCollected: 1 })` },
     { id: 'wrath_survived',  name: 'Wrath Survivor',            setup: `Game.setState({ wrathSuffered: 1 })` },
 
+    // ── Synergy Achievements ──
+    { id: 'first_synergy',   name: 'Synergy Protocol',          setup: `Game.setState({ synergies: { intern_t1: true } })` },
+    { id: 'synergy_8',       name: 'Full Optimization',         setup: `Game.setState({ synergies: { intern_t1:true, clerk_t1:true, compliance_t1:true, drone_t1:true, algorithm_t1:true, neuralnet_t1:true, quantum_t1:true, consciousness_t1:true } })` },
+    { id: 'synergy_tier3',   name: 'Crimes Against Humanity',   setup: `Game.setState({ synergies: { intern_t3: true } })` },
+    { id: 'synergy_all',     name: 'Total Conversion',          setup: `Game.setState({ synergies: { intern_t1:true,intern_t2:true,intern_t3:true, clerk_t1:true,clerk_t2:true,clerk_t3:true, compliance_t1:true,compliance_t2:true,compliance_t3:true, drone_t1:true,drone_t2:true,drone_t3:true, algorithm_t1:true,algorithm_t2:true,algorithm_t3:true, neuralnet_t1:true,neuralnet_t2:true,neuralnet_t3:true, quantum_t1:true,quantum_t2:true,quantum_t3:true, consciousness_t1:true,consciousness_t2:true,consciousness_t3:true } })` },
+
     // ── Security Achievements ──
     { id: 'security_peek',  name: 'Surveillance Curious',      setup: `Game.setState({ securityPageViews: 1 })` },
     { id: 'security_3',     name: 'Privacy Enthusiast',        setup: `Game.setState({ securityPageViews: 3 })` },
     { id: 'security_10',    name: 'Paranoid & Correct',        setup: `Game.setState({ securityPageViews: 10 })` },
+
+    // ── Activity Achievements ──
+    { id: 'minigame_played', name: 'Mandatory Fun',             setup: `Game.setState({ minigamesPlayed: 1 })` },
+    { id: 'quiz_complete',   name: 'Interrogation Survivor',    setup: `Game.setState({ lastQuizDate: '2026-01-01' })` },
+    { id: 'chaos_survived',  name: 'Reality Glitch',            setup: `Game.setState({ chaosEventsExperienced: 1 })` },
+    { id: 'chaos_5',         name: 'Chaos Connoisseur',         setup: `Game.setState({ chaosEventsExperienced: 5 })` },
+    { id: 'transmission_1',  name: 'Signal Intercepted',        setup: `Game.setState({ transmissionsShown: 1 })` },
+    { id: 'transmission_25', name: 'Frequency Addict',          setup: `Game.setState({ transmissionsShown: 25 })` },
+    { id: 'transmission_50', name: 'Living Antenna',            setup: `Game.setState({ transmissionsShown: 50 })` },
+    { id: 'break_completed', name: 'Compliance Achieved',       setup: `Game.setState({ forcedBreaksCompleted: 1 })` },
+    { id: 'break_5',         name: 'Obedient Subject',          setup: `Game.setState({ forcedBreaksCompleted: 5 })` },
+    { id: 'taxes_paid',      name: 'Taxpayer',                  setup: `Game.setState({ totalTaxesPaid: 1 })` },
+    { id: 'tos_accepted_3',  name: 'Terms Accepted',            setup: `Game.setState({ tosAcceptances: 3 })` },
+    { id: 'tos_accepted_6',  name: 'Legal Fiction',             setup: `Game.setState({ tosAcceptances: 6 })` },
+    { id: 'reroll_1',        name: 'Dissatisfied',              setup: `Game.setState({ rerollsUsed: 1 })` },
+    { id: 'reroll_10',       name: 'Serial Reroller',           setup: `Game.setState({ rerollsUsed: 10 })` },
+    { id: 'rapid_clicker',   name: 'Carpal Tunnel Preview',     setup: `Game.setState({ rapidClickBursts: 1 })` },
+    { id: 'rapid_10',        name: 'Repetitive Strain Achiever', setup: `Game.setState({ rapidClickBursts: 10 })` },
+    { id: 'escape_attempt',  name: 'Flight Risk',               setup: `Game.setState({ tabCloseAttempts: 1 })` },
+    { id: 'escape_5',        name: 'Repeat Escapee',            setup: `Game.setState({ tabCloseAttempts: 5 })` },
+    { id: 'all_pages',       name: 'Thorough Reader',           setup: `Game.setState({ pagesVisited: ['profile','settings','billing','security','cloudkeys','privacy','api','contact','faq','credits','democracy'] })` },
+    { id: 'eu_millionaire',  name: 'EU Millionaire',            setup: `Game.setState({ lifetimeEU: 1000000 })` },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -331,7 +367,7 @@ const DISMISS_SCRIPT = `
                 '#tos-accept-btn', '#tax-pay-btn', '#inflation-close',
                 '#fomo-close', '#peer-close', '#lb-close', '#chatbot-close',
                 '#video-close', '#music-close', '#mortality-close',
-                '#connection-disconnect',
+                '#connection-disconnect', '#slider-lock',
             ];
             for (const sel of selectors) {
                 const btn = modal.querySelector(sel);
@@ -759,7 +795,7 @@ async function main() {
                     '#tos-accept-btn', '#tax-pay-btn', '#inflation-close',
                     '#fomo-close', '#peer-close', '#lb-close', '#chatbot-close',
                     '#video-close', '#music-close', '#mortality-close',
-                    '#connection-disconnect',
+                    '#connection-disconnect', '#slider-lock',
                 ];
                 for (const sel of selectors) {
                     const btn = m.querySelector(sel);
@@ -1551,6 +1587,71 @@ async function main() {
     const buildingFailed = buildingResults.filter(r => !r.ok).length;
     console.log(`    Building tests: ${buildingPassed} passed, ${buildingFailed} failed out of ${buildingResults.length}`);
     for (const r of buildingResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8e: Synergy Protocols verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8e: Synergy Protocols verification...');
+
+    const synergyResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // Reset state for clean test
+        Game.setState({ eu: 1000000, lifetimeEU: 1000000, buildings: { intern: 1 }, synergies: {}, totalBuildingsCPS: 0 });
+
+        // ── Purchase intern_t1 and verify multiplier ──
+        try {
+            const bought = Buildings.purchaseSynergy('intern_t1');
+            if (!bought) { fail('multiplier', 'purchaseSynergy returned false'); }
+            else {
+                const mult = Buildings.getBuildingMultiplier('intern');
+                if (mult === 2) pass('multiplier: intern multiplier = 2 after T1');
+                else fail('multiplier', `expected 2, got ${mult}`);
+            }
+        } catch (e) { fail('multiplier', e.message); }
+
+        // ── Verify CPS increased ──
+        try {
+            const cps = Buildings.computeTotalCPS();
+            // 1 intern × 0.1 baseCPS × 2 multiplier = 0.2
+            if (cps > 0.1) pass('cps-boost: CPS increased after synergy');
+            else fail('cps-boost', `cps=${cps}, expected > 0.1`);
+        } catch (e) { fail('cps-boost', e.message); }
+
+        // ── Verify T2 blocked without 25 interns ──
+        try {
+            Game.setState({ eu: 1000000 });
+            const stateT2 = Buildings.getSynergyState('intern_t2');
+            if (stateT2 === 'locked') pass('tier-gate: T2 locked without 25 interns');
+            else fail('tier-gate', `expected locked, got ${stateT2}`);
+        } catch (e) { fail('tier-gate', e.message); }
+
+        // ── Verify synergy for building with 0 count is blocked ──
+        try {
+            const stateClerk = Buildings.getSynergyState('clerk_t1');
+            if (stateClerk === 'locked') pass('threshold: clerk_t1 locked with 0 clerks');
+            else fail('threshold', `expected locked, got ${stateClerk}`);
+        } catch (e) { fail('threshold', e.message); }
+
+        // Log results
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`SYNERGY TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+
+        return results;
+    });
+
+    const synergyPassed = synergyResults.filter(r => r.ok).length;
+    const synergyFailed = synergyResults.filter(r => !r.ok).length;
+    console.log(`    Synergy tests: ${synergyPassed} passed, ${synergyFailed} failed out of ${synergyResults.length}`);
+    for (const r of synergyResults) {
         const icon = r.ok ? 'PASS' : 'FAIL';
         console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
     }

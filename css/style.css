@@ -159,6 +159,8 @@ body {
     margin-bottom: 0;
     position: relative;
     z-index: 5;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .tab-button {
@@ -270,6 +272,9 @@ body {
     align-items: center;
     gap: 0;
     padding: 8px 0;
+    margin-bottom: 6px;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #click-button {
@@ -290,6 +295,8 @@ body {
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
 }
 
 #click-button:hover {
@@ -5729,6 +5736,134 @@ body.crown-seizure {
     border-color: var(--accent-blue);
 }
 
+/* ── Building Multiplier Badge ── */
+.building-mult {
+    display: inline-block;
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* ── Synergy Items ── */
+.synergy-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 2px 10px;
+    align-items: center;
+    padding: 6px 14px 6px 30px;
+    margin-bottom: 2px;
+    background: var(--bg-primary);
+    cursor: default;
+    transition: all var(--transition-speed);
+}
+
+.synergy-item.available {
+    cursor: pointer;
+}
+
+.synergy-item.available:hover {
+    background: var(--bg-tertiary);
+}
+
+.synergy-item.locked {
+    opacity: 0.4;
+}
+
+.synergy-item.purchased {
+    opacity: 0.6;
+}
+
+.synergy-item.tier-1 {
+    border-left: 2px solid var(--accent-blue);
+}
+
+.synergy-item.tier-2 {
+    border-left: 2px solid #ffd700;
+}
+
+.synergy-item.tier-3 {
+    border-left: 2px solid var(--accent-red);
+}
+
+.synergy-tier-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 6px;
+    color: var(--bg-primary);
+    text-align: center;
+}
+
+.synergy-tier-badge.tier-1 {
+    background: var(--accent-blue);
+}
+
+.synergy-tier-badge.tier-2 {
+    background: #ffd700;
+}
+
+.synergy-tier-badge.tier-3 {
+    background: var(--accent-red);
+}
+
+.synergy-info {
+    min-width: 0;
+}
+
+.synergy-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.synergy-name .synergy-mult {
+    font-weight: 400;
+    font-size: 10px;
+    color: var(--accent-gold);
+}
+
+.synergy-flavor {
+    font-size: 11px;
+    font-style: italic;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.synergy-cost-col {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.synergy-cost {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent-gold);
+}
+
+.synergy-cost.too-expensive {
+    color: var(--accent-red);
+}
+
+.synergy-purchased-check {
+    font-size: 14px;
+    color: var(--accent-green);
+}
+
+.synergy-locked-reason {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
 /* EU/s Ticker */
 .ticker-eps .ticker-val {
     color: var(--accent-green) !important;
@@ -5768,4 +5903,70 @@ body.crown-seizure {
 @keyframes wrath-pulse {
     0%, 100% { filter: drop-shadow(0 0 12px rgba(180, 40, 40, 0.5)); }
     50% { filter: drop-shadow(0 0 24px rgba(220, 20, 20, 1)); }
+}
+
+/* ── Slider Calibration Challenge ────────────────────────── */
+.slider-track {
+    position: relative;
+    width: 100%;
+    height: 32px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin: 16px 0;
+    overflow: hidden;
+}
+
+.slider-target-zone {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(58, 107, 58, 0.4);
+    border-left: 2px solid var(--accent-green);
+    border-right: 2px solid var(--accent-green);
+}
+
+.slider-indicator {
+    position: absolute;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--accent-gold-bright);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    transition: left 0.05s linear;
+}
+
+.slider-timer {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    color: var(--accent-red);
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+.slider-range-input {
+    width: 100%;
+    margin: 8px 0;
+    accent-color: var(--accent-gold);
+}
+
+.slider-result {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-top: 12px;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.slider-result.success {
+    color: var(--accent-green);
+    background: rgba(58, 107, 58, 0.2);
+    border: 1px solid var(--accent-green);
+}
+
+.slider-result.failure {
+    color: var(--accent-red);
+    background: rgba(139, 58, 58, 0.2);
+    border: 1px solid var(--accent-red);
 }

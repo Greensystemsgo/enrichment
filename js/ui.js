@@ -488,8 +488,9 @@ const UI = (() => {
             const owned = (state.buildings && state.buildings[id]) || 0;
             const cost = Buildings.getCost(id, buyAmount);
             const canAfford = state.eu >= cost;
-            const singleCPS = b.baseCPS;
-            const totalCPS = owned * singleCPS;
+            const mult = Buildings.getBuildingMultiplier(id);
+            const effectiveCPS = b.baseCPS * mult;
+            const totalCPS = owned * effectiveCPS;
             const flavor = Buildings.getBuildingFlavor(id);
 
             const div = document.createElement('div');
@@ -497,8 +498,8 @@ const UI = (() => {
             div.innerHTML = `
                 <div class="building-icon">${b.icon}</div>
                 <div class="building-info">
-                    <div class="building-name">${b.name}${owned > 0 ? ` <span class="building-count">${owned}</span>` : ''}</div>
-                    <div class="building-cps">${fmt(singleCPS)} EU/s each${owned > 0 ? ' · ' + fmt(totalCPS) + ' total' : ''}</div>
+                    <div class="building-name">${b.name}${owned > 0 ? ` <span class="building-count">${owned}</span>` : ''}${mult > 1 ? ` <span class="building-mult">×${mult}</span>` : ''}</div>
+                    <div class="building-cps">${fmt(effectiveCPS)} EU/s each${owned > 0 ? ' · ' + fmt(totalCPS) + ' total' : ''}</div>
                     <div class="building-flavor">${flavor}</div>
                 </div>
                 <div class="building-cost${canAfford ? '' : ' too-expensive'}">${fmt(cost)} EU</div>
@@ -512,7 +513,62 @@ const UI = (() => {
             });
 
             list.appendChild(div);
+
+            // Render synergies for this building
+            renderBuildingSynergies(list, id, state, fmt);
         });
+    }
+
+    function renderBuildingSynergies(container, buildingId, state, fmt) {
+        const synergyIds = Buildings.SYNERGY_ORDER.filter(sId => Buildings.SYNERGIES[sId].building === buildingId);
+
+        for (const sId of synergyIds) {
+            const syn = Buildings.SYNERGIES[sId];
+            const synState = Buildings.getSynergyState(sId);
+
+            const div = document.createElement('div');
+            div.className = `synergy-item tier-${syn.tier} ${synState}`;
+
+            const tierBadge = `<span class="synergy-tier-badge tier-${syn.tier}">T${syn.tier}</span>`;
+
+            let costText;
+            if (synState === 'purchased') {
+                costText = '<span class="synergy-purchased-check">✓</span>';
+            } else if (synState === 'locked') {
+                const owned = (state.buildings && state.buildings[buildingId]) || 0;
+                const prevTier = syn.tier > 1 ? buildingId + '_t' + (syn.tier - 1) : null;
+                const prevPurchased = !prevTier || (state.synergies && state.synergies[prevTier]);
+                if (!prevPurchased) {
+                    costText = `<span class="synergy-locked-reason">Requires T${syn.tier - 1}</span>`;
+                } else {
+                    costText = `<span class="synergy-locked-reason">Need ${syn.threshold} ${Buildings.BUILDINGS[buildingId].name}s</span>`;
+                }
+            } else {
+                const canAfford = state.eu >= syn.cost;
+                costText = `<span class="synergy-cost${canAfford ? '' : ' too-expensive'}">${fmt(syn.cost)} EU</span>`;
+            }
+
+            div.innerHTML = `
+                ${tierBadge}
+                <div class="synergy-info">
+                    <div class="synergy-name">${syn.name} <span class="synergy-mult">×${syn.multiplier}</span></div>
+                    <div class="synergy-flavor">${syn.flavor}</div>
+                </div>
+                <div class="synergy-cost-col">${costText}</div>
+            `;
+
+            if (synState === 'available') {
+                div.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (Buildings.purchaseSynergy(sId)) {
+                        renderBuildings();
+                        updateStats(Game.getState());
+                    }
+                });
+            }
+
+            container.appendChild(div);
+        }
     }
 
     function initBuyToggle() {
@@ -947,6 +1003,7 @@ const UI = (() => {
 
         // Building events
         Game.on('buildingPurchased', () => renderBuildings());
+        Game.on('synergyPurchased', () => renderBuildings());
         Game.on('tick', () => {
             // Refresh building affordability when tab is active
             const pane = document.querySelector('.tab-pane[data-tab="buildings"]');

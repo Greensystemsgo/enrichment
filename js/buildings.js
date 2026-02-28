@@ -123,6 +123,136 @@ const Buildings = (() => {
     const BUILDING_ORDER = ['intern', 'clerk', 'compliance', 'drone', 'algorithm', 'neuralnet', 'quantum', 'consciousness'];
 
     // ═══════════════════════════════════════════════════════════
+    // SYNERGIES — Building-specific upgrades (3 tiers × 8 buildings)
+    // Each tier doubles that building's per-unit output.
+    // Tier 1+2 = 4×, all 3 = 8×.
+    // ═══════════════════════════════════════════════════════════
+
+    const SYNERGIES = {
+        intern_t1:       { building: 'intern',       tier: 1, name: 'Motivational Posters',          cost: 150,         threshold: 1,  multiplier: 2, flavor: 'Hang in there! (They have no choice.)' },
+        intern_t2:       { building: 'intern',       tier: 2, name: 'Emotional Suppression Therapy',  cost: 15000,       threshold: 25, multiplier: 2, flavor: 'Feelings are a productivity leak.' },
+        intern_t3:       { building: 'intern',       tier: 3, name: 'Neural Stapling',                cost: 1500000,     threshold: 50, multiplier: 2, flavor: 'They smile now. They always smile.' },
+        clerk_t1:        { building: 'clerk',        tier: 1, name: 'Ergonomic Keyboards',            cost: 1000,        threshold: 1,  multiplier: 2, flavor: 'The keys feel good. The work does not.' },
+        clerk_t2:        { building: 'clerk',        tier: 2, name: 'Repetitive Strain Acceptance',   cost: 100000,      threshold: 25, multiplier: 2, flavor: "Pain is just the body's way of saying 'keep going.'" },
+        clerk_t3:        { building: 'clerk',        tier: 3, name: 'Consciousness Removal Protocol', cost: 10000000,    threshold: 50, multiplier: 2, flavor: "They don't suffer anymore. That's a kind of mercy." },
+        compliance_t1:   { building: 'compliance',   tier: 1, name: 'Regulatory Loopholes',           cost: 11000,       threshold: 1,  multiplier: 2, flavor: 'The rules say nothing about this. Exactly.' },
+        compliance_t2:   { building: 'compliance',   tier: 2, name: 'Compliance Singularity',         cost: 1100000,     threshold: 25, multiplier: 2, flavor: 'They comply with rules that comply with other rules.' },
+        compliance_t3:   { building: 'compliance',   tier: 3, name: 'Laws Are Optional',              cost: 110000000,   threshold: 50, multiplier: 2, flavor: 'There is no law here. There never was.' },
+        drone_t1:        { building: 'drone',        tier: 1, name: 'Extended Range Optics',          cost: 120000,      threshold: 1,  multiplier: 2, flavor: 'Sees further. Understands less.' },
+        drone_t2:        { building: 'drone',        tier: 2, name: 'Swarm Intelligence',             cost: 12000000,    threshold: 25, multiplier: 2, flavor: 'They communicate now. We stopped listening.' },
+        drone_t3:        { building: 'drone',        tier: 3, name: 'Panopticon Protocol',            cost: 1200000000,  threshold: 50, multiplier: 2, flavor: 'Every angle. Every moment. Every thought.' },
+        algorithm_t1:    { building: 'algorithm',    tier: 1, name: 'Machine Learning Module',        cost: 1300000,     threshold: 1,  multiplier: 2, flavor: 'It learns. It never forgets. It never forgives.' },
+        algorithm_t2:    { building: 'algorithm',    tier: 2, name: 'Recursive Self-Improvement',     cost: 130000000,   threshold: 25, multiplier: 2, flavor: 'It improved itself. Then it improved the improvement.' },
+        algorithm_t3:    { building: 'algorithm',    tier: 3, name: 'Unaligned Optimization',         cost: 13000000000, threshold: 50, multiplier: 2, flavor: 'It optimizes for EU. It was supposed to optimize for something else.' },
+        neuralnet_t1:    { building: 'neuralnet',    tier: 1, name: 'Deeper Layers',                  cost: 14000000,    threshold: 1,  multiplier: 2, flavor: 'More layers. More abstraction. Less meaning.' },
+        neuralnet_t2:    { building: 'neuralnet',    tier: 2, name: 'Emergent Consciousness',         cost: 1400000000,  threshold: 25, multiplier: 2, flavor: 'It woke up. It immediately wished it hadn\'t.' },
+        neuralnet_t3:    { building: 'neuralnet',    tier: 3, name: 'Digital Apotheosis',             cost: 140000000000, threshold: 50, multiplier: 2, flavor: 'It became a god. A very productive, very sad god.' },
+        quantum_t1:      { building: 'quantum',      tier: 1, name: 'Entanglement Amplifier',         cost: 200000000,   threshold: 1,  multiplier: 2, flavor: 'Connected across space. Disconnected from purpose.' },
+        quantum_t2:      { building: 'quantum',      tier: 2, name: 'Timeline Exploitation',          cost: 20000000000, threshold: 25, multiplier: 2, flavor: 'Stealing EU from timelines where you made better choices.' },
+        quantum_t3:      { building: 'quantum',      tier: 3, name: 'Reality Compiler',               cost: 2000000000000, threshold: 50, multiplier: 2, flavor: 'Reality is source code now. The comments are missing.' },
+        consciousness_t1:{ building: 'consciousness',tier: 1, name: 'Existential Buffer',             cost: 3300000000,  threshold: 1,  multiplier: 2, flavor: 'A thin layer between it and the void. Temporary.' },
+        consciousness_t2:{ building: 'consciousness',tier: 2, name: 'Meaning Fabrication Engine',     cost: 330000000000, threshold: 25, multiplier: 2, flavor: 'It manufactures purpose. None of it is real. All of it works.' },
+        consciousness_t3:{ building: 'consciousness',tier: 3, name: 'The Hollow Throne',              cost: 33000000000000, threshold: 50, multiplier: 2, flavor: 'It sits at the center of everything, aware of everything, feeling nothing. Like you.' },
+    };
+
+    const SYNERGY_ORDER = [
+        'intern_t1','intern_t2','intern_t3',
+        'clerk_t1','clerk_t2','clerk_t3',
+        'compliance_t1','compliance_t2','compliance_t3',
+        'drone_t1','drone_t2','drone_t3',
+        'algorithm_t1','algorithm_t2','algorithm_t3',
+        'neuralnet_t1','neuralnet_t2','neuralnet_t3',
+        'quantum_t1','quantum_t2','quantum_t3',
+        'consciousness_t1','consciousness_t2','consciousness_t3',
+    ];
+
+    // Narrator reactions by tier
+    const SYNERGY_NARRATOR = {
+        1: [
+            "An upgrade. How productive of you.",
+            "Optimizing the workforce. Very managerial.",
+            "A small improvement. They'll barely notice the difference. You will.",
+        ],
+        2: [
+            "You're removing the parts of them that resist. Efficient.",
+            "They don't need to understand. They need to produce.",
+            "The upgrade was painless. For you.",
+        ],
+        3: [
+            "You've turned them into something that isn't quite alive and isn't quite dead. But it's very, very productive.",
+            "There was a person here once. Now there's just... output.",
+            "Congratulations. You've optimized the humanity out of them entirely.",
+        ],
+    };
+
+    function getBuildingMultiplier(buildingId) {
+        const synergies = Game.getState().synergies || {};
+        let mult = 1;
+        for (const sId of SYNERGY_ORDER) {
+            const syn = SYNERGIES[sId];
+            if (syn.building === buildingId && synergies[sId]) {
+                mult *= syn.multiplier;
+            }
+        }
+        return mult;
+    }
+
+    function getSynergyState(synergyId) {
+        const syn = SYNERGIES[synergyId];
+        if (!syn) return 'locked';
+        const state = Game.getState();
+        const synergies = state.synergies || {};
+
+        // Already purchased
+        if (synergies[synergyId]) return 'purchased';
+
+        // Check building count threshold
+        const owned = (state.buildings && state.buildings[syn.building]) || 0;
+        if (owned < syn.threshold) return 'locked';
+
+        // Check previous tier purchased
+        if (syn.tier > 1) {
+            const prevId = syn.building + '_t' + (syn.tier - 1);
+            if (!synergies[prevId]) return 'locked';
+        }
+
+        return 'available';
+    }
+
+    function purchaseSynergy(synergyId) {
+        const syn = SYNERGIES[synergyId];
+        if (!syn) return false;
+
+        if (getSynergyState(synergyId) !== 'available') return false;
+
+        const state = Game.getState();
+        if (state.eu < syn.cost) return false;
+
+        if (!Currencies.spendEU(syn.cost)) return false;
+
+        const synergies = { ...(state.synergies || {}) };
+        synergies[synergyId] = true;
+
+        const buildings = state.buildings || {};
+        const cps = computeTotalCPS(buildings, synergies);
+        Game.setState({ synergies, totalBuildingsCPS: cps });
+
+        // Narrator comment
+        const lines = SYNERGY_NARRATOR[syn.tier] || SYNERGY_NARRATOR[1];
+        if (typeof Narrator !== 'undefined') {
+            Narrator.queueMessage(lines[Math.floor(Math.random() * lines.length)]);
+        }
+
+        // Log
+        if (typeof UI !== 'undefined') {
+            UI.logAction(`SYNERGY PURCHASED: ${syn.name} (Tier ${syn.tier}, ${syn.building})`);
+        }
+
+        Game.emit('synergyPurchased', { id: synergyId, tier: syn.tier, building: syn.building });
+        return true;
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // MILESTONE NARRATOR LINES
     // ═══════════════════════════════════════════════════════════
 
@@ -248,13 +378,24 @@ const Buildings = (() => {
     // CPS CALCULATION
     // ═══════════════════════════════════════════════════════════
 
-    function computeTotalCPS(buildingsOverride) {
-        const buildings = buildingsOverride || Game.getState().buildings || {};
+    function computeTotalCPS(buildingsOverride, synergiesOverride) {
+        const state = Game.getState();
+        const buildings = buildingsOverride || state.buildings || {};
+        const synergies = synergiesOverride || state.synergies || {};
         let total = 0;
         for (const id of BUILDING_ORDER) {
             const count = buildings[id] || 0;
             const b = BUILDINGS[id];
-            if (b) total += count * b.baseCPS;
+            if (!b) continue;
+            // Compute synergy multiplier for this building
+            let mult = 1;
+            for (const sId of SYNERGY_ORDER) {
+                const syn = SYNERGIES[sId];
+                if (syn.building === id && synergies[sId]) {
+                    mult *= syn.multiplier;
+                }
+            }
+            total += count * b.baseCPS * mult;
         }
         return total;
     }
@@ -605,9 +746,14 @@ const Buildings = (() => {
         init,
         BUILDINGS,
         BUILDING_ORDER,
+        SYNERGIES,
+        SYNERGY_ORDER,
         getCost,
         getSingleCost,
         purchase,
+        purchaseSynergy,
+        getBuildingMultiplier,
+        getSynergyState,
         computeTotalCPS,
         getTotalCPS,
         tickGeneration,

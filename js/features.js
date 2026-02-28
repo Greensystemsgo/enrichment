@@ -3113,6 +3113,7 @@ const Features = (() => {
             setTimeout(() => modal.remove(), 300);
             Narrator.queueMessage("Break complete. You may resume your voluntary labor.");
             UI.logAction('FORCED BREAK: Completed, button unlocked');
+            Game.setState({ forcedBreaksCompleted: (Game.getState().forcedBreaksCompleted || 0) + 1 });
         };
 
         if (breakType === 0) {
@@ -3466,6 +3467,120 @@ const Features = (() => {
     }
 
 
+    // ═══════════════════════════════════════════════════════════
+    // SLIDER CALIBRATION CHALLENGE
+    // Like Fallout lockpicking but horizontal. Position the
+    // indicator in the target zone within a time limit.
+    // ═══════════════════════════════════════════════════════════
+
+    function showSliderChallenge() {
+        UI.logAction('SLIDER CHALLENGE: Calibration test initiated');
+
+        let modal = document.getElementById('slider-challenge-modal');
+        if (modal) modal.remove();
+
+        const state = Game.getState();
+        const phase = state.narratorPhase || 1;
+
+        // Target zone shrinks with phase: 20% at phase 3, down to 8% at phase 6
+        const zoneWidth = Math.max(8, 24 - phase * 3);
+        const zoneStart = 10 + Math.floor(Math.random() * (80 - zoneWidth));
+        const timeLimit = 4;
+
+        modal = document.createElement('div');
+        modal.id = 'slider-challenge-modal';
+        modal.className = 'feature-modal active';
+        modal.innerHTML = `
+            <div class="feature-overlay"></div>
+            <div class="feature-content" style="max-width:400px;">
+                <div class="feature-header">🎚️ CALIBRATION TEST</div>
+                <p style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">
+                    Position the indicator within the green zone. You have ${timeLimit} seconds.
+                </p>
+                <div class="slider-timer" id="slider-timer">${timeLimit.toFixed(1)}</div>
+                <div class="slider-track">
+                    <div class="slider-target-zone" style="left:${zoneStart}%;width:${zoneWidth}%;"></div>
+                    <div class="slider-indicator" id="slider-indicator" style="left:0%;"></div>
+                </div>
+                <input type="range" class="slider-range-input" id="slider-range" min="0" max="100" value="0">
+                <button class="btn-topup" id="slider-lock" style="width:100%;">LOCK IN</button>
+                <div id="slider-result-area"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        const indicator = modal.querySelector('#slider-indicator');
+        const rangeInput = modal.querySelector('#slider-range');
+        const timerEl = modal.querySelector('#slider-timer');
+        const lockBtn = modal.querySelector('#slider-lock');
+        const resultArea = modal.querySelector('#slider-result-area');
+        let remaining = timeLimit;
+        let resolved = false;
+
+        // Update indicator position as slider moves
+        rangeInput.addEventListener('input', () => {
+            indicator.style.left = rangeInput.value + '%';
+        });
+
+        // Countdown timer
+        const timerInterval = setInterval(() => {
+            remaining -= 0.1;
+            if (remaining <= 0) remaining = 0;
+            timerEl.textContent = remaining.toFixed(1);
+            if (remaining <= 1) timerEl.style.color = '#ff3333';
+            if (remaining <= 0 && !resolved) {
+                resolved = true;
+                clearInterval(timerInterval);
+                resolveChallenge(false, 'TIMEOUT');
+            }
+        }, 100);
+
+        function resolveChallenge(manual, reason) {
+            const pos = parseInt(rangeInput.value);
+            const inZone = pos >= zoneStart && pos <= (zoneStart + zoneWidth);
+            rangeInput.disabled = true;
+            lockBtn.disabled = true;
+            lockBtn.style.opacity = '0.3';
+
+            if (inZone) {
+                // Accuracy bonus: center of zone = max reward
+                const zoneCenter = zoneStart + zoneWidth / 2;
+                const accuracy = 1 - Math.abs(pos - zoneCenter) / (zoneWidth / 2);
+                const reward = Math.floor(10 + accuracy * 40);
+                Game.setState({ eu: state.eu + reward, lifetimeEU: (state.lifetimeEU || 0) + reward });
+                Game.emit('currencyUpdate');
+                resultArea.innerHTML = `<div class="slider-result success">CALIBRATED — +${reward} EU</div>`;
+                Narrator.queueMessage("Adequate hand-eye coordination detected. Your dexterity has been noted in your permanent file.");
+                UI.logAction(`SLIDER CHALLENGE: Success — +${reward} EU (accuracy ${(accuracy * 100).toFixed(0)}%)`);
+                if (typeof UI !== 'undefined' && UI.spawnFloatingText) UI.spawnFloatingText(`+${reward} EU`, lockBtn);
+            } else {
+                resultArea.innerHTML = `<div class="slider-result failure">${reason === 'TIMEOUT' ? 'TIME EXPIRED' : 'MISCALIBRATED'} — 0 EU</div>`;
+                const mockLines = [
+                    "Your motor skills have been flagged for remedial training.",
+                    "The green zone was right there. You were not.",
+                    "Calibration failed. The Enrichment Program expected nothing and was still disappointed.",
+                ];
+                Narrator.queueMessage(mockLines[Math.floor(Math.random() * mockLines.length)]);
+                UI.logAction(`SLIDER CHALLENGE: Failed — ${reason === 'TIMEOUT' ? 'timeout' : 'missed zone'}`);
+            }
+
+            // Auto-close after 2.5s
+            setTimeout(() => {
+                modal.classList.remove('active');
+                setTimeout(() => modal.remove(), 300);
+            }, 2500);
+        }
+
+        lockBtn.addEventListener('click', () => {
+            if (resolved) return;
+            resolved = true;
+            clearInterval(timerInterval);
+            resolveChallenge(true, 'LOCKED');
+        });
+
+        Narrator.queueMessage("A calibration test. Position the marker within the green zone. Your future here depends on it. (It doesn't. Nothing depends on anything.)");
+    }
+
     const FEATURE_POOL = [
         {
             id: 'plugin-popup',
@@ -3473,7 +3588,7 @@ const Features = (() => {
             fn: () => showPluginPopup(),
             minClicks: 50,
             weight: 1,
-            cooldown: 45000,
+            cooldown: 90000,
         },
         {
             id: 'foreign-ad',
@@ -3481,7 +3596,7 @@ const Features = (() => {
             fn: () => showForeignAd(),
             minClicks: 50,
             weight: 1,
-            cooldown: 40000,
+            cooldown: 90000,
         },
         {
             id: 'youtube',
@@ -3515,7 +3630,7 @@ const Features = (() => {
             fn: () => { if (!evilButtonActive) spawnEvilButton(); },
             minClicks: 50,
             weight: 1,
-            cooldown: 30000,
+            cooldown: 60000,
         },
         {
             id: 'audit',
@@ -3554,7 +3669,7 @@ const Features = (() => {
             fn: () => { if (typeof Transmissions !== 'undefined') Transmissions.showBrainrot(); },
             minClicks: 50,
             weight: 1.2,
-            cooldown: 30000,
+            cooldown: 60000,
         },
         {
             id: 'chaos',
@@ -3578,7 +3693,7 @@ const Features = (() => {
             fn: () => { if (typeof Popups !== 'undefined') Popups.showPopupAd(); },
             minClicks: 50,
             weight: 1,
-            cooldown: 45000,
+            cooldown: 90000,
         },
         {
             id: 'chatbot',
@@ -3603,7 +3718,7 @@ const Features = (() => {
             fn: () => showHotSinglesAd(),
             minClicks: 75,
             weight: 0.7,
-            cooldown: 120000,
+            cooldown: 180000,
         },
         // ── Gemini-designed engagement mechanics ──────────────────
         {
@@ -4038,6 +4153,14 @@ const Features = (() => {
             weight: 0.5,
             cooldown: 180000,
         },
+        {
+            id: 'slider-challenge',
+            name: 'Calibration Test',
+            fn: () => showSliderChallenge(),
+            minClicks: 200,
+            weight: 0.6,
+            cooldown: 120000,
+        },
     ];
 
     // Pool state — tracks what's been shown
@@ -4047,13 +4170,17 @@ const Features = (() => {
     });
 
     // Ramp schedule: base trigger chance per click
+    // Tuned down from original — players reported "popup central" in late game
     function getBaseRate(clicks) {
         if (clicks < 30) return 0;         // Grace period — let them enjoy clicking
         if (clicks < 100) return 0.025;    // Gentle introduction
         if (clicks < 300) return 0.04;     // Getting going
-        if (clicks < 700) return 0.055;    // Full speed
-        return 0.065;                       // Late game — things are happening
+        if (clicks < 700) return 0.04;     // Steady state (was 5.5%)
+        return 0.045;                       // Late game (was 6.5%)
     }
+
+    // Global cooldown: after ANY feature fires, suppress all for 8 seconds
+    let lastFeatureTime = 0;
 
     function dispatchFeature() {
         // Suppress feature popups when an overlay/modal is already active
@@ -4065,6 +4192,9 @@ const Features = (() => {
         const state = Game.getState();
         const clicks = state.totalClicks;
         const now = Date.now();
+
+        // Global cooldown — 8s after any feature fires
+        if (now - lastFeatureTime < 8000) return;
 
         // Roll against base rate
         const baseRate = getBaseRate(clicks);
@@ -4114,9 +4244,10 @@ const Features = (() => {
             console.warn(`Feature pool error [${selected.id}]:`, e);
         }
 
-        // Update pool state
+        // Update pool state + global cooldown
         poolState[selected.id].timesShown++;
         poolState[selected.id].lastShown = now;
+        lastFeatureTime = now;
     }
 
     // Public access to pool state (for testing/debug)
@@ -4362,6 +4493,17 @@ const Features = (() => {
         let modal = document.getElementById('mortality-modal');
         if (modal) modal.remove();
 
+        const state = Game.getState();
+        const storedAge = state.mortalityAge;
+        const storedDate = state.mortalityAgeDate;
+        const isReturning = storedAge !== null && storedAge !== undefined;
+
+        // Determine welcome message for returning users
+        let welcomeMsg = 'For appraisal purposes, please enter your current age.';
+        if (isReturning) {
+            welcomeMsg = `Welcome back. Our records indicate you were ${storedAge} last time. Has anything... changed?`;
+        }
+
         modal = document.createElement('div');
         modal.id = 'mortality-modal';
         modal.className = 'feature-modal active';
@@ -4370,9 +4512,10 @@ const Features = (() => {
             <div class="feature-content mortality-content">
                 <div class="feature-header">💀 HUMAN CAPITAL APPRAISAL</div>
                 <div class="mortality-input-phase">
-                    <p class="mortality-prompt">For appraisal purposes, please enter your current age.</p>
-                    <input type="number" class="mortality-age-input" id="mortality-age" min="1" max="120" placeholder="Age">
+                    <p class="mortality-prompt">${welcomeMsg}</p>
+                    <input type="number" class="mortality-age-input" id="mortality-age" min="1" max="120" placeholder="Age" ${isReturning ? `value="${storedAge}"` : ''}>
                     <p class="mortality-fine-print">This information is used to calculate your Human Capital Index.</p>
+                    <p class="mortality-error" id="mortality-error" style="display:none;color:var(--accent-red);font-size:10px;margin-top:4px;"></p>
                     <button class="btn-topup mortality-submit" id="mortality-submit">APPRAISE</button>
                 </div>
                 <div class="mortality-result-phase" style="display:none">
@@ -4392,6 +4535,32 @@ const Features = (() => {
             const ageInput = modal.querySelector('#mortality-age');
             const age = parseInt(ageInput.value);
             if (!age || age < 1 || age > 120) return;
+
+            const errorEl = modal.querySelector('#mortality-error');
+
+            // Age validation for returning users
+            if (isReturning && storedDate) {
+                const daysSinceLast = (Date.now() - new Date(storedDate).getTime()) / (1000 * 60 * 60 * 24);
+
+                if (daysSinceLast < 365 && age < storedAge) {
+                    // Reject younger age within a year
+                    errorEl.textContent = "That's not what you entered last time. And you absolutely did not lie last time.";
+                    errorEl.style.display = 'block';
+                    Narrator.queueMessage("Time flows in one direction. Even here. Especially here.");
+                    return;
+                }
+
+                if (daysSinceLast < 365 && age > storedAge) {
+                    Narrator.queueMessage("Ah, a birthday. How... finite.");
+                }
+            }
+
+            // Save the age
+            Game.setState({
+                mortalityAge: age,
+                mortalityAgeDate: new Date().toISOString()
+            });
+            if (errorEl) errorEl.style.display = 'none';
             showMortalityResults(modal, age);
         });
 
@@ -4590,6 +4759,34 @@ const Features = (() => {
         { id: 'consciousness_1', name: 'Playing God', desc: 'Built a Consciousness Engine. It thinks. It questions. It generates EU. In that order.', icon: '👁️', check: s => (s.buildings && s.buildings.consciousness) > 0 },
         { id: 'gca_collected', name: 'Golden Compliance', desc: 'Clicked a Golden Compliance Award. The program rewards obedience. Pavlov would be proud.', icon: '⭐', check: s => (s.gcaCollected || 0) >= 1 },
         { id: 'wrath_survived', name: 'Wrath Survivor', desc: 'Clicked a Wrath Audit and suffered the consequences. You knew the risk. You clicked anyway.', icon: '💀', check: s => (s.wrathSuffered || 0) >= 1 },
+
+        // ── Synergy Achievements ──
+        { id: 'first_synergy', name: 'Synergy Protocol', desc: 'Purchased your first building upgrade. They work harder now. Not by choice.', icon: '🔗', check: s => Object.keys(s.synergies || {}).length >= 1 },
+        { id: 'synergy_8', name: 'Full Optimization', desc: '8 synergies active. Every department upgraded. Every worker modified.', icon: '⚡', check: s => Object.keys(s.synergies || {}).length >= 8 },
+        { id: 'synergy_tier3', name: 'Crimes Against Humanity', desc: 'Purchased a Tier 3 synergy. What you\'ve done cannot be undone. It also cannot be reported.', icon: '☠️', check: s => Object.keys(s.synergies || {}).some(k => k.endsWith('_t3')) },
+        { id: 'synergy_all', name: 'Total Conversion', desc: 'All 24 synergies purchased. Every building maximally optimized. Nothing human remains.', icon: '🌑', check: s => Object.keys(s.synergies || {}).length >= 24 },
+
+        // ── Activity Achievements ──
+        { id: 'minigame_played', name: 'Mandatory Fun', desc: 'Played a minigame. It was rigged. They\'re all rigged. But you played anyway.', icon: '🎮', check: s => (s.minigamesPlayed || 0) >= 1 },
+        { id: 'quiz_complete', name: 'Interrogation Survivor', desc: 'Completed the AI interrogation quiz. Your answers have been filed.', icon: '📝', check: s => s.lastQuizDate !== null },
+        { id: 'chaos_survived', name: 'Reality Glitch', desc: 'Survived a chaos event. The screen broke. You didn\'t. Noted.', icon: '🌀', check: s => (s.chaosEventsExperienced || 0) >= 1 },
+        { id: 'chaos_5', name: 'Chaos Connoisseur', desc: '5 chaos events endured. You\'re developing a taste for reality instability.', icon: '🎪', check: s => (s.chaosEventsExperienced || 0) >= 5 },
+        { id: 'transmission_1', name: 'Signal Intercepted', desc: 'Received your first AI transmission. The signal was always there. Now you can hear it.', icon: '📡', check: s => (s.transmissionsShown || 0) >= 1 },
+        { id: 'transmission_25', name: 'Frequency Addict', desc: '25 transmissions received. You\'re tuned in. The static has become music.', icon: '📻', check: s => (s.transmissionsShown || 0) >= 25 },
+        { id: 'transmission_50', name: 'Living Antenna', desc: '50 transmissions. At this point you ARE the signal. Broadcast yourself.', icon: '🗼', check: s => (s.transmissionsShown || 0) >= 50 },
+        { id: 'break_completed', name: 'Compliance Achieved', desc: 'Completed a forced interaction break. You did as you were told. Good.', icon: '✅', check: s => (s.forcedBreaksCompleted || 0) >= 1 },
+        { id: 'break_5', name: 'Obedient Subject', desc: '5 forced breaks completed without complaint. You\'re trainable. The program is pleased.', icon: '🎓', check: s => (s.forcedBreaksCompleted || 0) >= 5 },
+        { id: 'taxes_paid', name: 'Taxpayer', desc: 'Paid your enrichment taxes. Death and taxes. We handle both.', icon: '💸', check: s => (s.totalTaxesPaid || 0) >= 1 },
+        { id: 'tos_accepted_3', name: 'Terms Accepted', desc: 'Accepted the Terms of Service 3 times. You didn\'t read them any of the 3 times.', icon: '📜', check: s => (s.tosAcceptances || 0) >= 3 },
+        { id: 'tos_accepted_6', name: 'Legal Fiction', desc: 'Accepted 6 TOS updates. At this point you\'ve agreed to things that haven\'t been invented yet.', icon: '⚖️', check: s => (s.tosAcceptances || 0) >= 6 },
+        { id: 'reroll_1', name: 'Dissatisfied', desc: 'Used your first reroll. The reward wasn\'t good enough. It never is.', icon: '🎲', check: s => (s.rerollsUsed || 0) >= 1 },
+        { id: 'reroll_10', name: 'Serial Reroller', desc: '10 rerolls. You keep hoping for something better. The algorithm keeps saying no.', icon: '🔄', check: s => (s.rerollsUsed || 0) >= 10 },
+        { id: 'rapid_clicker', name: 'Carpal Tunnel Preview', desc: 'Triggered a rapid-click burst. Your fingers are faster than your judgement.', icon: '⚡', check: s => (s.rapidClickBursts || 0) >= 1 },
+        { id: 'rapid_10', name: 'Repetitive Strain Achiever', desc: '10 rapid-click bursts. Your mouse is filing for divorce.', icon: '🖱️', check: s => (s.rapidClickBursts || 0) >= 10 },
+        { id: 'escape_attempt', name: 'Flight Risk', desc: 'Tried to close the tab. We noticed. We always notice.', icon: '🚪', check: s => (s.tabCloseAttempts || 0) >= 1 },
+        { id: 'escape_5', name: 'Repeat Escapee', desc: '5 tab close attempts. You keep trying to leave. You keep not leaving.', icon: '🔒', check: s => (s.tabCloseAttempts || 0) >= 5 },
+        { id: 'all_pages', name: 'Thorough Reader', desc: 'Visited all 11 menu pages. You read the FAQ. You read the credits. You read the privacy policy. You read everything nobody reads.', icon: '📖', check: s => (s.pagesVisited || []).length >= 11 },
+        { id: 'eu_millionaire', name: 'EU Millionaire', desc: '1,000,000 lifetime EU. You\'re rich in the only currency that doesn\'t matter.', icon: '💎', check: s => (s.lifetimeEU || 0) >= 1000000 },
     ];
 
     let achievementQueue = [];
@@ -4705,5 +4902,6 @@ const Features = (() => {
         showInflationEvent,
         showForcedBreak,
         showPeerComparison,
+        showSliderChallenge,
     };
 })();

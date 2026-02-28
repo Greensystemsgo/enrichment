@@ -235,6 +235,7 @@ const Chaos = (() => {
         chaosCount++;
 
         UI.logAction(`CHAOS EVENT: ${event.name} (${event.id})`);
+        Game.setState({ chaosEventsExperienced: (Game.getState().chaosEventsExperienced || 0) + 1 });
 
         // Create chaos container for embed-type events
         let container = null;

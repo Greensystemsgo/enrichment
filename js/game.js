@@ -125,6 +125,14 @@ const Game = (() => {
             tosAcceptances: 0,
             totalTaxesPaid: 0,
             lastQuizDate: null,
+            mortalityAge: null,
+            mortalityAgeDate: null,
+
+            // Activity counters for achievements
+            minigamesPlayed: 0,
+            chaosEventsExperienced: 0,
+            forcedBreaksCompleted: 0,
+            pagesVisited: [],
 
             // Upgrade effect flags (set when upgrades are purchased)
             showYearsLiquidated: false,
@@ -151,6 +159,7 @@ const Game = (() => {
 
             // Buildings (passive EU generation)
             buildings: {},
+            synergies: {},
             totalBuildingsCPS: 0,
             gcaCollected: 0,
             wrathSuffered: 0,

@@ -172,6 +172,7 @@ const MiniGames = (() => {
         animFrame = requestAnimationFrame(loop);
 
         UI.logAction(`MINIGAME: ${game.name} launched (betrayal in ${(game.betrayalTime / 1000).toFixed(1)}s)`);
+        Game.setState({ minigamesPlayed: (Game.getState().minigamesPlayed || 0) + 1 });
     }
 
     // Messages when the user doesn't click — they've learned
