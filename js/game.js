@@ -174,6 +174,13 @@ const Game = (() => {
             soundVolume: 0.5,
             soundMuted: false,
 
+            // Prestige / Ascension
+            protocolPoints: 0,
+            lifetimeProtocolPoints: 0,
+            ascensionCount: 0,
+            prestigeUpgrades: {},
+            _prestigeMultiplier: 1,
+
             // Version for migration
             saveVersion: 2,
         };
@@ -246,6 +253,11 @@ const Game = (() => {
     function computeClickValue() {
         let base = 1;
 
+        // Prestige: Muscle Memory — +1 base click per level
+        if (typeof Prestige !== 'undefined') {
+            base += Prestige.getMuscleMemoryBonus();
+        }
+
         // Efficiency Paradox: 2x click value per level
         const epLevel = state.efficiencyParadox ? (state.upgrades.efficiencyParadox || 1) : 0;
         if (epLevel > 0) base *= Math.pow(2, epLevel);
@@ -269,6 +281,11 @@ const Game = (() => {
         // GCA Click Surge multiplier (from Golden Compliance Awards)
         if (state._gcaClickMultiplier > 1) {
             gross = Math.floor(gross * state._gcaClickMultiplier);
+        }
+
+        // Prestige multiplier (PP bonus + temporal compression)
+        if (state._prestigeMultiplier > 1) {
+            gross = Math.floor(gross * state._prestigeMultiplier);
         }
 
         // GCA Audit Holiday — skip taxes and escrow
@@ -473,6 +490,9 @@ const Game = (() => {
 
         checkStreak();
         updateAutoClicker();
+
+        // Initialize prestige system
+        if (typeof Prestige !== 'undefined') Prestige.init();
 
         // Start game tick (1 second interval)
         tickInterval = setInterval(tick, 1000);

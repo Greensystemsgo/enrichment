@@ -938,6 +938,8 @@ body[data-phase="6"] {
     padding: 20px 24px;
     max-width: 480px;
     width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
     transition: transform 0.2s ease;
 }
@@ -1054,6 +1056,8 @@ body[data-phase="6"] {
     padding: 20px;
     max-width: 340px;
     width: 85vw;
+    max-height: 85vh;
+    overflow-y: auto;
     text-align: center;
     position: relative;
     box-shadow: 0 0 40px rgba(196, 160, 53, 0.2);
@@ -1176,6 +1180,8 @@ body[data-phase="6"] {
     padding: 32px;
     max-width: 480px;
     width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
     text-align: center;
     box-shadow: 0 0 60px rgba(139, 58, 58, 0.15);
 }
@@ -1855,6 +1861,8 @@ body.crown-seizure {
     padding: 28px;
     max-width: 480px;
     width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
     text-align: center;
 }
 
@@ -5969,4 +5977,193 @@ body.crown-seizure {
     color: var(--accent-red);
     background: rgba(139, 58, 58, 0.2);
     border: 1px solid var(--accent-red);
+}
+
+/* ── Prestige / Ascension Tab ──────────────────────────── */
+.prestige-summary {
+    margin-bottom: 16px;
+}
+
+.prestige-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.prestige-stat {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    text-align: center;
+}
+
+.prestige-stat-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.prestige-stat-value {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--accent-gold);
+    font-weight: 700;
+}
+
+.prestige-ascend-box {
+    text-align: center;
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.prestige-potential {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.btn-ascend {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 32px;
+    border: 2px solid var(--accent-gold);
+    background: linear-gradient(135deg, rgba(196, 160, 53, 0.2), rgba(255, 215, 0, 0.1));
+    color: var(--accent-gold);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-ascend:hover:not(.disabled) {
+    background: linear-gradient(135deg, rgba(196, 160, 53, 0.4), rgba(255, 215, 0, 0.2));
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    transform: scale(1.02);
+}
+
+.btn-ascend.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+.prestige-requirement {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    letter-spacing: 1px;
+}
+
+.prestige-shop {
+    margin-top: 16px;
+}
+
+.prestige-shop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.prestige-upgrade {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.prestige-upgrade.affordable {
+    border-color: var(--accent-gold);
+}
+
+.prestige-upgrade.maxed {
+    opacity: 0.5;
+}
+
+.prestige-upgrade-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.prestige-upgrade-icon {
+    font-size: 18px;
+}
+
+.prestige-upgrade-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-primary);
+    text-transform: uppercase;
+}
+
+.prestige-upgrade-desc {
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.prestige-upgrade-level {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.prestige-upgrade-effect {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-green);
+    margin-bottom: 8px;
+}
+
+.prestige-buy-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 6px 16px;
+    border: 1px solid var(--accent-gold);
+    background: rgba(196, 160, 53, 0.15);
+    color: var(--accent-gold);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.prestige-buy-btn:hover:not(.disabled) {
+    background: rgba(196, 160, 53, 0.3);
+}
+
+.prestige-buy-btn.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+.prestige-maxed-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-top: 4px;
 }

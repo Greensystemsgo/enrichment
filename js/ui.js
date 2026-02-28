@@ -594,7 +594,7 @@ const UI = (() => {
 
         // Restore persisted tab (fallback to 'buildings' if stale)
         const state = Game.getState();
-        const validTabs = ['buildings', 'market', 'upgrades', 'log', 'stuff'];
+        const validTabs = ['buildings', 'market', 'upgrades', 'log', 'stuff', 'prestige'];
         const saved = validTabs.includes(state.activeTab) ? state.activeTab : 'buildings';
         switchTab(saved);
     }
@@ -612,6 +612,7 @@ const UI = (() => {
         Game.setState({ activeTab: name });
         // Re-render buildings when switching to that tab
         if (name === 'buildings') renderBuildings();
+        if (name === 'prestige' && typeof Prestige !== 'undefined') Prestige.renderPrestige();
     }
 
     // ── Rate Charts (SVG Sparklines) ──────────────────────────

@@ -156,6 +156,18 @@ const FEATURE_MANIFEST = [
     { id: 'sound-title-phase',      pattern: 'SOUND TEST [PASS]: title phase',          category: 'Sound', notes: 'Title updates on phase' },
     { id: 'sound-title-hidden',     pattern: 'SOUND TEST [PASS]: title hidden cycle',   category: 'Sound', notes: 'Title cycles when hidden' },
     { id: 'sound-notifications',    pattern: 'SOUND TEST [PASS]: notifications',        category: 'Sound', notes: 'sendNotification exists' },
+
+    // ── Prestige / Ascension ──
+    { id: 'prestige-module',         pattern: 'PRESTIGE TEST [PASS]: module loaded',       category: 'Prestige', notes: 'Prestige module exists' },
+    { id: 'prestige-pp-calc',        pattern: 'PRESTIGE TEST [PASS]: pp-calc',             category: 'Prestige', notes: 'PP calculation' },
+    { id: 'prestige-multiplier',     pattern: 'PRESTIGE TEST [PASS]: multiplier',           category: 'Prestige', notes: 'Multiplier applies' },
+    { id: 'prestige-ascend',         pattern: 'PRESTIGE TEST [PASS]: ascend',               category: 'Prestige', notes: 'Ascension resets state' },
+    { id: 'prestige-upgrade-buy',    pattern: 'PRESTIGE TEST [PASS]: upgrade-buy',          category: 'Prestige', notes: 'Buy prestige upgrade' },
+    { id: 'prestige-muscle-memory',  pattern: 'PRESTIGE TEST [PASS]: muscle-memory',        category: 'Prestige', notes: 'Click value bonus' },
+    { id: 'prestige-workforce-disc', pattern: 'PRESTIGE TEST [PASS]: workforce-discount',   category: 'Prestige', notes: 'Building cost discount' },
+    { id: 'prestige-persist-intern', pattern: 'PRESTIGE TEST [PASS]: persist-interns',       category: 'Prestige', notes: 'Interns persist on ascend' },
+    { id: 'prestige-tab',            pattern: 'PRESTIGE TEST [PASS]: tab-exists',            category: 'Prestige', notes: 'Prestige tab in DOM' },
+    { id: 'prestige-ascension-log',  pattern: 'PROTOCOL ASCENSION:',                        category: 'Prestige', notes: 'Ascension log entry' },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -300,6 +312,12 @@ const ACHIEVEMENT_MANIFEST = [
     { id: 'escape_5',        name: 'Repeat Escapee',            setup: `Game.setState({ tabCloseAttempts: 5 })` },
     { id: 'all_pages',       name: 'Thorough Reader',           setup: `Game.setState({ pagesVisited: ['profile','settings','billing','security','cloudkeys','privacy','api','contact','faq','credits','democracy'] })` },
     { id: 'eu_millionaire',  name: 'EU Millionaire',            setup: `Game.setState({ lifetimeEU: 1000000 })` },
+
+    // ── Prestige / Ascension Achievements ──
+    { id: 'first_ascension', name: 'Protocol Initiated',       setup: `Game.setState({ ascensionCount: 1 })` },
+    { id: 'ascension_5',     name: 'Serial Ascender',          setup: `Game.setState({ ascensionCount: 5 })` },
+    { id: 'ascension_10',    name: 'Eternal Return',           setup: `Game.setState({ ascensionCount: 10 })` },
+    { id: 'pp_100',          name: 'Protocol Maximalist',      setup: `Game.setState({ lifetimeProtocolPoints: 100 })` },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -1652,6 +1670,130 @@ async function main() {
     const synergyFailed = synergyResults.filter(r => !r.ok).length;
     console.log(`    Synergy tests: ${synergyPassed} passed, ${synergyFailed} failed out of ${synergyResults.length}`);
     for (const r of synergyResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8f: Prestige / Ascension verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8f: Prestige / Ascension verification...');
+
+    const prestigeResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // ── Module exists ──
+        try {
+            if (typeof Prestige !== 'undefined' && Prestige.init) pass('module loaded');
+            else fail('module loaded', 'Prestige not defined');
+        } catch (e) { fail('module loaded', e.message); }
+
+        // ── PP calculation ──
+        try {
+            Game.setState({ lifetimeEU: 4000000, protocolPoints: 0 });
+            const pp = Prestige.calculatePotentialPP();
+            // sqrt(4M / 1M) = 2
+            if (pp === 2) pass('pp-calc: sqrt(4M/1M) = 2');
+            else fail('pp-calc', `expected 2, got ${pp}`);
+        } catch (e) { fail('pp-calc', e.message); }
+
+        // ── Multiplier calculation ──
+        try {
+            Game.setState({ protocolPoints: 10, _prestigeMultiplier: 1, prestigeUpgrades: {} });
+            Prestige.recalcMultiplier();
+            const mult = Prestige.getPrestigeMultiplier();
+            // 10 PP = 1 + 0.10 = 1.10
+            if (Math.abs(mult - 1.10) < 0.001) pass('multiplier: 10 PP = ×1.10');
+            else fail('multiplier', `expected 1.10, got ${mult}`);
+        } catch (e) { fail('multiplier', e.message); }
+
+        // ── Ascension resets state ──
+        try {
+            Game.setState({
+                eu: 5000, st: 100, cc: 50, doubloons: 10, tickets: 5,
+                totalClicks: 500, buildings: { intern: 10, clerk: 5 },
+                synergies: { intern_t1: true }, upgrades: { test: 1 },
+                lifetimeEU: 4000000, protocolPoints: 0,
+                ascensionCount: 0, lifetimeProtocolPoints: 0,
+                prestigeUpgrades: {},
+                totalBuildingsCPS: 10, _gcaMultiplier: 1, _prestigeMultiplier: 1,
+            });
+            const ascended = Prestige.ascend();
+            const s = Game.getState();
+            if (ascended && s.eu === 0 && s.totalClicks === 0 &&
+                Object.keys(s.upgrades).length === 0 &&
+                s.protocolPoints === 2 && s.ascensionCount === 1) {
+                pass('ascend: resets currencies/buildings, awards 2 PP');
+            } else {
+                fail('ascend', `ascended=${ascended} eu=${s.eu} clicks=${s.totalClicks} pp=${s.protocolPoints} asc=${s.ascensionCount}`);
+            }
+        } catch (e) { fail('ascend', e.message); }
+
+        // ── Buy prestige upgrade ──
+        try {
+            Game.setState({ protocolPoints: 5, prestigeUpgrades: {} });
+            const bought = Prestige.purchasePrestigeUpgrade('muscle_memory');
+            const level = Prestige.getUpgradeLevel('muscle_memory');
+            const ppLeft = Game.getState().protocolPoints;
+            if (bought && level === 1 && ppLeft === 3) pass('upgrade-buy: muscle memory L1 costs 2 PP');
+            else fail('upgrade-buy', `bought=${bought} level=${level} pp=${ppLeft}`);
+        } catch (e) { fail('upgrade-buy', e.message); }
+
+        // ── Muscle memory bonus ──
+        try {
+            Game.setState({ prestigeUpgrades: { muscle_memory: 3 } });
+            const bonus = Prestige.getMuscleMemoryBonus();
+            if (bonus === 3) pass('muscle-memory: level 3 = +3 base click');
+            else fail('muscle-memory', `expected 3, got ${bonus}`);
+        } catch (e) { fail('muscle-memory', e.message); }
+
+        // ── Workforce discount ──
+        try {
+            Game.setState({ prestigeUpgrades: { workforce_subsidy: 2 } });
+            const discount = Prestige.getWorkforceDiscount();
+            if (Math.abs(discount - 0.10) < 0.001) pass('workforce-discount: level 2 = 10%');
+            else fail('workforce-discount', `expected 0.10, got ${discount}`);
+        } catch (e) { fail('workforce-discount', e.message); }
+
+        // ── Unpaid Persistence (interns persist) ──
+        try {
+            Game.setState({
+                eu: 0, lifetimeEU: 9000000, protocolPoints: 0,
+                ascensionCount: 0, lifetimeProtocolPoints: 0,
+                buildings: { intern: 10, clerk: 5 }, synergies: {},
+                upgrades: {}, totalClicks: 100,
+                prestigeUpgrades: { unpaid_persist: 3 },
+                totalBuildingsCPS: 10, _gcaMultiplier: 1, _prestigeMultiplier: 1,
+            });
+            Prestige.ascend();
+            const s = Game.getState();
+            if ((s.buildings.intern || 0) === 3) pass('persist-interns: 3 interns kept after ascend');
+            else fail('persist-interns', `expected 3 interns, got ${s.buildings.intern || 0}`);
+        } catch (e) { fail('persist-interns', e.message); }
+
+        // ── Prestige tab exists in DOM ──
+        try {
+            const tab = document.querySelector('[data-tab="prestige"]');
+            if (tab) pass('tab-exists: prestige tab in DOM');
+            else fail('tab-exists', 'no prestige tab found');
+        } catch (e) { fail('tab-exists', e.message); }
+
+        // Log results
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`PRESTIGE TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+
+        return results;
+    });
+
+    const prestigePassed = prestigeResults.filter(r => r.ok).length;
+    const prestigeFailed = prestigeResults.filter(r => !r.ok).length;
+    console.log(`    Prestige tests: ${prestigePassed} passed, ${prestigeFailed} failed out of ${prestigeResults.length}`);
+    for (const r of prestigeResults) {
         const icon = r.ok ? 'PASS' : 'FAIL';
         console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
     }

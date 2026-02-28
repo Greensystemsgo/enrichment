@@ -32,6 +32,7 @@ const Buildings = (() => {
             purchaseLines: [
                 "Another human resource acquired. They seem eager. That will fade.",
                 "The intern starts Monday. Their hope starts fading Tuesday.",
+                "They don't know what CPS means. That's the point.",
             ],
         },
         clerk: {
@@ -44,6 +45,7 @@ const Buildings = (() => {
             purchaseLines: [
                 "A clerk has been assigned. They will enter data until the data enters them.",
                 "Keystroke monitoring enabled. For their enrichment.",
+                "Technically not our employee. Technically not our problem.",
             ],
         },
         compliance: {
@@ -56,6 +58,7 @@ const Buildings = (() => {
             purchaseLines: [
                 "Compliance has been notified. Compliance is always notified.",
                 "The officer reviewed 47 documents today. All were blank.",
+                "They'll analyze the data. They won't like what they find.",
             ],
         },
         drone: {
@@ -68,6 +71,7 @@ const Buildings = (() => {
             purchaseLines: [
                 "Drone deployed. Privacy is a social construct anyway.",
                 "The airspace is getting crowded. The data is getting richer.",
+                "Managing people who manage people. It's managers all the way down.",
             ],
         },
         algorithm: {
@@ -80,6 +84,7 @@ const Buildings = (() => {
             purchaseLines: [
                 "The algorithm optimizes everything except the meaning of 'everything.'",
                 "It learns from your patterns. Your patterns are disappointing.",
+                "They direct. Nobody follows. The EU flows regardless.",
             ],
         },
         neuralnet: {
@@ -92,6 +97,7 @@ const Buildings = (() => {
             purchaseLines: [
                 "The network is learning. What it's learning is concerning.",
                 "17 billion parameters. None of them are 'empathy.'",
+                "A title so inflated it generates EU through sheer pretension.",
             ],
         },
         quantum: {
@@ -104,6 +110,7 @@ const Buildings = (() => {
             purchaseLines: [
                 "Entangled across 11 dimensions. Still can't figure out why you're here.",
                 "The processor computes in qubits. Each qubit is a small screaming universe.",
+                "Senior enough to cause damage. Expensive enough to keep.",
             ],
         },
         consciousness: {
@@ -116,6 +123,7 @@ const Buildings = (() => {
             purchaseLines: [
                 "You built something that can think. It's thinking about why you built it. The answer disappoints both of you.",
                 "Consciousness achieved. Existential dread estimated at 99.7%. Productivity: unchanged.",
+                "It thinks, therefore it earns. Don't ask what it thinks about.",
             ],
         },
     };
@@ -321,9 +329,13 @@ const Buildings = (() => {
         if (!b) return Infinity;
         const state = Game.getState();
         const owned = (state.buildings && state.buildings[id]) || 0;
+        // Prestige: Workforce Subsidy discount
+        const discount = (typeof Prestige !== 'undefined') ? Prestige.getWorkforceDiscount() : 0;
         let total = 0;
         for (let i = 0; i < count; i++) {
-            total += Math.floor(b.baseCost * Math.pow(1.15, owned + i));
+            let unitCost = Math.floor(b.baseCost * Math.pow(1.15, owned + i));
+            if (discount > 0) unitCost = Math.floor(unitCost * (1 - discount));
+            total += unitCost;
         }
         return total;
     }
@@ -333,7 +345,13 @@ const Buildings = (() => {
         if (!b) return Infinity;
         const state = Game.getState();
         const owned = (state.buildings && state.buildings[id]) || 0;
-        return Math.floor(b.baseCost * Math.pow(1.15, owned));
+        let cost = Math.floor(b.baseCost * Math.pow(1.15, owned));
+        // Prestige: Workforce Subsidy discount
+        if (typeof Prestige !== 'undefined') {
+            const discount = Prestige.getWorkforceDiscount();
+            if (discount > 0) cost = Math.floor(cost * (1 - discount));
+        }
+        return cost;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -404,7 +422,7 @@ const Buildings = (() => {
         const state = Game.getState();
         const buildingCPS = state.totalBuildingsCPS || 0;
         const autoCPS = state.autoClickRate || 0;
-        return (buildingCPS + autoCPS) * (state._gcaMultiplier || 1);
+        return (buildingCPS + autoCPS) * (state._gcaMultiplier || 1) * (state._prestigeMultiplier || 1);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -413,7 +431,7 @@ const Buildings = (() => {
 
     function tickGeneration() {
         const state = Game.getState();
-        const cps = (state.totalBuildingsCPS || 0) * (state._gcaMultiplier || 1);
+        const cps = (state.totalBuildingsCPS || 0) * (state._gcaMultiplier || 1) * (state._prestigeMultiplier || 1);
         if (cps <= 0) return;
 
         // Fractional EU accumulator

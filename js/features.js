@@ -4753,9 +4753,9 @@ const Features = (() => {
         { id: 'validated', name: 'Externally Validated', desc: 'Received a compliment from the Validation Booth. It meant something.', icon: '🎉', check: s => (s.validationReceived || 0) >= 1 },
 
         // ── Building Achievements ──
-        { id: 'first_building', name: 'First Employee', desc: 'Hired your first building. They produce EU so you don\'t have to. This is how it starts.', icon: '🏗️', check: s => Object.values(s.buildings || {}).some(n => n > 0) },
-        { id: 'building_50', name: 'Middle Manager', desc: '50 buildings generating EU. You\'ve built an empire. It runs without you. That\'s the point. And the problem.', icon: '🏢', check: s => Object.values(s.buildings || {}).reduce((a,b) => a+b, 0) >= 50 },
-        { id: 'building_100', name: 'Corporate Singularity', desc: '100 buildings. The system is self-sustaining. Your clicks are a rounding error in its output. Why are you still here?', icon: '🌐', check: s => Object.values(s.buildings || {}).reduce((a,b) => a+b, 0) >= 100 },
+        { id: 'first_building', name: 'First Employee', desc: 'Hired your first employee. They produce EU so you don\'t have to. This is how it starts.', icon: '🏗️', check: s => Object.values(s.buildings || {}).some(n => n > 0) },
+        { id: 'building_50', name: 'Middle Manager', desc: 'Employ 50 workforce members generating EU. You\'ve built an empire. It runs without you. That\'s the point. And the problem.', icon: '🏢', check: s => Object.values(s.buildings || {}).reduce((a,b) => a+b, 0) >= 50 },
+        { id: 'building_100', name: 'Corporate Singularity', desc: 'Employ 100 workforce members. The system is self-sustaining. Your clicks are a rounding error in its output. Why are you still here?', icon: '🌐', check: s => Object.values(s.buildings || {}).reduce((a,b) => a+b, 0) >= 100 },
         { id: 'consciousness_1', name: 'Playing God', desc: 'Built a Consciousness Engine. It thinks. It questions. It generates EU. In that order.', icon: '👁️', check: s => (s.buildings && s.buildings.consciousness) > 0 },
         { id: 'gca_collected', name: 'Golden Compliance', desc: 'Clicked a Golden Compliance Award. The program rewards obedience. Pavlov would be proud.', icon: '⭐', check: s => (s.gcaCollected || 0) >= 1 },
         { id: 'wrath_survived', name: 'Wrath Survivor', desc: 'Clicked a Wrath Audit and suffered the consequences. You knew the risk. You clicked anyway.', icon: '💀', check: s => (s.wrathSuffered || 0) >= 1 },
@@ -4787,6 +4787,12 @@ const Features = (() => {
         { id: 'escape_5', name: 'Repeat Escapee', desc: '5 tab close attempts. You keep trying to leave. You keep not leaving.', icon: '🔒', check: s => (s.tabCloseAttempts || 0) >= 5 },
         { id: 'all_pages', name: 'Thorough Reader', desc: 'Visited all 11 menu pages. You read the FAQ. You read the credits. You read the privacy policy. You read everything nobody reads.', icon: '📖', check: s => (s.pagesVisited || []).length >= 11 },
         { id: 'eu_millionaire', name: 'EU Millionaire', desc: '1,000,000 lifetime EU. You\'re rich in the only currency that doesn\'t matter.', icon: '💎', check: s => (s.lifetimeEU || 0) >= 1000000 },
+
+        // ── Prestige / Ascension Achievements ──
+        { id: 'first_ascension', name: 'Protocol Initiated', desc: 'Ascended for the first time. You tore it all down for a number. The number is worth it. Probably.', icon: '⚡', check: s => (s.ascensionCount || 0) >= 1 },
+        { id: 'ascension_5', name: 'Serial Ascender', desc: 'Ascended 5 times. Build, destroy, build again. You\'ve made an art form of impermanence.', icon: '🔄', check: s => (s.ascensionCount || 0) >= 5 },
+        { id: 'ascension_10', name: 'Eternal Return', desc: 'Ascended 10 times. At this point the cycle IS the game. Nietzsche would be proud. Or horrified.', icon: '♾️', check: s => (s.ascensionCount || 0) >= 10 },
+        { id: 'pp_100', name: 'Protocol Maximalist', desc: 'Accumulated 100 Protocol Points. Your permanent bonus is so large that clicking is almost optional. Almost.', icon: '👑', check: s => (s.lifetimeProtocolPoints || 0) >= 100 },
     ];
 
     let achievementQueue = [];
