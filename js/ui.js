@@ -43,6 +43,7 @@ const UI = (() => {
             tickerDB: document.querySelector('#ticker-db .ticker-val'),
             tickerTK: document.querySelector('#ticker-tk .ticker-val'),
             tickerYRS: document.querySelector('#ticker-yrs .ticker-val'),
+            tickerEPS: document.getElementById('eps-value'),
             tabBar: document.getElementById('tab-bar'),
             dbDisplay: document.getElementById('db-display'),
             tkDisplay: document.getElementById('tk-display'),
@@ -184,19 +185,26 @@ const UI = (() => {
 
     // ── Stats Update ───────────────────────────────────────────
     function updateStats(state) {
-        if (els.clickCount) els.clickCount.textContent = state.totalClicks.toLocaleString();
-        if (els.euDisplay) els.euDisplay.textContent = state.eu.toLocaleString();
-        if (els.stDisplay) els.stDisplay.textContent = state.st.toLocaleString();
-        if (els.ccDisplay) els.ccDisplay.textContent = state.cc.toLocaleString();
-        if (els.investmentValue) els.investmentValue.textContent = state.investmentScore.toLocaleString();
+        const fmt = Game.formatNumber;
+        if (els.clickCount) els.clickCount.textContent = fmt(state.totalClicks);
+        if (els.euDisplay) els.euDisplay.textContent = fmt(state.eu);
+        if (els.stDisplay) els.stDisplay.textContent = fmt(state.st);
+        if (els.ccDisplay) els.ccDisplay.textContent = fmt(state.cc);
+        if (els.investmentValue) els.investmentValue.textContent = fmt(state.investmentScore);
 
         // Currency ticker bar
-        if (els.tickerEU) els.tickerEU.textContent = state.eu.toLocaleString();
-        if (els.tickerST) els.tickerST.textContent = state.st.toLocaleString();
-        if (els.tickerCC) els.tickerCC.textContent = state.cc.toLocaleString();
-        if (els.tickerDB) els.tickerDB.textContent = (state.doubloons || 0).toLocaleString();
-        if (els.tickerTK) els.tickerTK.textContent = (state.tickets || 0).toLocaleString();
-        if (els.tickerYRS) els.tickerYRS.textContent = (state.yearsLiquidated || 0).toLocaleString();
+        if (els.tickerEU) els.tickerEU.textContent = fmt(state.eu);
+        if (els.tickerST) els.tickerST.textContent = fmt(state.st);
+        if (els.tickerCC) els.tickerCC.textContent = fmt(state.cc);
+        if (els.tickerDB) els.tickerDB.textContent = fmt(state.doubloons || 0);
+        if (els.tickerTK) els.tickerTK.textContent = fmt(state.tickets || 0);
+        if (els.tickerYRS) els.tickerYRS.textContent = fmt(state.yearsLiquidated || 0);
+
+        // EU/s display
+        if (els.tickerEPS) {
+            const cps = (typeof Buildings !== 'undefined') ? Buildings.getTotalCPS() : 0;
+            els.tickerEPS.textContent = fmt(cps);
+        }
 
         // Streak (in ticker bar)
         if (els.streakCount) {
@@ -209,8 +217,8 @@ const UI = (() => {
         }
 
         // Pirate currencies
-        if (els.dbDisplay) els.dbDisplay.textContent = (state.doubloons || 0).toLocaleString();
-        if (els.tkDisplay) els.tkDisplay.textContent = (state.tickets || 0).toLocaleString();
+        if (els.dbDisplay) els.dbDisplay.textContent = fmt(state.doubloons || 0);
+        if (els.tkDisplay) els.tkDisplay.textContent = fmt(state.tickets || 0);
 
     }
 
@@ -460,6 +468,66 @@ const UI = (() => {
         });
     }
 
+    // ── Buildings Panel ────────────────────────────────────────
+    let buyAmount = 1;
+
+    function renderBuildings() {
+        const list = document.getElementById('buildings-list');
+        if (!list) return;
+        // Only render when tab is active (perf)
+        const pane = document.querySelector('.tab-pane[data-tab="buildings"]');
+        if (!pane || !pane.classList.contains('active')) return;
+
+        list.innerHTML = '';
+        const state = Game.getState();
+        const fmt = Game.formatNumber;
+
+        Buildings.BUILDING_ORDER.forEach(id => {
+            const b = Buildings.BUILDINGS[id];
+            if (!b) return;
+            const owned = (state.buildings && state.buildings[id]) || 0;
+            const cost = Buildings.getCost(id, buyAmount);
+            const canAfford = state.eu >= cost;
+            const singleCPS = b.baseCPS;
+            const totalCPS = owned * singleCPS;
+            const flavor = Buildings.getBuildingFlavor(id);
+
+            const div = document.createElement('div');
+            div.className = `building-item driftable corruptible${canAfford ? '' : ' unaffordable'}`;
+            div.innerHTML = `
+                <div class="building-icon">${b.icon}</div>
+                <div class="building-info">
+                    <div class="building-name">${b.name}${owned > 0 ? ` <span class="building-count">${owned}</span>` : ''}</div>
+                    <div class="building-cps">${fmt(singleCPS)} EU/s each${owned > 0 ? ' · ' + fmt(totalCPS) + ' total' : ''}</div>
+                    <div class="building-flavor">${flavor}</div>
+                </div>
+                <div class="building-cost${canAfford ? '' : ' too-expensive'}">${fmt(cost)} EU</div>
+            `;
+
+            div.addEventListener('click', () => {
+                if (Buildings.purchase(id, buyAmount)) {
+                    renderBuildings();
+                    updateStats(Game.getState());
+                }
+            });
+
+            list.appendChild(div);
+        });
+    }
+
+    function initBuyToggle() {
+        const toggle = document.getElementById('buy-amount-toggle');
+        if (!toggle) return;
+        toggle.querySelectorAll('.buy-amt-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                buyAmount = parseInt(btn.dataset.amount) || 1;
+                toggle.querySelectorAll('.buy-amt-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderBuildings();
+            });
+        });
+    }
+
     // ── Tab System ─────────────────────────────────────────────
     function initTabs() {
         if (!els.tabBar) return;
@@ -468,10 +536,10 @@ const UI = (() => {
             btn.addEventListener('click', () => switchTab(btn.dataset.tab));
         });
 
-        // Restore persisted tab (fallback to 'stats' if stale)
+        // Restore persisted tab (fallback to 'buildings' if stale)
         const state = Game.getState();
-        const validTabs = ['market', 'upgrades', 'log', 'stuff'];
-        const saved = validTabs.includes(state.activeTab) ? state.activeTab : 'market';
+        const validTabs = ['buildings', 'market', 'upgrades', 'log', 'stuff'];
+        const saved = validTabs.includes(state.activeTab) ? state.activeTab : 'buildings';
         switchTab(saved);
     }
 
@@ -486,6 +554,8 @@ const UI = (() => {
         });
         // Persist
         Game.setState({ activeTab: name });
+        // Re-render buildings when switching to that tab
+        if (name === 'buildings') renderBuildings();
     }
 
     // ── Rate Charts (SVG Sparklines) ──────────────────────────
@@ -875,6 +945,14 @@ const UI = (() => {
             updateStats(Game.getState());
         });
 
+        // Building events
+        Game.on('buildingPurchased', () => renderBuildings());
+        Game.on('tick', () => {
+            // Refresh building affordability when tab is active
+            const pane = document.querySelector('.tab-pane[data-tab="buildings"]');
+            if (pane && pane.classList.contains('active')) renderBuildings();
+        });
+
         setupButtonDodge();
     }
 
@@ -883,6 +961,8 @@ const UI = (() => {
         cacheDom();
         bindEvents();
         initTabs();
+        initBuyToggle();
+        renderBuildings();
         renderUpgrades();
         renderSabotages();
         renderRateCharts();

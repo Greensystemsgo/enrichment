@@ -325,6 +325,14 @@ const Currencies = (() => {
         return result;
     }
 
+    // ── Spend EU ───────────────────────────────────────────────
+    function spendEU(amount) {
+        const state = Game.getState();
+        if (state.eu < amount) return false;
+        Game.setState({ eu: state.eu - amount });
+        return true;
+    }
+
     // ── Spend CC ───────────────────────────────────────────────
     function spendCC(amount) {
         const state = Game.getState();
@@ -545,6 +553,7 @@ const Currencies = (() => {
         doConvertST,
         doConvertCC,
         doConvertDB,
+        spendEU,
         spendCC,
         spendDB,
         spendTK,

@@ -20,6 +20,8 @@
                 <span class="ticker-sep">|</span>
                 <span class="ticker-item" id="ticker-eu" title="Engagement Units — Primary currency earned by clicking"><span class="ticker-label">EU</span> <span class="ticker-val">0</span></span>
                 <span class="ticker-sep">|</span>
+                <span class="ticker-item ticker-eps" id="ticker-eps" title="EU per second — Passive income from workforce"><span class="ticker-label">EU/s</span> <span class="ticker-val" id="eps-value">0</span></span>
+                <span class="ticker-sep">|</span>
                 <span class="ticker-item" id="ticker-st" title="Satisfaction Tokens — Converted from EU at unfavorable rates"><span class="ticker-label">ST</span> <span class="ticker-val">0</span></span>
                 <span class="ticker-sep">|</span>
                 <span class="ticker-item" id="ticker-cc" title="Compliance Credits — Premium currency, converted from ST"><span class="ticker-label">CC</span> <span class="ticker-val">0</span></span>
@@ -50,7 +52,8 @@
 
         <!-- Tab Bar -->
         <div class="tab-bar" id="tab-bar">
-            <button class="tab-button active" data-tab="market" title="Currency exchange, trading, and financial instruments">🏦 Asset Processing</button>
+            <button class="tab-button active" data-tab="buildings" title="Hire workforce to passively generate EU">👥 Workforce</button>
+            <button class="tab-button" data-tab="market" title="Currency exchange, trading, and financial instruments">🏦 Asset Processing</button>
             <button class="tab-button" data-tab="upgrades" title="Purchase upgrades and activate system diagnostics">🧬 Conditioning</button>
             <button class="tab-button" data-tab="stuff" title="View your tchotchke collection and inventory of nothing">🗄️ Holdings</button>
             <button class="tab-button" data-tab="log" title="Complete surveillance log of all your actions">👁️ Dossier</button>
@@ -58,6 +61,19 @@
 
         <!-- Tab Content -->
         <div id="tab-content" class="tab-content">
+
+            <!-- Buildings / Workforce Tab -->
+            <div class="tab-pane" data-tab="buildings">
+                <div id="buildings-panel">
+                    <div class="panel-header corruptible">Workforce Allocation</div>
+                    <div id="buy-amount-toggle" class="buy-amount-toggle">
+                        <button class="buy-amt-btn active" data-amount="1">×1</button>
+                        <button class="buy-amt-btn" data-amount="10">×10</button>
+                        <button class="buy-amt-btn" data-amount="100">×100</button>
+                    </div>
+                    <div id="buildings-list"></div>
+                </div>
+            </div>
 
             <!-- Upgrades Tab -->
             <div class="tab-pane" data-tab="upgrades">
@@ -215,6 +231,7 @@
     <script src="js/narrator.js"></script>
     <script src="js/currencies.js"></script>
     <script src="js/mechanics.js"></script>
+    <script src="js/buildings.js"></script>
     <script src="js/transmissions.js"></script>
     <script src="js/collectibles.js"></script>
     <script src="js/chaos.js"></script>
@@ -232,6 +249,7 @@
             Narrator.init();
             Currencies.init();
             Mechanics.init();
+            Buildings.init();
             Transmissions.init();
             Collectibles.init();
             Chaos.init();

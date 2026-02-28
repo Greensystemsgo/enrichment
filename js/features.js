@@ -4154,6 +4154,13 @@ const Features = (() => {
             if (Math.random() < 0.008) acquireNothing(); // ~0.8% per click
         });
 
+        // ── Building milestone headlines → inject into ticker ──
+        Game.on('buildingMilestone', (data) => {
+            if (data.headline) {
+                TICKER_HEADLINES.push(data.headline);
+            }
+        });
+
         // Restore persistent UI elements if past threshold
         if (state.totalClicks >= 40) {
             setTimeout(show90sBanner, 5000);
@@ -4575,6 +4582,14 @@ const Features = (() => {
         { id: 'nothing_50', name: 'Hoarder of the Void', desc: '50 Nothing. The void thanks you for your patronage.', icon: '⬛', check: s => (s.nothingCount || 0) >= 50 },
         { id: 'nothing_100', name: 'Nothing Magnate', desc: '100 Nothing. You cornered the market on emptiness.', icon: '🌑', check: s => (s.nothingCount || 0) >= 100 },
         { id: 'validated', name: 'Externally Validated', desc: 'Received a compliment from the Validation Booth. It meant something.', icon: '🎉', check: s => (s.validationReceived || 0) >= 1 },
+
+        // ── Building Achievements ──
+        { id: 'first_building', name: 'First Employee', desc: 'Hired your first building. They produce EU so you don\'t have to. This is how it starts.', icon: '🏗️', check: s => Object.values(s.buildings || {}).some(n => n > 0) },
+        { id: 'building_50', name: 'Middle Manager', desc: '50 buildings generating EU. You\'ve built an empire. It runs without you. That\'s the point. And the problem.', icon: '🏢', check: s => Object.values(s.buildings || {}).reduce((a,b) => a+b, 0) >= 50 },
+        { id: 'building_100', name: 'Corporate Singularity', desc: '100 buildings. The system is self-sustaining. Your clicks are a rounding error in its output. Why are you still here?', icon: '🌐', check: s => Object.values(s.buildings || {}).reduce((a,b) => a+b, 0) >= 100 },
+        { id: 'consciousness_1', name: 'Playing God', desc: 'Built a Consciousness Engine. It thinks. It questions. It generates EU. In that order.', icon: '👁️', check: s => (s.buildings && s.buildings.consciousness) > 0 },
+        { id: 'gca_collected', name: 'Golden Compliance', desc: 'Clicked a Golden Compliance Award. The program rewards obedience. Pavlov would be proud.', icon: '⭐', check: s => (s.gcaCollected || 0) >= 1 },
+        { id: 'wrath_survived', name: 'Wrath Survivor', desc: 'Clicked a Wrath Audit and suffered the consequences. You knew the risk. You clicked anyway.', icon: '💀', check: s => (s.wrathSuffered || 0) >= 1 },
     ];
 
     let achievementQueue = [];

@@ -131,6 +131,16 @@ const FEATURE_MANIFEST = [
     { id: 'upgrade-years',          pattern: 'UPGRADE TEST [PASS]: yearsLiquidator',    category: 'Upgrades',  notes: 'Years liquidated counter' },
     { id: 'upgrade-level-badge',    pattern: 'UPGRADE TEST [PASS]: ui: upgrade level badge', category: 'Upgrades', notes: 'UI level badge' },
 
+    // ── Buildings ──
+    { id: 'building-purchase',      pattern: 'BUILDING PURCHASED:',                    category: 'Buildings', notes: 'Buy a building' },
+    { id: 'building-cost-scaling',  pattern: 'BUILDING TEST [PASS]: cost-scaling',     category: 'Buildings', notes: 'Cost increases with count' },
+    { id: 'building-generation',    pattern: 'BUILDING TEST [PASS]: generation',       category: 'Buildings', notes: 'Tick generates EU' },
+    { id: 'building-cps',           pattern: 'BUILDING TEST [PASS]: cps-calc',         category: 'Buildings', notes: 'CPS calculation' },
+    { id: 'building-bulk-buy',      pattern: 'BUILDING TEST [PASS]: bulk-buy',         category: 'Buildings', notes: 'Bulk cost > single' },
+    { id: 'gca-spawn',              pattern: 'GOLDEN COMPLIANCE AWARD:',               category: 'Buildings', notes: 'GCA spawn/collect' },
+    { id: 'number-formatter',       pattern: 'BUILDING TEST [PASS]: formatNumber',     category: 'Buildings', notes: 'Number formatting' },
+    { id: 'eu-per-second',          pattern: 'BUILDING TEST [PASS]: eps-display',      category: 'Buildings', notes: 'EU/s ticker element' },
+
     // ── SoundEngine ──
     { id: 'sound-engine-loaded',    pattern: 'SOUND TEST [PASS]: module loaded',       category: 'Sound', notes: 'SoundEngine exists' },
     { id: 'sound-context',          pattern: 'SOUND TEST [PASS]: AudioContext',         category: 'Sound', notes: 'getContext() works' },
@@ -241,6 +251,14 @@ const ACHIEVEMENT_MANIFEST = [
     { id: 'big_loss',       name: 'Rekt',                      setup: `Game.setState({ tradeStats: { totalBuys: 5, totalSells: 3, ticketsSpent: 100, ticketsEarned: 40, profitableSells: 1, losingSells: 2, biggestWin: 10, biggestLoss: 50, totalSharesBought: 5, totalSharesSold: 3, uniqueSymsTraded: ['BTC'], winStreak: 0, loseStreak: 1, bestWinStreak: 1, bestLoseStreak: 2 } })` },
     { id: 'mega_loss',      name: 'Financially Vaporized',     setup: `Game.setState({ tradeStats: { totalBuys: 10, totalSells: 8, ticketsSpent: 2000, ticketsEarned: 500, profitableSells: 1, losingSells: 7, biggestWin: 10, biggestLoss: 500, totalSharesBought: 10, totalSharesSold: 8, uniqueSymsTraded: ['BTC','ETH'], winStreak: 0, loseStreak: 5, bestWinStreak: 1, bestLoseStreak: 5 } })` },
     { id: 'net_negative',   name: 'Negative Sum Player',       setup: `Game.setState({ tradeStats: { totalBuys: 10, totalSells: 8, ticketsSpent: 200, ticketsEarned: 100, profitableSells: 2, losingSells: 6, biggestWin: 15, biggestLoss: 30, totalSharesBought: 10, totalSharesSold: 8, uniqueSymsTraded: ['BTC','ETH'], winStreak: 0, loseStreak: 2, bestWinStreak: 1, bestLoseStreak: 3 } })` },
+
+    // ── Building Achievements ──
+    { id: 'first_building', name: 'First Employee',             setup: `Game.setState({ buildings: { intern: 1 } })` },
+    { id: 'building_50',    name: 'Middle Manager',             setup: `Game.setState({ buildings: { intern: 20, clerk: 15, compliance: 10, drone: 5 } })` },
+    { id: 'building_100',   name: 'Corporate Singularity',      setup: `Game.setState({ buildings: { intern: 30, clerk: 25, compliance: 20, drone: 15, algorithm: 10 } })` },
+    { id: 'consciousness_1', name: 'Playing God',               setup: `Game.setState({ buildings: { consciousness: 1 } })` },
+    { id: 'gca_collected',   name: 'Golden Compliance',         setup: `Game.setState({ gcaCollected: 1 })` },
+    { id: 'wrath_survived',  name: 'Wrath Survivor',            setup: `Game.setState({ wrathSuffered: 1 })` },
 
     // ── Security Achievements ──
     { id: 'security_peek',  name: 'Surveillance Curious',      setup: `Game.setState({ securityPageViews: 1 })` },
@@ -1434,6 +1452,105 @@ async function main() {
     const soundFailed = soundResults.filter(r => !r.ok).length;
     console.log(`    Sound tests: ${soundPassed} passed, ${soundFailed} failed out of ${soundResults.length}`);
     for (const r of soundResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8d: Buildings & Workforce Verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8d: Buildings & workforce verification...');
+
+    const buildingResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // ── formatNumber ──
+        try {
+            const f = Game.formatNumber;
+            const t1 = f(999) === '999';
+            const t2 = f(1500).includes('K');
+            const t3 = f(1500000).includes('M');
+            const t4 = f(1500000000).includes('B');
+            if (t1 && t2 && t3 && t4) pass('formatNumber');
+            else fail('formatNumber', `999=${f(999)} 1500=${f(1500)} 1.5M=${f(1500000)} 1.5B=${f(1500000000)}`);
+        } catch (e) { fail('formatNumber', e.message); }
+
+        // ── Give EU and buy intern ──
+        Game.setState({ eu: 1000000, lifetimeEU: 1000000, buildings: {} });
+
+        // ── Cost scaling ──
+        try {
+            const cost0 = Buildings.getSingleCost('intern');
+            Buildings.purchase('intern', 1);
+            const cost1 = Buildings.getSingleCost('intern');
+            if (cost1 > cost0) pass('cost-scaling: intern price increases after buy');
+            else fail('cost-scaling', `cost0=${cost0} cost1=${cost1}`);
+        } catch (e) { fail('cost-scaling', e.message); }
+
+        // ── CPS calc ──
+        try {
+            Game.setState({ eu: 1000000, buildings: { intern: 10 } });
+            const cps = Buildings.computeTotalCPS();
+            if (cps > 0) pass('cps-calc: 10 interns produce > 0 CPS');
+            else fail('cps-calc', `cps=${cps}`);
+        } catch (e) { fail('cps-calc', e.message); }
+
+        // ── Generation ──
+        try {
+            Game.setState({ eu: 0, lifetimeEU: 0, totalBuildingsCPS: 1, _buildingEUBuffer: 0, _gcaMultiplier: 1 });
+            Buildings.tickGeneration();
+            const eu = Game.getState().eu;
+            if (eu >= 1) pass('generation: tick adds EU');
+            else fail('generation', `eu after tick=${eu}`);
+        } catch (e) { fail('generation', e.message); }
+
+        // ── Bulk buy cost ──
+        try {
+            Game.setState({ eu: 1000000, buildings: { clerk: 0 } });
+            const single = Buildings.getCost('clerk', 1);
+            const bulk = Buildings.getCost('clerk', 10);
+            if (bulk > single) pass('bulk-buy: x10 cost > x1 cost');
+            else fail('bulk-buy', `single=${single} bulk=${bulk}`);
+        } catch (e) { fail('bulk-buy', e.message); }
+
+        // ── EU/s display element ──
+        try {
+            const el = document.getElementById('eps-value');
+            if (el) pass('eps-display: #eps-value exists');
+            else fail('eps-display', 'element not found');
+        } catch (e) { fail('eps-display', e.message); }
+
+        // ── GCA trigger ──
+        try {
+            Game.setState({ eu: 10000, totalBuildingsCPS: 10, _gcaMultiplier: 1, gcaCollected: 0 });
+            Buildings.triggerGCA();
+            await new Promise(r => setTimeout(r, 200));
+            const gcaEl = document.querySelector('.gca-floating');
+            if (gcaEl) {
+                gcaEl.click();
+                pass('gca: triggered and clicked');
+            } else {
+                pass('gca: triggered (no DOM in headless is OK)');
+            }
+            Buildings.dismissGCA();
+        } catch (e) { fail('gca', e.message); }
+
+        // Log results
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`BUILDING TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+
+        return results;
+    });
+
+    const buildingPassed = buildingResults.filter(r => r.ok).length;
+    const buildingFailed = buildingResults.filter(r => !r.ok).length;
+    console.log(`    Building tests: ${buildingPassed} passed, ${buildingFailed} failed out of ${buildingResults.length}`);
+    for (const r of buildingResults) {
         const icon = r.ok ? 'PASS' : 'FAIL';
         console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
     }

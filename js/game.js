@@ -149,6 +149,18 @@ const Game = (() => {
             // User profile
             userProfile: null,
 
+            // Buildings (passive EU generation)
+            buildings: {},
+            totalBuildingsCPS: 0,
+            gcaCollected: 0,
+            wrathSuffered: 0,
+
+            // Transient building state (stripped on save via _ prefix)
+            _buildingEUBuffer: 0,
+            _gcaMultiplier: 1,
+            _gcaClickMultiplier: 1,
+            _gcaAuditHoliday: false,
+
             // Sound
             soundVolume: 0.5,
             soundMuted: false,
@@ -244,6 +256,16 @@ const Game = (() => {
         }
 
         let gross = Math.max(1, Math.round(base));
+
+        // GCA Click Surge multiplier (from Golden Compliance Awards)
+        if (state._gcaClickMultiplier > 1) {
+            gross = Math.floor(gross * state._gcaClickMultiplier);
+        }
+
+        // GCA Audit Holiday — skip taxes and escrow
+        if (state._gcaAuditHoliday) {
+            return { gross, net: gross, taxAmount: 0, escrowed: false, displayDelay: 0 };
+        }
 
         // Existential Tax: 10% of gross
         let taxAmount = 0;
@@ -472,6 +494,7 @@ const Game = (() => {
     // ── Game Tick ──────────────────────────────────────────────
     function tick() {
         updateInvestmentScore();
+        if (typeof Buildings !== 'undefined') Buildings.tickGeneration();
         emit('tick', {
             totalClicks: state.totalClicks,
             eu: state.eu,
@@ -509,6 +532,28 @@ const Game = (() => {
         });
     }
 
+    // ── Number Formatting ────────────────────────────────────
+    // 999 → "999", 1500 → "1.5K", 2300000 → "2.3M", etc.
+    function formatNumber(n) {
+        if (n === undefined || n === null || isNaN(n)) return '0';
+        if (n < 0) return '-' + formatNumber(-n);
+        if (n < 1000) return Math.floor(n).toString();
+        const tiers = [
+            { threshold: 1e15, suffix: 'Q' },
+            { threshold: 1e12, suffix: 'T' },
+            { threshold: 1e9,  suffix: 'B' },
+            { threshold: 1e6,  suffix: 'M' },
+            { threshold: 1e3,  suffix: 'K' },
+        ];
+        for (const tier of tiers) {
+            if (n >= tier.threshold) {
+                const val = n / tier.threshold;
+                return (val >= 100 ? Math.floor(val) : val.toFixed(1).replace(/\.0$/, '')) + tier.suffix;
+            }
+        }
+        return Math.floor(n).toString();
+    }
+
     // ── Public API ─────────────────────────────────────────────
     return {
         on,
@@ -526,5 +571,6 @@ const Game = (() => {
         setupBeforeUnload,
         setupVisibilityChange,
         defaultState,
+        formatNumber,
     };
 })();
