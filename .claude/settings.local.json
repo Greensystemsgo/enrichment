@@ -93,7 +93,9 @@
       "WebFetch(domain:www.youtube.com)",
       "WebFetch(domain:www.wikidata.org)",
       "WebFetch(domain:en.wikipedia.org)",
-      "mcp__gemini__gemini-brainstorm"
+      "mcp__gemini__gemini-brainstorm",
+      "Bash(sed:*)",
+      "mcp__qwen__chat-with-qwen-2_5-72b"
     ]
   },
   "enabledMcpjsonServers": [

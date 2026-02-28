@@ -6167,3 +6167,49 @@ body.crown-seizure {
     color: var(--text-muted);
     margin-top: 4px;
 }
+
+/* ── Hidden Nuclear Delete ── */
+.real-delete-hint {
+    display: block;
+    font-size: 6px;
+    opacity: 0.15;
+    cursor: default;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    transition: opacity 0.3s;
+    user-select: none;
+}
+.real-delete-hint:hover {
+    opacity: 0.3;
+}
+
+/* ── Dropdown Section Labels ───────────────────────────────── */
+.dropdown-section-label {
+    font-size: 8px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    padding: 8px 14px 2px;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ── FAQ Section Labels ────────────────────────────────────── */
+.faq-section-label {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent-gold);
+    padding: 12px 0 6px;
+    margin-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.faq-section-label:first-child {
+    border-top: none;
+    margin-top: 0;
+}

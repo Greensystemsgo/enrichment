@@ -1985,25 +1985,47 @@ const Features = (() => {
     function generateLeaderboardSnapshot() {
         const timeSeed = Math.floor(Date.now() / 60000);
         return LEADERBOARD_POOL.map((p, i) => {
-            // Net worth in billions → clicks: multiply by 100M with jitter
+            // Net worth in billions → EU: multiply by 100M * 0.42 with jitter
             const jitter = ((p.name.length * 31 + timeSeed * 7) % 20 - 10) / 100; // ±10%
-            const clicks = Math.floor(p.netWorth * 100_000_000 * (1 + jitter));
-            const eu = Math.floor(clicks * 0.42);
-            return { ...p, clicks, eu, rank: i + 1 };
+            const eu = Math.floor(p.netWorth * 100_000_000 * 0.42 * (1 + jitter));
+            return { ...p, eu, rank: i + 1 };
         });
+    }
+
+    function getPlayerTitle(lifetimeEU) {
+        if (lifetimeEU >= 10_000_000_000) return 'Wealth Singularity';
+        if (lifetimeEU >= 1_000_000_000) return 'Board-Certified Clicker';
+        if (lifetimeEU >= 100_000_000) return 'Corporate Entity';
+        if (lifetimeEU >= 10_000_000) return 'Senior Vice Participant';
+        if (lifetimeEU >= 1_000_000) return 'Middle Management';
+        if (lifetimeEU >= 100_000) return 'Compliance Drone';
+        if (lifetimeEU >= 10_000) return 'Junior Enrichment Officer';
+        return 'Aspiring Participant';
     }
 
     function getPlayerLeaderboardPosition() {
         const state = Game.getState();
-        // Players ahead: big number that slowly shrinks with clicks
-        const base = 847_293 + Math.floor(Math.random() * 50_000);
-        const reduction = Math.floor(state.totalClicks * 0.3);
-        const aheadOfYou = Math.max(42, base - reduction);
-        // Players below: small number, grows slightly with clicks
-        const below = Math.max(3, Math.floor(7 + state.totalClicks * 0.004 + Math.random() * 5));
-        const playerRank = 8 + aheadOfYou + 1; // after top 8 + gap
+        const lifetimeEU = state.lifetimeEU || 0;
+        const snapshot = generateLeaderboardSnapshot();
+        const topBillionaireEU = snapshot[0].eu;
+
+        // Count how many billionaires the player has passed
+        const billionairesPassed = snapshot.filter(p => lifetimeEU > p.eu).length;
+
+        // Fabricated players ahead shrinks as you approach the top
+        const baseAhead = 847_293;
+        const aheadOfYou = topBillionaireEU > 0
+            ? Math.max(0, Math.floor(baseAhead * (1 - lifetimeEU / topBillionaireEU)))
+            : baseAhead;
+
+        // Players below: grows with your progress
+        const below = Math.max(3, Math.floor(7 + lifetimeEU * 0.00001 + Math.random() * 5));
+
+        // Rank: 8 - billionaires passed + ahead gap + 1
+        const playerRank = (8 - billionairesPassed) + aheadOfYou + 1;
         const totalPlayers = playerRank + below;
-        return { playerRank, aheadOfYou, below, totalPlayers };
+
+        return { playerRank, aheadOfYou, below, totalPlayers, billionairesPassed };
     }
 
     function showLeaderboard() {
@@ -2011,28 +2033,35 @@ const Features = (() => {
         if (existing) existing.remove();
 
         const state = Game.getState();
-        const { playerRank, aheadOfYou, below, totalPlayers } = getPlayerLeaderboardPosition();
+        const lifetimeEU = state.lifetimeEU || 0;
+        const { playerRank, aheadOfYou, below, totalPlayers, billionairesPassed } = getPlayerLeaderboardPosition();
         const profile = state.userProfile || {};
         const playerName = profile.username || 'Subject_Anonymous';
         const playerAvatar = profile.avatar || '🥚';
+        const playerTitle = getPlayerTitle(lifetimeEU);
+        const cps = (typeof Buildings !== 'undefined') ? Buildings.getTotalCPS() : 0;
+        const buildingCount = state.buildings ? Object.values(state.buildings).reduce((a, b) => a + b, 0) : 0;
 
         const snapshot = generateLeaderboardSnapshot();
 
-        // Top 8 rows
-        const topRows = snapshot.map(p => `
-                <div class="lb-row lb-rank-${p.rank}">
-                    <div class="lb-rank">#${p.rank}</div>
+        // Top 8 rows — dim billionaires the player has passed
+        const topRows = snapshot.map(p => {
+            const passed = lifetimeEU > p.eu;
+            const dimStyle = passed ? ' style="opacity:0.4;"' : '';
+            return `
+                <div class="lb-row lb-rank-${p.rank}"${dimStyle}>
+                    <div class="lb-rank">#${p.rank}${passed ? ' ✗' : ''}</div>
                     <div class="lb-avatar">${p.avatar}</div>
                     <div class="lb-info">
                         <div class="lb-name">${p.name}${p.verified ? ' <span class="lb-verified">✓</span>' : ''}</div>
                         <div class="lb-title">${p.title}</div>
                     </div>
                     <div class="lb-stats">
-                        <div class="lb-clicks">${p.clicks.toLocaleString()} clicks</div>
                         <div class="lb-eu">${p.eu.toLocaleString()} EU</div>
                     </div>
                 </div>
-            `).join('');
+            `;
+        }).join('');
 
         const modal = document.createElement('div');
         modal.className = 'feature-modal';
@@ -2047,6 +2076,7 @@ const Features = (() => {
                     ${topRows}
                 </div>
 
+                ${aheadOfYou > 0 ? `
                 <div class="lb-row lb-gap-row">
                     <div class="lb-rank">···</div>
                     <div class="lb-avatar">👥</div>
@@ -2055,20 +2085,20 @@ const Features = (() => {
                         <div class="lb-title">Standing between you and greatness</div>
                     </div>
                     <div class="lb-stats">
-                        <div class="lb-clicks" style="color:var(--text-muted);">rank #9 – #${(8 + aheadOfYou).toLocaleString()}</div>
+                        <div class="lb-eu" style="color:var(--text-muted);">rank #${(9 - billionairesPassed)} – #${((8 - billionairesPassed) + aheadOfYou).toLocaleString()}</div>
                     </div>
-                </div>
+                </div>` : ''}
 
                 <div class="lb-row lb-you">
                     <div class="lb-rank">#${playerRank.toLocaleString()}</div>
                     <div class="lb-avatar">${playerAvatar}</div>
                     <div class="lb-info">
                         <div class="lb-name">${playerName} <span class="lb-you-tag">YOU</span></div>
-                        <div class="lb-title">Aspiring Participant</div>
+                        <div class="lb-title">${playerTitle}</div>
                     </div>
                     <div class="lb-stats">
-                        <div class="lb-clicks">${state.totalClicks.toLocaleString()} clicks</div>
-                        <div class="lb-eu">${(state.eu || 0).toLocaleString()} EU</div>
+                        <div class="lb-eu">${lifetimeEU.toLocaleString()} EU</div>
+                        <div class="lb-clicks">${cps.toFixed(1)} EU/s · ${buildingCount} buildings</div>
                     </div>
                 </div>
 
@@ -2080,14 +2110,14 @@ const Features = (() => {
                         <div class="lb-title">Somehow worse than you</div>
                     </div>
                     <div class="lb-stats">
-                        <div class="lb-clicks" style="color:var(--text-muted);">rank #${(playerRank + 1).toLocaleString()}+</div>
+                        <div class="lb-eu" style="color:var(--text-muted);">rank #${(playerRank + 1).toLocaleString()}+</div>
                     </div>
                 </div>
 
                 <div class="lb-bottom-text">
-                    Net worth converted to clicks at a rate of $1B = 100M clicks.<br>
-                    Top 8 positions reserved for individuals who click with capital, not fingers.<br>
-                    Your position is not final. It could get worse.
+                    Net worth converted to EU at a rate of $1B ≈ 42M EU.<br>
+                    ${billionairesPassed > 0 ? `You have surpassed ${billionairesPassed} billionaire${billionairesPassed !== 1 ? 's' : ''}. They didn't see you coming.<br>` : ''}
+                    Your position is not final. It could get ${billionairesPassed > 4 ? 'better' : 'worse'}.
                 </div>
 
                 <div class="lb-fun-facts">
@@ -2107,15 +2137,22 @@ const Features = (() => {
         });
 
         UI.logAction(`LEADERBOARD: Subject viewed ranking (#${playerRank.toLocaleString()} of ${totalPlayers.toLocaleString()})`);
-        Narrator.queueMessage([
-            `You're ranked #${playerRank.toLocaleString()}. Elon has ${(snapshot[0].clicks / 1_000_000).toFixed(0)} million clicks. You have ${state.totalClicks}. The gap is... educational.`,
+
+        const narratorLines = billionairesPassed === 0 ? [
+            `You're ranked #${playerRank.toLocaleString()}. Elon has ${(snapshot[0].eu / 1_000_000).toFixed(0)} million EU. You have ${lifetimeEU.toLocaleString()}. The gap is... educational.`,
             `The top 8 didn't click their way there. They had other people click for them. That's what wealth IS.`,
             `Jensen Huang doesn't click himself. He sells the chips that power the clicking. The real enrichment is infrastructure.`,
-            `Bernard Arnault's clicks are each worth $4,000. Yours are worth 1 EU. Both are ultimately meaningless.`,
-            `You have ${below} participant${below !== 1 ? 's' : ''} below you. Guard that position. It's all you have.`,
-            `The leaderboard is a mirror. It shows you exactly where you stand. And where you stand is... there.`,
             `Bill Gates could buy this entire game, shut it down, and not notice the expense. He won't. But he could.`,
-        ][Math.floor(Math.random() * 7)]);
+        ] : billionairesPassed < 4 ? [
+            `You've passed ${billionairesPassed} billionaire${billionairesPassed > 1 ? 's' : ''}. They're looking up at you now. How does it feel? (Rhetorical. We already know.)`,
+            `Your title: "${playerTitle}." You earned it. Or at least, you clicked for it. Same thing in this economy.`,
+            `${snapshot[billionairesPassed - 1].name} just noticed you overtook them. They don't care. Their wealth is real.`,
+        ] : [
+            `${billionairesPassed} billionaires beneath you. You're reaching heights that make the algorithm nervous.`,
+            `"${playerTitle}." The title suits you. The leaderboard is starting to look like YOUR leaderboard.`,
+            `At this rate, the only thing between you and #1 is... clicking. Just more clicking. Forever.`,
+        ];
+        Narrator.queueMessage(narratorLines[Math.floor(Math.random() * narratorLines.length)]);
     }
 
 
@@ -3485,7 +3522,7 @@ const Features = (() => {
         // Target zone shrinks with phase: 20% at phase 3, down to 8% at phase 6
         const zoneWidth = Math.max(8, 24 - phase * 3);
         const zoneStart = 10 + Math.floor(Math.random() * (80 - zoneWidth));
-        const timeLimit = 4;
+        const timeLimit = 6;
 
         modal = document.createElement('div');
         modal.id = 'slider-challenge-modal';
@@ -3497,13 +3534,13 @@ const Features = (() => {
                 <p style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">
                     Position the indicator within the green zone. You have ${timeLimit} seconds.
                 </p>
-                <div class="slider-timer" id="slider-timer">${timeLimit.toFixed(1)}</div>
+                <div class="slider-timer" id="slider-timer">READY</div>
                 <div class="slider-track">
                     <div class="slider-target-zone" style="left:${zoneStart}%;width:${zoneWidth}%;"></div>
                     <div class="slider-indicator" id="slider-indicator" style="left:0%;"></div>
                 </div>
-                <input type="range" class="slider-range-input" id="slider-range" min="0" max="100" value="0">
-                <button class="btn-topup" id="slider-lock" style="width:100%;">LOCK IN</button>
+                <input type="range" class="slider-range-input" id="slider-range" min="0" max="100" value="0" disabled>
+                <button class="btn-topup" id="slider-lock" style="width:100%;" disabled>LOCK IN</button>
                 <div id="slider-result-area"></div>
             </div>
         `;
@@ -3522,18 +3559,26 @@ const Features = (() => {
             indicator.style.left = rangeInput.value + '%';
         });
 
-        // Countdown timer
-        const timerInterval = setInterval(() => {
-            remaining -= 0.1;
-            if (remaining <= 0) remaining = 0;
-            timerEl.textContent = remaining.toFixed(1);
-            if (remaining <= 1) timerEl.style.color = '#ff3333';
-            if (remaining <= 0 && !resolved) {
-                resolved = true;
-                clearInterval(timerInterval);
-                resolveChallenge(false, 'TIMEOUT');
-            }
-        }, 100);
+        // 1-second preview phase, then enable and start countdown
+        function startCountdown() {
+            rangeInput.disabled = false;
+            lockBtn.disabled = false;
+            timerEl.textContent = timeLimit.toFixed(1);
+            const timerInterval = setInterval(() => {
+                remaining -= 0.1;
+                if (remaining <= 0) remaining = 0;
+                timerEl.textContent = remaining.toFixed(1);
+                if (remaining <= 1) timerEl.style.color = '#ff3333';
+                if (remaining <= 0 && !resolved) {
+                    resolved = true;
+                    clearInterval(timerInterval);
+                    resolveChallenge(false, 'TIMEOUT');
+                }
+            }, 100);
+            // Store interval for lock-in cleanup
+            modal._timerInterval = timerInterval;
+        }
+        setTimeout(startCountdown, 1000);
 
         function resolveChallenge(manual, reason) {
             const pos = parseInt(rangeInput.value);
@@ -3574,7 +3619,7 @@ const Features = (() => {
         lockBtn.addEventListener('click', () => {
             if (resolved) return;
             resolved = true;
-            clearInterval(timerInterval);
+            if (modal._timerInterval) clearInterval(modal._timerInterval);
             resolveChallenge(true, 'LOCKED');
         });
 
@@ -4793,6 +4838,9 @@ const Features = (() => {
         { id: 'ascension_5', name: 'Serial Ascender', desc: 'Ascended 5 times. Build, destroy, build again. You\'ve made an art form of impermanence.', icon: '🔄', check: s => (s.ascensionCount || 0) >= 5 },
         { id: 'ascension_10', name: 'Eternal Return', desc: 'Ascended 10 times. At this point the cycle IS the game. Nietzsche would be proud. Or horrified.', icon: '♾️', check: s => (s.ascensionCount || 0) >= 10 },
         { id: 'pp_100', name: 'Protocol Maximalist', desc: 'Accumulated 100 Protocol Points. Your permanent bonus is so large that clicking is almost optional. Almost.', icon: '👑', check: s => (s.lifetimeProtocolPoints || 0) >= 100 },
+
+        // ── Nuclear Option ──
+        { id: 'scorched_earth', name: 'Scorched Earth', desc: 'Found the real delete button. Used it. Everything is gone. This achievement is all that remains.', icon: '☢️', check: s => s._scorchedEarth === true },
     ];
 
     let achievementQueue = [];
@@ -4909,5 +4957,6 @@ const Features = (() => {
         showForcedBreak,
         showPeerComparison,
         showSliderChallenge,
+        getPlayerLeaderboardPosition,
     };
 })();

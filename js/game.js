@@ -269,6 +269,11 @@ const Game = (() => {
             base *= penalty;
         }
 
+        // Cookie Clicker rule: +1% of total CPS per click
+        if (typeof Buildings !== 'undefined') {
+            base += Buildings.getTotalCPS() * 0.01;
+        }
+
         // Click Depreciation: 0.99^N within a 100-click window, resets every 100
         let depreciationN = 0;
         if (state.clickDepreciation) {
@@ -483,6 +488,12 @@ const Game = (() => {
         sessionStartTime = Date.now();
         state.sessionClicks = 0;
         state.sessionCount++;
+
+        // Scorched Earth: player used the real delete button last session
+        if (localStorage.getItem('enrichment_scorched')) {
+            localStorage.removeItem('enrichment_scorched');
+            state._scorchedEarth = true;
+        }
 
         if (!state.firstSessionTime) {
             state.firstSessionTime = new Date().toISOString();
