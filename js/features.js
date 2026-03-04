@@ -213,6 +213,236 @@ const Features = (() => {
     // EVIL SECOND BUTTON — Subtracts currency
     // ═══════════════════════════════════════════════════════════
 
+    // ── Notification Red Dots — permanently unclearable ──────
+    function spawnNotificationDots() {
+        if (document.querySelector('.notif-dot-permanent')) return;
+
+        const targets = [
+            { sel: '#menu-button', label: '3' },
+            { sel: '.tab-button[data-tab="upgrades"]', label: '!' },
+            { sel: '.tab-button[data-tab="market"]', label: '1' },
+            { sel: '.tab-button[data-tab="stuff"]', label: '2' },
+            { sel: '.tab-button[data-tab="prestige"]', label: 'NEW' },
+        ];
+
+        let dotsAdded = 0;
+        for (const t of targets) {
+            const el = document.querySelector(t.sel);
+            if (!el || el.querySelector('.notif-dot-permanent')) continue;
+            el.style.position = 'relative';
+            const dot = document.createElement('span');
+            dot.className = 'notif-dot-permanent';
+            dot.textContent = t.label;
+            el.appendChild(dot);
+
+            // Clicking the dot does nothing
+            dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Fake "clearing" animation that doesn't clear
+                dot.style.transform = 'scale(0.8)';
+                setTimeout(() => { dot.style.transform = 'scale(1)'; }, 150);
+            });
+            dotsAdded++;
+        }
+
+        if (dotsAdded > 0) {
+            UI.logAction('NOTIFICATION DOTS: Permanent badges deployed — cannot be cleared');
+            if (typeof Narrator !== 'undefined') {
+                Narrator.queueMessage("You have notifications. You will always have notifications. The red dots are permanent. Like regret.");
+            }
+            Game.getState().notificationDotsActive = true;
+        }
+    }
+
+    // ── Subscription Economy (The Roach Motel) ──────────────
+    function showSubscription() {
+        const existing = document.getElementById('subscription-modal');
+        if (existing) existing.remove();
+
+        const state = Game.getState();
+        const modal = document.createElement('div');
+        modal.className = 'feature-modal';
+        modal.id = 'subscription-modal';
+
+        const perks = [
+            '10x EU per click', 'Ad-free experience', 'Priority queue access',
+            'Custom narrator voice', 'Unlimited rerolls', 'VIP badge',
+        ];
+
+        modal.innerHTML = `
+            <div class="feature-overlay"></div>
+            <div class="feature-content" style="max-width:400px;">
+                <div class="feature-header" style="color:var(--accent-gold)">🌟 PROTOCOL PLUS 🌟</div>
+                <div class="feature-subtitle">You've been auto-enrolled in a FREE TRIAL!</div>
+                <div style="background:rgba(196,160,53,0.1);border:1px solid var(--accent-gold);padding:10px;margin:10px 0;font-size:10px;font-family:var(--font-mono);">
+                    <div style="font-weight:bold;color:var(--accent-gold-bright);margin-bottom:6px;">PREMIUM PERKS (active for 60 seconds):</div>
+                    ${perks.map(p => `<div style="color:var(--text-secondary);">✓ ${p}</div>`).join('')}
+                </div>
+                <div style="font-size:9px;color:var(--text-muted);margin:8px 0;">
+                    After trial ends, Protocol Plus charges <span style="color:var(--accent-red)">50 EU/minute</span> automatically.
+                    <br>Cancel anytime.* <span style="font-size:7px;">(*Cancellation requires completing a 47-step verification process.)</span>
+                </div>
+                <div id="sub-trial-timer" style="font-size:12px;font-family:var(--font-mono);color:var(--accent-gold-bright);text-align:center;margin:8px 0;">Trial: 60s remaining</div>
+                <div style="display:flex;gap:8px;flex-direction:column;margin-top:10px;">
+                    <button class="btn-feature" id="sub-accept" style="background:var(--accent-gold) !important;color:#000 !important;">ENJOY PREMIUM</button>
+                    <button class="btn-feature" id="sub-cancel" style="font-size:9px;">cancel (are you sure? really? think about what you're giving up)</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => modal.classList.add('active'));
+
+        let trialSecs = 60;
+        const timerEl = modal.querySelector('#sub-trial-timer');
+        const trialInterval = setInterval(() => {
+            if (!document.getElementById('subscription-modal')) { clearInterval(trialInterval); return; }
+            trialSecs--;
+            timerEl.textContent = trialSecs > 0 ? `Trial: ${trialSecs}s remaining` : 'TRIAL EXPIRED — Charging 50 EU/min';
+            if (trialSecs <= 0) {
+                timerEl.style.color = 'var(--accent-red)';
+                // Start charging
+                if (trialSecs % 6 === 0) { // every ~6 seconds = 10x speed for demo
+                    state.eu = Math.max(0, state.eu - 50);
+                    Game.emit('stateChange', state);
+                }
+            }
+        }, 1000);
+
+        // Accept — does nothing extra, just closes
+        modal.querySelector('#sub-accept').addEventListener('click', () => {
+            clearInterval(trialInterval);
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+            Narrator.queueMessage("Welcome to Protocol Plus. The perks are... already active. You just can't tell because nothing actually changed. Perception is reality.");
+        });
+
+        // Cancel — confirm-shaming gauntlet
+        const cancelBtn = modal.querySelector('#sub-cancel');
+        let cancelAttempts = 0;
+        const shameMessages = [
+            "Are you sure? Premium users earn 10x more.",
+            "Really? You'd give up VIP status for... nothing?",
+            "Last chance. Free users are 73% sadder (source: us).",
+            "Fine. Your loss. Literally.",
+        ];
+        cancelBtn.addEventListener('click', () => {
+            cancelAttempts++;
+            if (cancelAttempts < shameMessages.length) {
+                cancelBtn.textContent = shameMessages[cancelAttempts];
+                cancelBtn.style.fontSize = `${9 - cancelAttempts}px`;
+            } else {
+                clearInterval(trialInterval);
+                modal.classList.remove('active');
+                setTimeout(() => modal.remove(), 300);
+                Narrator.queueMessage("Subscription cancelled. But the auto-renewal has already been scheduled. See you next month.");
+            }
+        });
+
+        UI.logAction('SUBSCRIPTION: Protocol Plus free trial auto-enrolled');
+        Narrator.queueMessage("Good news! You've been auto-enrolled in Protocol Plus. Free for 60 seconds, then it starts charging. The cancel button works. Eventually.");
+    }
+
+    // ── CAPTCHA Labor Mines (RLHF Mode) ──────────────────────
+    function showCaptchaLabor() {
+        const existing = document.getElementById('captcha-labor-modal');
+        if (existing) existing.remove();
+
+        const ABSTRACT_ART = [
+            { emoji: '🔵', labels: ['a bicycle', 'a traffic light', 'a crosswalk', 'modern art'] },
+            { emoji: '🟡', labels: ['a fire hydrant', 'a school bus', 'the sun', 'a warning'] },
+            { emoji: '🔴', labels: ['a stop sign', 'anger', 'a tomato', 'the void staring back'] },
+            { emoji: '⬛', labels: ['a car', 'darkness', 'your future', 'a missing texture'] },
+            { emoji: '🟢', labels: ['a tree', 'envy', 'a go signal', 'mold'] },
+            { emoji: '🟣', labels: ['a boat', 'royalty', 'bruise', 'the concept of Tuesday'] },
+        ];
+
+        const selected = ABSTRACT_ART[Math.floor(Math.random() * ABSTRACT_ART.length)];
+
+        const modal = document.createElement('div');
+        modal.className = 'feature-modal';
+        modal.id = 'captcha-labor-modal';
+
+        modal.innerHTML = `
+            <div class="feature-overlay"></div>
+            <div class="feature-content" style="max-width:380px;">
+                <div class="feature-header" style="color:var(--accent-red);">HUMAN VERIFICATION REQUIRED</div>
+                <div class="feature-subtitle">Select all squares containing: <strong>${selected.labels[0]}</strong></div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:12px 0;">
+                    ${Array.from({length: 9}, (_, i) => {
+                        const art = ABSTRACT_ART[Math.floor(Math.random() * ABSTRACT_ART.length)];
+                        return `<div class="captcha-tile" data-idx="${i}" style="aspect-ratio:1;background:var(--bg-secondary);border:2px solid var(--border-color);display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;transition:border-color 0.2s;">${art.emoji}</div>`;
+                    }).join('')}
+                </div>
+                <div id="captcha-result" style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);text-align:center;min-height:20px;"></div>
+                <div style="font-size:8px;color:var(--text-muted);text-align:center;margin:4px 0;">Your responses improve our targeting algorithm. Thank you for your free labor.</div>
+                <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+                    <button class="btn-feature" id="captcha-verify">VERIFY</button>
+                    <button class="btn-feature btn-close-feature" id="captcha-skip">SKIP (flagged as bot)</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => modal.classList.add('active'));
+
+        // Tile selection
+        const tiles = modal.querySelectorAll('.captcha-tile');
+        const selectedTiles = new Set();
+        tiles.forEach(tile => {
+            tile.addEventListener('click', () => {
+                const idx = tile.dataset.idx;
+                if (selectedTiles.has(idx)) {
+                    selectedTiles.delete(idx);
+                    tile.style.borderColor = 'var(--border-color)';
+                } else {
+                    selectedTiles.add(idx);
+                    tile.style.borderColor = 'var(--accent-blue)';
+                }
+            });
+        });
+
+        // Verify — always wrong
+        const resultDiv = modal.querySelector('#captcha-result');
+        let verifyAttempts = 0;
+        const verifyResponses = [
+            "Incorrect. Please try again. The algorithm needs more data.",
+            "Wrong. Are you sure you're human? Our confidence is dropping.",
+            "Failed again. A bot would have gotten this right by now.",
+            "Verification complete. Thank you for training our targeting model.",
+        ];
+
+        modal.querySelector('#captcha-verify').addEventListener('click', () => {
+            verifyAttempts++;
+            if (verifyAttempts < verifyResponses.length) {
+                resultDiv.textContent = verifyResponses[verifyAttempts - 1];
+                resultDiv.style.color = 'var(--accent-red)';
+                // Clear selections
+                selectedTiles.clear();
+                tiles.forEach(t => { t.style.borderColor = 'var(--border-color)'; });
+            } else {
+                resultDiv.textContent = verifyResponses[verifyResponses.length - 1];
+                resultDiv.style.color = 'var(--accent-green)';
+                setTimeout(() => {
+                    modal.classList.remove('active');
+                    setTimeout(() => modal.remove(), 300);
+                }, 2000);
+                UI.logAction('CAPTCHA LABOR: Verification complete — data harvested');
+            }
+        });
+
+        // Skip — labeled as bot
+        modal.querySelector('#captcha-skip').addEventListener('click', () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+            Narrator.queueMessage("Verification skipped. You've been flagged as 'suspicious bot behavior.' This will appear on your permanent record.");
+            UI.logAction('CAPTCHA LABOR: Skipped — flagged as bot');
+        });
+
+        UI.logAction('CAPTCHA LABOR: RLHF verification initiated');
+        Narrator.queueMessage("Verify you're human by labeling abstract art as bicycles. Your responses improve the targeting algorithm. Thank you for your unpaid labor.");
+    }
+
     let evilButtonActive = false;
     let evilButtonEl = null;
 
@@ -4206,6 +4436,65 @@ const Features = (() => {
             weight: 0.6,
             cooldown: 120000,
         },
+        {
+            id: 'dead-internet-chat',
+            name: 'Community Feed',
+            fn: () => DeadInternetChat.show(),
+            minClicks: 100,
+            weight: 0.9,
+            cooldown: 300000,
+            maxShows: 1,
+        },
+        {
+            id: 'gacha',
+            name: 'Loot Acquisition Terminal',
+            fn: () => Gacha.show(),
+            minClicks: 150,
+            weight: 0.8,
+            cooldown: 120000,
+        },
+        {
+            id: 'battle-pass',
+            name: 'Eternal Season Pass',
+            fn: () => BattlePass.show(),
+            minClicks: 200,
+            weight: 0.7,
+            cooldown: 180000,
+        },
+        {
+            id: 'notification-dots',
+            name: 'Notification Sync',
+            fn: () => spawnNotificationDots(),
+            minClicks: 120,
+            weight: 0.8,
+            cooldown: 999999,
+            maxShows: 1,
+        },
+        {
+            id: 'subscription',
+            name: 'Protocol Plus Free Trial',
+            fn: () => showSubscription(),
+            minClicks: 300,
+            weight: 0.5,
+            cooldown: 300000,
+            maxShows: 2,
+        },
+        {
+            id: 'captcha-labor',
+            name: 'RLHF Verification',
+            fn: () => showCaptchaLabor(),
+            minClicks: 250,
+            weight: 0.6,
+            cooldown: 180000,
+        },
+        {
+            id: 'cyoa',
+            name: 'Historical Archive',
+            fn: () => { if (typeof MiniGames !== 'undefined') MiniGames.launchCYOA(); },
+            minClicks: 300,
+            weight: 0.7,
+            cooldown: 600000,
+        },
     ];
 
     // Pool state — tracks what's been shown
@@ -4347,6 +4636,10 @@ const Features = (() => {
         // Restore Nothing display if they have any
         if (state.nothingCount > 0) {
             setTimeout(() => updateNothingDisplay(state.nothingCount), 500);
+        }
+        // Restore notification dots
+        if (state.notificationDotsActive) {
+            setTimeout(() => spawnNotificationDots(), 3000);
         }
 
         // Footer links (leaderboard + security)
@@ -4838,6 +5131,9 @@ const Features = (() => {
         { id: 'ascension_5', name: 'Serial Ascender', desc: 'Ascended 5 times. Build, destroy, build again. You\'ve made an art form of impermanence.', icon: '🔄', check: s => (s.ascensionCount || 0) >= 5 },
         { id: 'ascension_10', name: 'Eternal Return', desc: 'Ascended 10 times. At this point the cycle IS the game. Nietzsche would be proud. Or horrified.', icon: '♾️', check: s => (s.ascensionCount || 0) >= 10 },
         { id: 'pp_100', name: 'Protocol Maximalist', desc: 'Accumulated 100 Protocol Points. Your permanent bonus is so large that clicking is almost optional. Almost.', icon: '👑', check: s => (s.lifetimeProtocolPoints || 0) >= 100 },
+
+        // ── CYOA ──
+        { id: 'cyoa_complete', name: 'Predetermined', desc: 'Completed the CYOA. All paths led to the same place. Every choice was designed. You chose freely. We chose first.', icon: '🗺️', check: s => s.cyoaCompleted === true },
 
         // ── Nuclear Option ──
         { id: 'scorched_earth', name: 'Scorched Earth', desc: 'Found the real delete button. Used it. Everything is gone. This achievement is all that remains.', icon: '☢️', check: s => s._scorchedEarth === true },

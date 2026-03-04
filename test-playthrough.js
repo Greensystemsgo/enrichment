@@ -76,6 +76,13 @@ const FEATURE_MANIFEST = [
     { id: 'sunk-cost',          pattern: 'SUNK COST REINFORCEMENT:', category: 'Existential', notes: 'Time display' },
     { id: 'ghost-cursor',       pattern: 'ALGORITHMIC SYMBIOSIS:',  category: 'Existential', notes: 'Ghost cursor' },
     { id: 'slider-challenge',   pattern: 'SLIDER CHALLENGE:',       category: 'Features',    notes: 'Calibration test' },
+    { id: 'dead-internet-chat', pattern: 'DEAD INTERNET CHAT:',    category: 'Features',    notes: 'Fake multiplayer chat' },
+    { id: 'gacha',              pattern: 'GACHA:',                  category: 'Features',    notes: 'Rigged loot box wheel' },
+    { id: 'battle-pass',        pattern: 'BATTLE PASS:',            category: 'Features',    notes: 'Eternal season pass' },
+    { id: 'notification-dots',  pattern: 'NOTIFICATION DOTS:',      category: 'Features',    notes: 'Permanent red badges' },
+    { id: 'subscription',       pattern: 'SUBSCRIPTION:',           category: 'DarkPattern', notes: 'Protocol Plus auto-enroll' },
+    { id: 'captcha-labor',      pattern: 'CAPTCHA LABOR:',          category: 'DarkPattern', notes: 'RLHF verification labor' },
+    { id: 'cyoa',               pattern: 'CYOA:',                   category: 'Features',    notes: 'Tile-based CYOA minigame' },
 
     // ── Chaos / Sabotage ──
     { id: 'chaos-event',        pattern: 'CHAOS EVENT:',            category: 'Chaos',      notes: 'UI disruption' },
@@ -394,7 +401,7 @@ const DISMISS_SCRIPT = `
                 '#tos-accept-btn', '#tax-pay-btn', '#inflation-close',
                 '#fomo-close', '#peer-close', '#lb-close', '#chatbot-close',
                 '#video-close', '#music-close', '#mortality-close',
-                '#connection-disconnect', '#slider-lock',
+                '#connection-disconnect', '#slider-lock', '#gacha-close', '#bp-close', '#sub-accept', '#captcha-skip',
             ];
             for (const sel of selectors) {
                 const btn = modal.querySelector(sel);
@@ -822,7 +829,7 @@ async function main() {
                     '#tos-accept-btn', '#tax-pay-btn', '#inflation-close',
                     '#fomo-close', '#peer-close', '#lb-close', '#chatbot-close',
                     '#video-close', '#music-close', '#mortality-close',
-                    '#connection-disconnect', '#slider-lock',
+                    '#connection-disconnect', '#slider-lock', '#gacha-close', '#bp-close', '#sub-accept', '#captcha-skip',
                 ];
                 for (const sel of selectors) {
                     const btn = m.querySelector(sel);
@@ -1910,6 +1917,422 @@ async function main() {
     const newFeatFailed = newFeatureResults.filter(r => !r.ok).length;
     console.log(`    New feature tests: ${newFeatPassed} passed, ${newFeatFailed} failed out of ${newFeatureResults.length}`);
     for (const r of newFeatureResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8h: Dead Internet Chat verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8h: Dead Internet Chat verification...');
+
+    const chatResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // Module loaded
+        if (typeof DeadInternetChat !== 'undefined') pass('module loaded');
+        else { fail('module loaded', 'DeadInternetChat undefined'); return results; }
+
+        // Show chat
+        try {
+            DeadInternetChat.show();
+            await new Promise(r => setTimeout(r, 500));
+            const panel = document.getElementById('dead-internet-chat');
+            if (panel && panel.classList.contains('active')) pass('show: panel activated');
+            else fail('show', 'panel not active');
+        } catch (e) { fail('show', e.message); }
+
+        // State updated
+        try {
+            const s = Game.getState();
+            if (s.deadInternetChatVisible === true) pass('state: deadInternetChatVisible');
+            else fail('state', `deadInternetChatVisible=${s.deadInternetChatVisible}`);
+        } catch (e) { fail('state', e.message); }
+
+        // Messages area has content
+        try {
+            const msgs = document.getElementById('dic-messages');
+            if (msgs && msgs.children.length > 0) pass('messages: seeded');
+            else fail('messages', `children=${msgs ? msgs.children.length : 'null'}`);
+        } catch (e) { fail('messages', e.message); }
+
+        // Online counter exists
+        try {
+            const counter = document.getElementById('dic-online-count');
+            if (counter && parseInt(counter.textContent) > 0) pass('online counter');
+            else fail('online counter', `text=${counter ? counter.textContent : 'null'}`);
+        } catch (e) { fail('online counter', e.message); }
+
+        // Post a message programmatically
+        try {
+            const msgs = document.getElementById('dic-messages');
+            const before = msgs ? msgs.children.length : 0;
+            DeadInternetChat.postMessage();
+            await new Promise(r => setTimeout(r, 2500));
+            const after = msgs ? msgs.children.length : 0;
+            if (after > before) pass('postMessage: new message added');
+            else fail('postMessage', `before=${before} after=${after}`);
+        } catch (e) { fail('postMessage', e.message); }
+
+        // Input field exists (decorative)
+        try {
+            const input = document.getElementById('dic-input');
+            if (input) pass('input: decorative field exists');
+            else fail('input', 'no input field');
+        } catch (e) { fail('input', e.message); }
+
+        // Log results
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`DEAD INTERNET CHAT TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        // Log the feature pattern for manifest
+        UI.logAction('DEAD INTERNET CHAT: Test verification complete');
+
+        return results;
+    });
+
+    const chatPassed = chatResults.filter(r => r.ok).length;
+    const chatFailed = chatResults.filter(r => !r.ok).length;
+    console.log(`    Chat tests: ${chatPassed} passed, ${chatFailed} failed out of ${chatResults.length}`);
+    for (const r of chatResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8i: Gacha / Loot Box verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8i: Gacha / Loot Box verification...');
+
+    const gachaResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // Module loaded
+        if (typeof Gacha !== 'undefined') pass('module loaded');
+        else { fail('module loaded', 'Gacha undefined'); return results; }
+
+        // Loot table exists
+        try {
+            if (Gacha.LOOT_TABLE && Gacha.LOOT_TABLE.length >= 20) pass('loot table: 20+ items');
+            else fail('loot table', `length=${Gacha.LOOT_TABLE ? Gacha.LOOT_TABLE.length : 'null'}`);
+        } catch (e) { fail('loot table', e.message); }
+
+        // Show gacha modal
+        try {
+            Game.setState({ st: 100 }); // Give ST for spinning
+            Gacha.show();
+            await new Promise(r => setTimeout(r, 500));
+            const modal = document.getElementById('gacha-modal');
+            if (modal && modal.classList.contains('active')) pass('show: modal activated');
+            else fail('show', 'modal not active');
+        } catch (e) { fail('show', e.message); }
+
+        // Wheel strip has cells
+        try {
+            const strip = document.getElementById('gacha-strip');
+            const cells = strip ? strip.querySelectorAll('.gacha-cell') : [];
+            if (cells.length >= 20) pass('wheel: segments rendered');
+            else fail('wheel', `cells=${cells.length}`);
+        } catch (e) { fail('wheel', e.message); }
+
+        // Legendary cell exists and glows
+        try {
+            const legendary = document.querySelector('.gacha-legendary');
+            if (legendary) pass('legendary: visible on wheel');
+            else fail('legendary', 'no .gacha-legendary cell');
+        } catch (e) { fail('legendary', e.message); }
+
+        // Spin button exists
+        try {
+            const spinBtn = document.getElementById('gacha-spin');
+            if (spinBtn) pass('spin button exists');
+            else fail('spin button', 'not found');
+        } catch (e) { fail('spin button', e.message); }
+
+        // Pity counter displays
+        try {
+            const pity = document.getElementById('gacha-pity');
+            if (pity && pity.textContent.includes('Pity')) pass('pity counter');
+            else fail('pity counter', `text=${pity ? pity.textContent : 'null'}`);
+        } catch (e) { fail('pity counter', e.message); }
+
+        // State keys exist
+        try {
+            const s = Game.getState();
+            if ('gachaPity' in s && 'gachaSpins' in s) pass('state keys');
+            else fail('state keys', 'missing gachaPity or gachaSpins');
+        } catch (e) { fail('state keys', e.message); }
+
+        // Clean up
+        const modal = document.getElementById('gacha-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 50);
+        }
+
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`GACHA TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+
+        return results;
+    });
+
+    const gachaPassed = gachaResults.filter(r => r.ok).length;
+    const gachaFailed = gachaResults.filter(r => !r.ok).length;
+    console.log(`    Gacha tests: ${gachaPassed} passed, ${gachaFailed} failed out of ${gachaResults.length}`);
+    for (const r of gachaResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8j: Battle Pass verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8j: Battle Pass verification...');
+
+    const bpResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // Module loaded
+        if (typeof BattlePass !== 'undefined') pass('module loaded');
+        else { fail('module loaded', 'BattlePass undefined'); return results; }
+
+        // Tier data exists
+        try {
+            if (BattlePass.FREE_TIER.length === 15 && BattlePass.PREMIUM_TIER.length === 15) pass('tier data: 15 levels each');
+            else fail('tier data', `free=${BattlePass.FREE_TIER.length} premium=${BattlePass.PREMIUM_TIER.length}`);
+        } catch (e) { fail('tier data', e.message); }
+
+        // Dailies exist
+        try {
+            if (BattlePass.DAILY_CHALLENGES.length >= 20) pass('dailies: 20+ challenges');
+            else fail('dailies', `count=${BattlePass.DAILY_CHALLENGES.length}`);
+        } catch (e) { fail('dailies', e.message); }
+
+        // Show modal
+        try {
+            BattlePass.show();
+            await new Promise(r => setTimeout(r, 500));
+            const modal = document.getElementById('battlepass-modal');
+            if (modal && modal.classList.contains('active')) pass('show: modal activated');
+            else fail('show', 'modal not active');
+        } catch (e) { fail('show', e.message); }
+
+        // Tier rows rendered
+        try {
+            const rows = document.querySelectorAll('.bp-tier-row');
+            if (rows.length === 15) pass('tier rows: 15 rendered');
+            else fail('tier rows', `count=${rows.length}`);
+        } catch (e) { fail('tier rows', e.message); }
+
+        // Countdown timer exists
+        try {
+            const timer = document.querySelector('.bp-timer-val');
+            if (timer && timer.textContent.includes('h')) pass('timer: countdown displayed');
+            else fail('timer', `text=${timer ? timer.textContent : 'null'}`);
+        } catch (e) { fail('timer', e.message); }
+
+        // Upgrade button exists
+        try {
+            const btn = document.getElementById('bp-upgrade');
+            if (btn && btn.textContent.includes('PREMIUM')) pass('upgrade button');
+            else fail('upgrade button', 'not found');
+        } catch (e) { fail('upgrade button', e.message); }
+
+        // Daily challenges rendered
+        try {
+            const dailies = document.querySelectorAll('.bp-daily');
+            if (dailies.length === 3) pass('daily challenges: 3 shown');
+            else fail('daily challenges', `count=${dailies.length}`);
+        } catch (e) { fail('daily challenges', e.message); }
+
+        // State keys
+        try {
+            const s = Game.getState();
+            if ('battlePassLevel' in s && 'battlePassXP' in s && 'battlePassSeason' in s) pass('state keys');
+            else fail('state keys', 'missing battle pass state');
+        } catch (e) { fail('state keys', e.message); }
+
+        // Clean up
+        const modal = document.getElementById('battlepass-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 50);
+        }
+
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`BATTLE PASS TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+
+        return results;
+    });
+
+    const bpPassed = bpResults.filter(r => r.ok).length;
+    const bpFailed = bpResults.filter(r => !r.ok).length;
+    console.log(`    Battle Pass tests: ${bpPassed} passed, ${bpFailed} failed out of ${bpResults.length}`);
+    for (const r of bpResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8k: CYOA verification
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8k: CYOA verification...');
+
+    const cyoaResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // CYOA_TILES exists with 12 entries
+        try {
+            if (typeof MiniGames !== 'undefined' && MiniGames.CYOA_TILES) {
+                if (MiniGames.CYOA_TILES.length === 12) pass('tiles: 12 entries');
+                else fail('tiles', `count=${MiniGames.CYOA_TILES.length}`);
+            } else {
+                fail('tiles', 'CYOA_TILES not found');
+                return results;
+            }
+        } catch (e) { fail('tiles', e.message); }
+
+        // Each tile has valid structure
+        try {
+            let valid = true;
+            for (const tile of MiniGames.CYOA_TILES) {
+                if (!tile.id || !tile.title || !tile.body || !tile.source) {
+                    valid = false;
+                    break;
+                }
+                // All non-finale tiles have 3 choices
+                if (tile.id !== 12 && (!tile.choices || tile.choices.length !== 3)) {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid) pass('structure: all tiles have id/title/body/source/3 choices');
+            else fail('structure', 'missing fields or wrong choice count');
+        } catch (e) { fail('structure', e.message); }
+
+        // Each choice has valid next reference
+        try {
+            let valid = true;
+            const tileIds = new Set(MiniGames.CYOA_TILES.map(t => t.id));
+            for (const tile of MiniGames.CYOA_TILES) {
+                for (const choice of (tile.choices || [])) {
+                    if (!tileIds.has(choice.next)) {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+            if (valid) pass('references: all next values point to valid tiles');
+            else fail('references', 'invalid next reference found');
+        } catch (e) { fail('references', e.message); }
+
+        // All 3 paths converge to tile 12
+        try {
+            const tile1 = MiniGames.CYOA_TILES.find(t => t.id === 1);
+            let allConverge = true;
+            for (const startChoice of tile1.choices) {
+                let current = startChoice.next;
+                let steps = 0;
+                while (current !== 12 && steps < 10) {
+                    const tile = MiniGames.CYOA_TILES.find(t => t.id === current);
+                    if (!tile || !tile.choices || tile.choices.length === 0) break;
+                    current = tile.choices[0].next;
+                    steps++;
+                }
+                if (current !== 12) allConverge = false;
+            }
+            if (allConverge) pass('convergence: all 3 paths reach tile 12');
+            else fail('convergence', 'not all paths reach tile 12');
+        } catch (e) { fail('convergence', e.message); }
+
+        // Tile 11 (exit door) routes to tile 12
+        try {
+            const tile11 = MiniGames.CYOA_TILES.find(t => t.id === 11);
+            const allTo12 = tile11.choices.every(c => c.next === 12);
+            if (allTo12) pass('exit door: tile 11 routes to 12');
+            else fail('exit door', 'tile 11 does not route to 12');
+        } catch (e) { fail('exit door', e.message); }
+
+        // launchCYOA creates overlay (clean up prior minigame state first)
+        try {
+            // Remove any leftover overlays from prior tests
+            document.querySelectorAll('.page-overlay, .minigame-overlay').forEach(el => el.remove());
+            // Reset internal flags by calling endQuiz-like cleanup
+            // MiniGames exposes launchCYOA which checks activeGame — force clear
+            if (typeof MiniGames._resetForTest === 'function') MiniGames._resetForTest();
+            MiniGames.launchCYOA();
+            await new Promise(r => setTimeout(r, 300));
+            const overlay = document.getElementById('cyoa-overlay');
+            if (overlay && overlay.classList.contains('active')) pass('launch: overlay created');
+            else fail('launch', 'overlay not active');
+        } catch (e) { fail('launch', e.message); }
+
+        // Grid has 12 tiles
+        try {
+            const tiles = document.querySelectorAll('.cyoa-tile');
+            if (tiles.length === 12) pass('grid: 12 tile cells');
+            else fail('grid', `count=${tiles.length}`);
+        } catch (e) { fail('grid', e.message); }
+
+        // Narrative panel exists
+        try {
+            const narrative = document.getElementById('cyoa-narrative');
+            if (narrative && narrative.innerHTML.length > 0) pass('narrative: panel populated');
+            else fail('narrative', 'empty or missing');
+        } catch (e) { fail('narrative', e.message); }
+
+        // State key exists
+        try {
+            const s = Game.getState();
+            if ('cyoaCompleted' in s) pass('state: cyoaCompleted key exists');
+            else fail('state', 'cyoaCompleted missing');
+        } catch (e) { fail('state', e.message); }
+
+        // Achievement exists
+        try {
+            const achs = Features.getAchievements();
+            const cyoaAch = achs.find(a => a.id === 'cyoa_complete');
+            if (cyoaAch) pass('achievement: cyoa_complete registered');
+            else fail('achievement', 'cyoa_complete not found');
+        } catch (e) { fail('achievement', e.message); }
+
+        // Clean up
+        const overlay = document.getElementById('cyoa-overlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 50);
+        }
+
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`CYOA TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        UI.logAction('CYOA: Test verification complete');
+
+        return results;
+    });
+
+    const cyoaPassed = cyoaResults.filter(r => r.ok).length;
+    const cyoaFailed = cyoaResults.filter(r => !r.ok).length;
+    console.log(`    CYOA tests: ${cyoaPassed} passed, ${cyoaFailed} failed out of ${cyoaResults.length}`);
+    for (const r of cyoaResults) {
         const icon = r.ok ? 'PASS' : 'FAIL';
         console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
     }

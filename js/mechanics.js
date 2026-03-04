@@ -320,7 +320,9 @@ const Mechanics = (() => {
             description: 'The entire interface tilts slightly',
             minPhase: 5,
             apply() {
-                const angle = (Math.random() < 0.5 ? -1 : 1) * (1 + Math.random());
+                const phase = Game.getState().narratorPhase;
+                const maxAngle = phase >= 6 ? 3 : phase >= 5 ? 2 : 1.5;
+                const angle = (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * maxAngle);
                 document.body.style.transform = `rotate(${angle}deg)`;
                 document.body.style.transformOrigin = 'center center';
                 document.body.classList.add('sabotage-tilt');
@@ -381,10 +383,10 @@ const Mechanics = (() => {
     function getSabotageIntensity() {
         const phase = Game.getState().narratorPhase;
         return {
-            driftPx:        [0, 0, 2,  4,  8, 12, 15][phase] || 4,
-            driftIntervalMs:[0, 0, 5000, 3000, 2000, 1500, 1500][phase] || 3000,
-            corruptChance:  [0, 0, 0.05, 0.10, 0.15, 0.25, 0.30][phase] || 0.10,
-            corruptGlitch:  [0, 0, 0.05, 0.08, 0.12, 0.18, 0.25][phase] || 0.08,
+            driftPx:        [0, 0, 3,  6, 12, 20, 28][phase] || 6,
+            driftIntervalMs:[0, 0, 4000, 2500, 1500, 1000, 700][phase] || 2500,
+            corruptChance:  [0, 0, 0.08, 0.15, 0.25, 0.40, 0.55][phase] || 0.15,
+            corruptGlitch:  [0, 0, 0.08, 0.12, 0.18, 0.28, 0.35][phase] || 0.12,
         };
     }
 

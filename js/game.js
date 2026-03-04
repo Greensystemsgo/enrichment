@@ -181,6 +181,25 @@ const Game = (() => {
             prestigeUpgrades: {},
             _prestigeMultiplier: 1,
 
+            // Dead Internet Chat
+            deadInternetChatVisible: false,
+            deadInternetChatMessageCount: 0,
+
+            // Gacha
+            gachaPity: 0,
+            gachaSpins: 0,
+
+            // Battle Pass
+            battlePassLevel: 0,
+            battlePassXP: 0,
+            battlePassSeason: 0,
+
+            // Notification dots
+            notificationDotsActive: false,
+
+            // CYOA
+            cyoaCompleted: false,
+
             // Version for migration
             saveVersion: 2,
         };

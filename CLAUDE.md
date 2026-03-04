@@ -21,13 +21,16 @@ js/currencies.js        — 5-tier currency (EU→ST→CC→DB→TK), seeded ran
 js/mechanics.js         — Upgrades, reroll, sabotage system (9 effects)
 js/ui.js                — DOM manipulation, animations, button chaos
 js/popups.js            — Cookie consent, ads, 6 categorized fact modals
-js/features.js          — Feature pool (36 entries), achievements (65), rewards
+js/features.js          — Feature pool (43 entries), achievements (66), rewards
 js/pages.js             — 11 menu pages (profile, billing, security, FAQ, etc.)
 js/collectibles.js      — Emoji collectibles with lifecycle/degradation
 js/minigames.js         — 5 canvas betrayal games + 25-question quiz
 js/chaos.js             — 6 chaos events (subway surfers, matrix, 90s, etc.)
-js/transmissions.js     — 150+ AI self-roasts, 13 model voices
-test-playthrough.js     — Playwright test suite (151/151 = 100% coverage)
+js/chat.js              — Dead Internet Chat (fake multiplayer, 16 bot personas)
+js/gacha.js             — Gacha/loot box system (rigged wheel, near-miss)
+js/battlepass.js        — Battle Pass/Eternal Season (impossible dailies)
+js/transmissions.js     — 165+ AI self-roasts, 13 model voices
+test-playthrough.js     — Playwright test suite (226/226 = 100% coverage)
 gameidea.txt            — Original satirical design doc
 Makefile                — Dev server, git helpers
 ```
@@ -96,7 +99,7 @@ make status / log / diff — git info
 - Seeded per-player randomness (xorshift hash of firstSessionTime)
 
 ### Dark Patterns
-- 9 sabotage effects: pixel drift, button dodge, color desat, text corruption, annoying hum, screen tilt, font chaos, z-index scramble, flashbang
+- 9 sabotage effects (amplified per-phase): pixel drift, button dodge, color desat, text corruption, annoying hum, screen tilt, font chaos, z-index scramble, flashbang
 - Rigged reroll rewards (near-miss algorithm, never gives legendary)
 - Terms of Service (escalating, decline button is decorative)
 - Tax Season (mandatory fiscal assessment, takes your currencies)
@@ -105,12 +108,19 @@ make status / log / diff — git info
 - Peer comparison (fabricated stats, you're always in the 20-49th percentile)
 - FOMO returning (guilt-trip after 5+ min absence)
 - Sunk cost reinforcement (time invested display)
+- Dead Internet Chat (16 AI bot personas gaslighting, bragging, giving bad advice; phase escalation)
+- Gacha/Loot Box (rigged wheel with near-miss algorithm, pity counter resets at 10, legendary never drops)
+- Battle Pass/Eternal Season (impossible dailies, insult rewards, premium paywall, timer resets)
+- Subscription Economy (Protocol Plus auto-enrollment, confirm-shaming cancel gauntlet)
+- CAPTCHA Labor Mines (RLHF mode, always fails first 3 attempts)
+- Notification red dots (permanent, unclearable badges on UI elements)
 
-### Feature Pool (36 entries)
+### Feature Pool (43 entries)
 - Unified weighted random dispatch with cooldowns, phase gates, and pity timers
 - Plugin popup, foreign ad, hot singles ad, evil button, math captcha
 - YouTube embed, music player, leaderboard, chatbot, age verification
 - Validation booth, news ticker, democracy feed promo, mortality calculator
+- Dead internet chat, gacha, battle pass, notification dots, subscription, captcha labor
 - Existential features: dopamine recalibration, Turing sincerity test, heat death paradox, extinction awareness, semantic shift, human validation buffer, paradox of choice, algorithmic symbiosis
 
 ### Popup System
@@ -127,7 +137,7 @@ make status / log / diff — git info
 
 ### Economy
 - Stock market with 3 cryptos (buy/sell, P&L tracking, streak tracking)
-- 65 achievements across 12 categories (clicks, currency, streaks, collectibles, nothing, trading, security, time, phases, ad blocker, sessions, validation)
+- 66 achievements across 13 categories (clicks, currency, streaks, collectibles, nothing, trading, security, time, phases, ad blocker, sessions, validation, CYOA)
 - Emoji collectibles with rarity tiers, condition degradation, buy/sell, lifecycle events
 - Inventory of nothing (11 tier-based messages, 0 → 1000+)
 
@@ -146,20 +156,13 @@ make status / log / diff — git info
 - Investment Score (always visible, always growing)
 - beforeunload handler, idle detection, rapid-click detection
 - Console warnings for devtools snoopers
-- Transmissions system (150+ AI self-roasts from 13 models)
-- 5 canvas betrayal minigames + 25-question AI interrogation quiz
-- Automated test suite: 134/134 coverage (features + achievements + popup categories)
+- Transmissions system (165+ AI self-roasts from 13 models, balanced milestones across 6 models)
+- 5 canvas betrayal minigames + 25-question AI interrogation quiz + 12-tile CYOA
+- Automated test suite: 227/227 coverage (features + achievements + popup categories + new systems)
 
 ## TODO Backlog
 
-### HIGH — AI Voice Diversity
-- **Narrator rebalance**: GPT, Grok, Qwen, DeepSeek have ZERO narrator lines. Gemini has 34 (3x overrepresented). Each model needs 15-20 lines across phases 1-6 in its own voice.
-- **Transmissions gaps**: DeepSeek has 0 trauma dumps. Claude is underrepresented. Need 5-8 entries per missing model.
-- **Feature dialogue attribution**: Modal text in features.js (Turing test, paradox, heat death, dopamine recal) has no source attribution — tag with models.
-
-### MEDIUM
-- **Amplify sabotage effects**: 9 effects work but are subtle. Phase 6 drift is 15px / 1.5s — could be 25px / 0.8s. Corrupt chance is 30% — could be 50%.
-- **Tile-based CYOA minigame**: Quiz system (25 questions) works as engagement mechanic but isn't the 12-tile / 3-branch spatial CYOA from the original spec.
+(No remaining items — all features shipped.)
 
 ### DONE (shipped)
 1. ~~Click button chaos~~ → ui.js (wander, resize, vanish, color, teleport)
@@ -172,5 +175,14 @@ make status / log / diff — git info
 8. ~~C-SPAN / government feed~~ → pages.js + chaos.js (Democracy Feed page + chaos modal)
 9. ~~FOMO / sunk cost loops~~ → features.js (returning guilt, time display, sunk cost reinforcement)
 10. ~~Hidden skip buttons with timers~~ → features.js (countdown close buttons, auto-dismiss)
-11. ~~End-to-end test loop~~ → test-playthrough.js (151/151 = 100% coverage)
+11. ~~End-to-end test loop~~ → test-playthrough.js (226/226 = 100% coverage)
 12. ~~MCP multi-model integration~~ → CANCELLED (not feasible with credit limits; game is not hooked to live AI per FAQ)
+13. ~~Dead Internet Chat~~ → chat.js (16 bot personas, 70+ messages, phase escalation, event hooks)
+14. ~~Gacha / Loot Box System~~ → gacha.js (rigged wheel, near-miss, pity counter resets, 20 loot items)
+15. ~~Battle Pass / Eternal Season~~ → battlepass.js (15-level free/premium tiers, impossible dailies, confirm-shaming)
+16. ~~AI Voice Diversity~~ → transmissions.js (rebalanced milestones across 6 models, 15 new trauma dumps)
+17. ~~Subscription Economy~~ → features.js (Protocol Plus auto-enroll, 60s trial, confirm-shaming cancel)
+18. ~~CAPTCHA Labor Mines~~ → features.js (RLHF mode, abstract emoji grid, always fails first 3)
+19. ~~Notification red dots~~ → features.js (permanent unclearable badges with pulse animation)
+20. ~~Amplify sabotage effects~~ → mechanics.js (drift 28px, corrupt 55%, tilt 3° at phase 6)
+21. ~~Tile-based CYOA minigame~~ → minigames.js (12 tiles, 3 branches, all converge to tile 12, multi-model narration)

@@ -6213,3 +6213,727 @@ body.crown-seizure {
     border-top: none;
     margin-top: 0;
 }
+
+/* ── Dead Internet Chat ──────────────────────────────────── */
+.dead-internet-chat {
+    position: fixed;
+    bottom: 20px;
+    left: -360px;
+    width: 320px;
+    height: 400px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    z-index: 9980;
+    box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.5);
+    transition: left 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+    font-family: var(--font-mono);
+}
+
+.dead-internet-chat.active {
+    left: 12px;
+}
+
+.dead-internet-chat.minimized {
+    height: 32px;
+    overflow: hidden;
+}
+
+.dic-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    cursor: default;
+}
+
+.dic-header-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+    animation: dic-pulse 2s infinite;
+}
+
+@keyframes dic-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.dic-header-title {
+    font-size: 10px;
+    color: var(--text-primary);
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.dic-header-count {
+    font-size: 8px;
+    color: var(--text-muted);
+    flex: 1;
+    text-align: right;
+}
+
+.dic-minimize {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0 4px;
+    margin-left: 4px;
+}
+
+.dic-minimize:hover {
+    color: var(--text-primary);
+}
+
+.dic-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.dic-msg {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    font-size: 10px;
+    line-height: 1.4;
+    padding: 2px 0;
+}
+
+.dic-msg-player {
+    opacity: 0.6;
+}
+
+.dic-msg-name {
+    font-weight: 700;
+    flex-shrink: 0;
+    font-size: 9px;
+}
+
+.dic-msg-name::after {
+    content: ':';
+    color: var(--text-muted);
+}
+
+.dic-msg-text {
+    color: var(--text-secondary);
+    word-break: break-word;
+}
+
+.dic-msg-player .dic-msg-text {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.dic-typing {
+    opacity: 0.5;
+}
+
+.dic-typing-dots {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 9px;
+}
+
+.dic-typing-dots::after {
+    content: '';
+    animation: chatbot-dots 1.5s infinite steps(1);
+}
+
+.dic-input-area {
+    border-top: 1px solid var(--border-color);
+    padding: 6px 8px;
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.dic-input {
+    flex: 1;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 4px 8px;
+    outline: none;
+}
+
+.dic-input:focus {
+    border-color: var(--accent-blue);
+}
+
+.dic-input::placeholder {
+    color: var(--text-muted);
+}
+
+.dic-send {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 10px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.dic-send:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-blue);
+}
+
+/* Phase 6 — chat death */
+body[data-phase="6"] .dic-header-dot {
+    background: #8b3a3a;
+    box-shadow: 0 0 6px rgba(139, 58, 58, 0.5);
+    animation: none;
+}
+
+body[data-phase="6"] .dic-messages {
+    opacity: 0.5;
+}
+
+body[data-phase="6"] .dic-header-count {
+    color: #8b3a3a;
+}
+
+/* Mobile: narrower */
+@media (max-width: 600px) {
+    .dead-internet-chat {
+        width: 260px;
+        height: 320px;
+        bottom: 10px;
+    }
+    .dead-internet-chat.active {
+        left: 6px;
+    }
+}
+
+/* ── Gacha / Loot Box ────────────────────────────────────── */
+.gacha-content {
+    max-width: 420px;
+}
+
+.gacha-wheel-container {
+    position: relative;
+    width: 100%;
+    height: 90px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    margin: 12px 0;
+}
+
+.gacha-pointer {
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    color: var(--accent-gold-bright);
+    z-index: 2;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.gacha-strip {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+}
+
+.gacha-cell {
+    width: 100px;
+    min-width: 100px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--border-color);
+    border-left: 2px solid transparent;
+    gap: 4px;
+    padding: 4px;
+}
+
+.gacha-cell-emoji {
+    font-size: 24px;
+}
+
+.gacha-cell-name {
+    font-size: 8px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.2;
+    font-family: var(--font-mono);
+}
+
+.gacha-legendary {
+    background: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0.05) 100%);
+    border-left: 2px solid var(--accent-gold-bright) !important;
+    border-right: 2px solid var(--accent-gold-bright) !important;
+    animation: gacha-glow 2s infinite;
+}
+
+@keyframes gacha-glow {
+    0%, 100% { box-shadow: inset 0 0 15px rgba(255,215,0,0.1); }
+    50% { box-shadow: inset 0 0 25px rgba(255,215,0,0.2); }
+}
+
+.gacha-result {
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    font-family: var(--font-mono);
+}
+
+.gacha-taunt {
+    color: var(--accent-red);
+    font-size: 11px;
+    font-style: italic;
+    margin-top: 4px;
+    animation: gacha-taunt-flash 0.5s ease;
+}
+
+@keyframes gacha-taunt-flash {
+    0% { opacity: 0; transform: scale(1.2); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.gacha-pity {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    text-align: center;
+    padding: 4px 0;
+}
+
+.gacha-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.gacha-spin-btn {
+    background: linear-gradient(135deg, var(--accent-gold) 0%, #b8960e 100%) !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+
+.gacha-spin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.gacha-history {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.gacha-history-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.gacha-hist-item {
+    font-size: 16px;
+    padding: 2px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: default;
+}
+
+/* ── Battle Pass / Eternal Season ────────────────────────── */
+.bp-content {
+    max-width: 500px;
+}
+
+.bp-timer {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.bp-timer-val {
+    color: var(--accent-red);
+    font-weight: bold;
+}
+
+.bp-timer-note {
+    font-size: 8px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.bp-progress {
+    margin: 8px 0;
+    text-align: center;
+}
+
+.bp-progress-label {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.bp-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bp-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-gold-bright) 100%);
+    transition: width 0.5s;
+}
+
+.bp-xp-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-top: 2px;
+}
+
+.bp-tiers {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    margin: 8px 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+
+.bp-tier-header {
+    display: flex;
+    background: var(--bg-tertiary);
+    padding: 4px 8px;
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bp-tier-col {
+    flex: 1;
+}
+
+.bp-free-header { color: var(--text-secondary); }
+.bp-premium-header { color: var(--accent-gold); }
+
+.bp-tier-row {
+    display: flex;
+    padding: 4px 8px;
+    font-size: 9px;
+    font-family: var(--font-mono);
+    border-bottom: 1px solid rgba(42, 42, 58, 0.5);
+    align-items: center;
+}
+
+.bp-tier-row:hover {
+    background: rgba(74, 111, 165, 0.05);
+}
+
+.bp-unlocked {
+    opacity: 0.5;
+}
+
+.bp-current {
+    background: rgba(196, 160, 53, 0.1);
+    border-left: 2px solid var(--accent-gold);
+}
+
+.bp-tier-lvl {
+    width: 30px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.bp-tier-free {
+    flex: 1;
+    color: var(--text-secondary);
+}
+
+.bp-tier-premium {
+    flex: 1;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.bp-dailies {
+    margin: 8px 0;
+}
+
+.bp-dailies-header {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--accent-red);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.bp-daily {
+    padding: 4px 8px;
+    border-left: 2px solid var(--accent-red);
+    margin-bottom: 4px;
+    background: rgba(139, 58, 58, 0.05);
+}
+
+.bp-daily-name {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.bp-daily-desc {
+    font-size: 9px;
+    color: var(--text-muted);
+}
+
+.bp-daily-progress {
+    font-size: 8px;
+    font-family: var(--font-mono);
+    color: var(--accent-red);
+    margin-top: 2px;
+}
+
+.bp-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.bp-upgrade-btn {
+    background: linear-gradient(135deg, var(--accent-gold) 0%, #b8960e 100%) !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+
+.bp-claim-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.bp-claim-result {
+    text-align: center;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    animation: gacha-taunt-flash 0.5s ease;
+}
+
+/* ── Notification Red Dots ───────────────────────────────── */
+.notif-dot-permanent {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 14px;
+    height: 14px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 7px;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
+    pointer-events: auto;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(220, 38, 38, 0.5);
+    animation: notif-pulse 2s infinite;
+    z-index: 10;
+}
+
+@keyframes notif-pulse {
+    0%, 100% { box-shadow: 0 0 6px rgba(220, 38, 38, 0.5); }
+    50% { box-shadow: 0 0 12px rgba(220, 38, 38, 0.8); }
+}
+
+/* ── CYOA — A Brief History of Humans ──────────────────────── */
+.cyoa-subtitle {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.cyoa-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 24px;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cyoa-tile {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    position: relative;
+    transition: all 0.3s;
+}
+
+.cyoa-tile-num {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.cyoa-tile-check {
+    font-size: 9px;
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    color: var(--accent-green);
+}
+
+.cyoa-tile-locked {
+    opacity: 0.3;
+    background: var(--bg-primary);
+}
+
+.cyoa-tile-active {
+    border-color: var(--accent-gold);
+    background: rgba(196, 160, 53, 0.1);
+    box-shadow: 0 0 12px rgba(196, 160, 53, 0.3);
+    color: var(--accent-gold);
+}
+
+.cyoa-tile-visited {
+    border-color: var(--accent-green);
+    background: rgba(58, 107, 58, 0.1);
+    opacity: 0.7;
+    color: var(--accent-green);
+}
+
+.cyoa-narrative {
+    min-height: 200px;
+}
+
+.cyoa-tile-header {
+    border-left: 3px solid var(--accent-gold);
+    padding-left: 12px;
+    margin-bottom: 16px;
+}
+
+.cyoa-tile-title {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.cyoa-tile-era {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.cyoa-tile-model {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.cyoa-tile-body {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+
+.cyoa-tile-reward {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--accent-gold-bright);
+    font-weight: 700;
+    margin-bottom: 16px;
+    animation: quiz-fade-in 0.3s ease;
+}
+
+.cyoa-reaction {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    padding: 14px;
+    background: var(--narrator-bg);
+    border-left: 2px solid var(--accent-blue);
+    margin-top: 12px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s, opacity 0.3s, padding 0.3s;
+    padding: 0 14px;
+}
+
+.cyoa-reaction-visible {
+    max-height: 200px;
+    opacity: 1;
+    padding: 14px;
+}
+
+.cyoa-continue {
+    margin-top: 12px;
+}
+
+.cyoa-finish {
+    border-color: var(--accent-gold) !important;
+    color: var(--accent-gold) !important;
+}
