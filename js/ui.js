@@ -707,7 +707,8 @@ const UI = (() => {
         const W = 680, H = 140, LEFT = 52, RIGHT = 8, TOP = 12, BOTTOM = 20;
         const plotW = W - LEFT - RIGHT;
         const plotH = H - TOP - BOTTOM;
-        const minT = points[0].t, maxT = points[points.length - 1].t;
+        // X axis always spans the full selected time range, not just available data
+        const minT = cutoff, maxT = now;
         const tRange = maxT - minT || 1;
 
         // For each point compute stacked y-values
