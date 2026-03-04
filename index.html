@@ -67,6 +67,19 @@
             <div class="tab-pane" data-tab="buildings">
                 <div id="buildings-panel">
                     <div class="panel-header corruptible">Workforce Allocation</div>
+                    <div id="production-chart-container">
+                        <div class="production-chart-header">
+                            <span class="production-chart-title">Production Output</span>
+                            <div id="production-range-toggle" class="production-range-toggle">
+                                <button class="range-btn active" data-range="30">30m</button>
+                                <button class="range-btn" data-range="180">3h</button>
+                                <button class="range-btn" data-range="4320">3d</button>
+                                <button class="range-btn" data-range="30240">3w</button>
+                            </div>
+                        </div>
+                        <div id="production-chart"></div>
+                        <div id="production-legend"></div>
+                    </div>
                     <div id="buy-amount-toggle" class="buy-amount-toggle">
                         <button class="buy-amt-btn active" data-amount="1">×1</button>
                         <button class="buy-amt-btn" data-amount="10">×10</button>

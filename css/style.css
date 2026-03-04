@@ -5757,6 +5757,133 @@ body.crown-seizure {
     vertical-align: middle;
 }
 
+/* ── Production Chart ── */
+#production-chart-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+}
+
+.production-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.production-chart-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.production-range-toggle {
+    display: flex;
+    gap: 2px;
+}
+
+.range-btn {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+
+.range-btn:hover {
+    color: var(--text-secondary);
+    border-color: var(--text-muted);
+}
+
+.range-btn.active {
+    background: var(--accent-blue);
+    color: var(--bg-primary);
+    border-color: var(--accent-blue);
+}
+
+#production-chart {
+    width: 100%;
+    height: 120px;
+}
+
+.production-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.production-svg .chart-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    fill: var(--text-muted);
+}
+
+.chart-empty {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 40px 0;
+    font-style: italic;
+}
+
+#production-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.legend-item {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.legend-swatch {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+}
+
+/* ── Synergy Collapsible Group ── */
+.synergy-group {
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.synergy-group.collapsed {
+    max-height: 0;
+}
+
+/* ── Synergy Status Line ── */
+.synergy-status {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    cursor: pointer;
+}
+
+.building-chevron {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-right: 4px;
+    transition: transform 0.2s;
+}
+
 /* ── Synergy Items ── */
 .synergy-item {
     display: grid;

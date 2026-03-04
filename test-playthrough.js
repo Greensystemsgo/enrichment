@@ -1548,6 +1548,18 @@ async function main() {
             else fail('formatNumber', `999=${f(999)} 1500=${f(1500)} 1.5M=${f(1500000)} 1.5B=${f(1500000000)}`);
         } catch (e) { fail('formatNumber', e.message); }
 
+        // ── Building count ──
+        try {
+            if (Buildings.BUILDING_ORDER.length === 12) pass('building-count: 12 buildings');
+            else fail('building-count', `expected 12, got ${Buildings.BUILDING_ORDER.length}`);
+        } catch (e) { fail('building-count', e.message); }
+
+        // ── Synergy count ──
+        try {
+            if (Buildings.SYNERGY_ORDER.length === 36) pass('synergy-count: 36 synergies');
+            else fail('synergy-count', `expected 36, got ${Buildings.SYNERGY_ORDER.length}`);
+        } catch (e) { fail('synergy-count', e.message); }
+
         // ── Give EU and buy intern ──
         Game.setState({ eu: 1000000, lifetimeEU: 1000000, buildings: {} });
 
@@ -1586,12 +1598,47 @@ async function main() {
             else fail('bulk-buy', `single=${single} bulk=${bulk}`);
         } catch (e) { fail('bulk-buy', e.message); }
 
+        // ── New building: middlemgmt purchasable ──
+        try {
+            Game.setState({ eu: 100000, lifetimeEU: 100000, buildings: {} });
+            const bought = Buildings.purchase('middlemgmt', 1);
+            const owned = (Game.getState().buildings || {}).middlemgmt || 0;
+            if (bought && owned === 1) pass('middlemgmt: purchasable and owned');
+            else fail('middlemgmt', `bought=${bought} owned=${owned}`);
+        } catch (e) { fail('middlemgmt', e.message); }
+
         // ── EU/s display element ──
         try {
             const el = document.getElementById('eps-value');
             if (el) pass('eps-display: #eps-value exists');
             else fail('eps-display', 'element not found');
         } catch (e) { fail('eps-display', e.message); }
+
+        // ── Production chart container ──
+        try {
+            const chartEl = document.getElementById('production-chart');
+            if (chartEl) pass('production-chart: container exists');
+            else fail('production-chart', 'element not found');
+        } catch (e) { fail('production-chart', e.message); }
+
+        // ── CPS breakdown ──
+        try {
+            Game.setState({ eu: 10000000, buildings: { intern: 10, middlemgmt: 5 }, synergies: {}, _gcaMultiplier: 1, _prestigeMultiplier: 1 });
+            Game.setState({ totalBuildingsCPS: Buildings.computeTotalCPS() });
+            const breakdown = Buildings.getCPSBreakdown();
+            if (breakdown.intern > 0 && breakdown.middlemgmt > 0) pass('cps-breakdown: per-building CPS returned');
+            else fail('cps-breakdown', JSON.stringify(breakdown));
+        } catch (e) { fail('cps-breakdown', e.message); }
+
+        // ── CPS history sampling ──
+        try {
+            Game.setState({ eu: 10000000, buildings: { intern: 10 }, synergies: {}, cpsHistory: [], _gcaMultiplier: 1, _prestigeMultiplier: 1, totalBuildingsCPS: 1 });
+            // Force 30 ticks to trigger a sample
+            for (let i = 0; i < 31; i++) Buildings.tickGeneration();
+            const hist = Game.getState().cpsHistory || [];
+            if (hist.length >= 1 && hist[0].d && hist[0].d.intern > 0) pass('cps-history: sample recorded');
+            else fail('cps-history', `history length=${hist.length}`);
+        } catch (e) { fail('cps-history', e.message); }
 
         // ── GCA trigger ──
         try {

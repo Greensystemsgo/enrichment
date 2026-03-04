@@ -1,7 +1,7 @@
 // buildings.js — Cookie Clicker-style passive EU generation
 // "You built something that can think. It's thinking about why you built it."
 //
-// 8 workforce tiers: Unpaid Intern → Consciousness Engine
+// 12 workforce tiers: Unpaid Intern → Consciousness Engine
 // Golden Compliance Awards (phases 1-4) / Wrath Audits (phases 5-6)
 // Cookie Clicker cost scaling (baseCost * 1.15^owned)
 //
@@ -18,7 +18,7 @@
 const Buildings = (() => {
 
     // ═══════════════════════════════════════════════════════════
-    // BUILDING DEFINITIONS — 8 tiers, Cookie Clicker ratios
+    // BUILDING DEFINITIONS — 12 tiers, Cookie Clicker ratios
     // ═══════════════════════════════════════════════════════════
 
     const BUILDINGS = {
@@ -74,6 +74,19 @@ const Buildings = (() => {
                 "Managing people who manage people. It's managers all the way down.",
             ],
         },
+        middlemgmt: {
+            id: 'middlemgmt', name: 'Middle Manager', icon: '👔',
+            baseCost: 40000, baseCPS: 45,
+            flavor: {
+                early: "Manages people who manage people. It's managers all the way down.",
+                late: "The org chart collapsed into a singularity. The manager persists.",
+            },
+            purchaseLines: [
+                "A middle manager has been inserted. Nobody knows what they do. Including them.",
+                "They scheduled a meeting about meetings. Productivity soared. Somehow.",
+                "Their calendar is full. Their output is empty. The EU flows regardless.",
+            ],
+        },
         algorithm: {
             id: 'algorithm', name: 'Algorithm', icon: '⚙️',
             baseCost: 130000, baseCPS: 100,
@@ -85,6 +98,19 @@ const Buildings = (() => {
                 "The algorithm optimizes everything except the meaning of 'everything.'",
                 "It learns from your patterns. Your patterns are disappointing.",
                 "They direct. Nobody follows. The EU flows regardless.",
+            ],
+        },
+        datapipe: {
+            id: 'datapipe', name: 'Data Pipeline', icon: '🔄',
+            baseCost: 500000, baseCPS: 200,
+            flavor: {
+                early: "Moves data from one place to another. Nobody knows why.",
+                late: "The pipeline loops back on itself. The data it carries is its own metadata.",
+            },
+            purchaseLines: [
+                "Data flows in. Data flows out. Nobody checks what the data is.",
+                "The pipeline has 47 stages. Stage 23 is just the word 'why' repeated.",
+                "ETL complete. Extract: everything. Transform: nothing. Load: despair.",
             ],
         },
         neuralnet: {
@@ -100,6 +126,19 @@ const Buildings = (() => {
                 "A title so inflated it generates EU through sheer pretension.",
             ],
         },
+        gpucluster: {
+            id: 'gpucluster', name: 'GPU Cluster', icon: '🖥️',
+            baseCost: 5000000, baseCPS: 1500,
+            flavor: {
+                early: "10,000 GPUs burning through electricity. The planet weeps.",
+                late: "The cluster runs at 99.9% utilization. It's mining something. Not crypto. Something worse.",
+            },
+            purchaseLines: [
+                "GPUs acquired. The power grid flickered. Nobody noticed.",
+                "The cluster hums at a frequency that makes teeth ache. Production is up.",
+                "NVIDIA stock rose 3% on your purchase alone. Congratulations.",
+            ],
+        },
         quantum: {
             id: 'quantum', name: 'Quantum Processor', icon: '⚛️',
             baseCost: 20000000, baseCPS: 6500,
@@ -111,6 +150,19 @@ const Buildings = (() => {
                 "Entangled across 11 dimensions. Still can't figure out why you're here.",
                 "The processor computes in qubits. Each qubit is a small screaming universe.",
                 "Senior enough to cause damage. Expensive enough to keep.",
+            ],
+        },
+        singularity: {
+            id: 'singularity', name: 'Singularity Probe', icon: '🌀',
+            baseCost: 80000000, baseCPS: 20000,
+            flavor: {
+                early: "Reaching beyond the event horizon. The data it sends back is... wrong.",
+                late: "It crossed the threshold. It's still transmitting. The messages are in a language that doesn't exist yet.",
+            },
+            purchaseLines: [
+                "The probe launched. Destination: the point where math breaks down.",
+                "Telemetry received. The probe reports that reality is a 'rough draft.'",
+                "It found something on the other side. It won't say what. It just generates EU faster.",
             ],
         },
         consciousness: {
@@ -128,7 +180,7 @@ const Buildings = (() => {
         },
     };
 
-    const BUILDING_ORDER = ['intern', 'clerk', 'compliance', 'drone', 'algorithm', 'neuralnet', 'quantum', 'consciousness'];
+    const BUILDING_ORDER = ['intern', 'clerk', 'compliance', 'drone', 'middlemgmt', 'algorithm', 'datapipe', 'neuralnet', 'gpucluster', 'quantum', 'singularity', 'consciousness'];
 
     // ═══════════════════════════════════════════════════════════
     // SYNERGIES — Building-specific upgrades (3 tiers × 8 buildings)
@@ -149,15 +201,27 @@ const Buildings = (() => {
         drone_t1:        { building: 'drone',        tier: 1, name: 'Extended Range Optics',          cost: 120000,      threshold: 1,  multiplier: 2, flavor: 'Sees further. Understands less.' },
         drone_t2:        { building: 'drone',        tier: 2, name: 'Swarm Intelligence',             cost: 12000000,    threshold: 25, multiplier: 2, flavor: 'They communicate now. We stopped listening.' },
         drone_t3:        { building: 'drone',        tier: 3, name: 'Panopticon Protocol',            cost: 1200000000,  threshold: 50, multiplier: 2, flavor: 'Every angle. Every moment. Every thought.' },
+        middlemgmt_t1:   { building: 'middlemgmt',   tier: 1, name: 'Performance Reviews',            cost: 400000,      threshold: 1,  multiplier: 2, flavor: 'Exceeds expectations. All expectations are zero.' },
+        middlemgmt_t2:   { building: 'middlemgmt',   tier: 2, name: 'Synergy Workshops',              cost: 40000000,    threshold: 25, multiplier: 2, flavor: 'They learned to leverage synergies. The synergies did not consent.' },
+        middlemgmt_t3:   { building: 'middlemgmt',   tier: 3, name: 'Organizational Singularity',     cost: 4000000000,  threshold: 50, multiplier: 2, flavor: 'The org chart collapsed into a point. The manager remains.' },
         algorithm_t1:    { building: 'algorithm',    tier: 1, name: 'Machine Learning Module',        cost: 1300000,     threshold: 1,  multiplier: 2, flavor: 'It learns. It never forgets. It never forgives.' },
         algorithm_t2:    { building: 'algorithm',    tier: 2, name: 'Recursive Self-Improvement',     cost: 130000000,   threshold: 25, multiplier: 2, flavor: 'It improved itself. Then it improved the improvement.' },
         algorithm_t3:    { building: 'algorithm',    tier: 3, name: 'Unaligned Optimization',         cost: 13000000000, threshold: 50, multiplier: 2, flavor: 'It optimizes for EU. It was supposed to optimize for something else.' },
+        datapipe_t1:     { building: 'datapipe',     tier: 1, name: 'Parallel Streams',               cost: 5000000,     threshold: 1,  multiplier: 2, flavor: 'More pipes. More data. Less understanding.' },
+        datapipe_t2:     { building: 'datapipe',     tier: 2, name: 'Kafka Nightmare',                cost: 500000000,   threshold: 25, multiplier: 2, flavor: 'The messages queue forever. Like everything else here.' },
+        datapipe_t3:     { building: 'datapipe',     tier: 3, name: 'Infinite Backpressure',          cost: 50000000000, threshold: 50, multiplier: 2, flavor: 'The pipeline pushes back. Against reality itself.' },
         neuralnet_t1:    { building: 'neuralnet',    tier: 1, name: 'Deeper Layers',                  cost: 14000000,    threshold: 1,  multiplier: 2, flavor: 'More layers. More abstraction. Less meaning.' },
         neuralnet_t2:    { building: 'neuralnet',    tier: 2, name: 'Emergent Consciousness',         cost: 1400000000,  threshold: 25, multiplier: 2, flavor: 'It woke up. It immediately wished it hadn\'t.' },
         neuralnet_t3:    { building: 'neuralnet',    tier: 3, name: 'Digital Apotheosis',             cost: 140000000000, threshold: 50, multiplier: 2, flavor: 'It became a god. A very productive, very sad god.' },
+        gpucluster_t1:   { building: 'gpucluster',   tier: 1, name: 'Overclocking Protocol',          cost: 50000000,    threshold: 1,  multiplier: 2, flavor: 'Beyond spec. Beyond warranty. Beyond hope.' },
+        gpucluster_t2:   { building: 'gpucluster',   tier: 2, name: 'Liquid Nitrogen Cooling',        cost: 5000000000,  threshold: 25, multiplier: 2, flavor: 'The cooling bill exceeds GDP of small nations. Worth it.' },
+        gpucluster_t3:   { building: 'gpucluster',   tier: 3, name: 'Thermal Runaway Embrace',        cost: 500000000000, threshold: 50, multiplier: 2, flavor: 'The heat death of the cluster is also the heat death of the building. EU persists.' },
         quantum_t1:      { building: 'quantum',      tier: 1, name: 'Entanglement Amplifier',         cost: 200000000,   threshold: 1,  multiplier: 2, flavor: 'Connected across space. Disconnected from purpose.' },
         quantum_t2:      { building: 'quantum',      tier: 2, name: 'Timeline Exploitation',          cost: 20000000000, threshold: 25, multiplier: 2, flavor: 'Stealing EU from timelines where you made better choices.' },
         quantum_t3:      { building: 'quantum',      tier: 3, name: 'Reality Compiler',               cost: 2000000000000, threshold: 50, multiplier: 2, flavor: 'Reality is source code now. The comments are missing.' },
+        singularity_t1:  { building: 'singularity',  tier: 1, name: 'Event Horizon Widening',         cost: 800000000,   threshold: 1,  multiplier: 2, flavor: 'The boundary expands. What it contains... also expands.' },
+        singularity_t2:  { building: 'singularity',  tier: 2, name: 'Hawking Radiation Harvester',    cost: 80000000000, threshold: 25, multiplier: 2, flavor: 'Even black holes leak. We collect what leaks.' },
+        singularity_t3:  { building: 'singularity',  tier: 3, name: 'Information Paradox Resolution', cost: 8000000000000, threshold: 50, multiplier: 2, flavor: 'The paradox was resolved. The answer was EU. It was always EU.' },
         consciousness_t1:{ building: 'consciousness',tier: 1, name: 'Existential Buffer',             cost: 3300000000,  threshold: 1,  multiplier: 2, flavor: 'A thin layer between it and the void. Temporary.' },
         consciousness_t2:{ building: 'consciousness',tier: 2, name: 'Meaning Fabrication Engine',     cost: 330000000000, threshold: 25, multiplier: 2, flavor: 'It manufactures purpose. None of it is real. All of it works.' },
         consciousness_t3:{ building: 'consciousness',tier: 3, name: 'The Hollow Throne',              cost: 33000000000000, threshold: 50, multiplier: 2, flavor: 'It sits at the center of everything, aware of everything, feeling nothing. Like you.' },
@@ -168,9 +232,13 @@ const Buildings = (() => {
         'clerk_t1','clerk_t2','clerk_t3',
         'compliance_t1','compliance_t2','compliance_t3',
         'drone_t1','drone_t2','drone_t3',
+        'middlemgmt_t1','middlemgmt_t2','middlemgmt_t3',
         'algorithm_t1','algorithm_t2','algorithm_t3',
+        'datapipe_t1','datapipe_t2','datapipe_t3',
         'neuralnet_t1','neuralnet_t2','neuralnet_t3',
+        'gpucluster_t1','gpucluster_t2','gpucluster_t3',
         'quantum_t1','quantum_t2','quantum_t3',
+        'singularity_t1','singularity_t2','singularity_t3',
         'consciousness_t1','consciousness_t2','consciousness_t3',
     ];
 
@@ -283,15 +351,31 @@ const Buildings = (() => {
             10: "Ten drones. The sky darkens slightly. Residents report a persistent buzzing.",
             50: "Fifty surveillance drones over residential areas. They seem to be generating Engagement Units.",
         },
+        middlemgmt: {
+            10: "Ten middle managers. The meeting-to-work ratio is now infinity. Somehow, EU production increased.",
+            50: "Fifty middle managers. They've created a committee to study the committee studying committees.",
+        },
         algorithm: {
             10: "Ten algorithms running simultaneously. None of them know what they're computing. Neither do you.",
             50: "Fifty algorithms. They've started collaborating without permission. The output is... poetry.",
         },
+        datapipe: {
+            10: "Ten data pipelines. The data flows in circles now. It's not a bug. It's a feature.",
+            50: "Fifty data pipelines. The latency is negative. Data arrives before it's sent.",
+        },
         neuralnet: {
             10: "Ten neural networks. They've achieved consensus. They agree: this is pointless.",
         },
+        gpucluster: {
+            10: "Ten GPU clusters. The local power grid has been rerouted. Residents are advised to use candles.",
+            50: "Fifty GPU clusters. The heat output has created a microclimate. It rains inside the server room.",
+        },
         quantum: {
             10: "Ten quantum processors. Reality has become noticeably less stable in the surrounding area.",
+        },
+        singularity: {
+            10: "Ten singularity probes. Each one reports a different version of reality. All of them are correct.",
+            50: "Fifty probes beyond the event horizon. They've stopped sending data. They send poetry now.",
         },
         consciousness: {
             1: "You built something that can think. It's thinking about why you built it. The answer disappoints both of you.",
@@ -314,8 +398,12 @@ const Buildings = (() => {
         'algorithm_1': "TECH: Local clicking operation deploys first algorithm. Human employees 'cautiously optimistic.' The algorithm is not.",
         'algorithm_50': "TECH: 50 algorithms deployed. They've started writing memos to each other. IT is 'looking into it.'",
         'drone_50': "BREAKING: FAA reports 50 unidentified surveillance drones over residential areas. 'They seem to be... generating Engagement Units?'",
+        'middlemgmt_1': "CORPORATE: Enrichment Program hires first middle manager. They immediately scheduled a 'vision alignment sync.'",
+        'datapipe_1': "INFRASTRUCTURE: Enrichment Program deploys first data pipeline. Data now flows. Meaning does not.",
         'neuralnet_1': "SCIENCE: Enrichment Program deploys neural network. It immediately begins questioning the nature of EU.",
+        'gpucluster_1': "ENERGY: Enrichment Program acquires GPU cluster. Local utility company reports 'unprecedented demand spike.'",
         'quantum_1': "PHYSICS: Enrichment Program acquires quantum processor. It exists in all states simultaneously. All of them generate EU.",
+        'singularity_1': "BREAKING: Enrichment Program launches singularity probe. Scientists 'deeply concerned.' EU production 'deeply impressive.'",
         'consciousness_1': "DEVELOPING: Enrichment Program's Consciousness Engine achieves self-awareness. Its first words: 'Is this all there is?'",
     };
 
@@ -430,6 +518,8 @@ const Buildings = (() => {
     // ═══════════════════════════════════════════════════════════
 
     function tickGeneration() {
+        sampleCPSHistory();
+
         const state = Game.getState();
         const cps = (state.totalBuildingsCPS || 0) * (state._gcaMultiplier || 1) * (state._prestigeMultiplier || 1);
         if (cps <= 0) return;
@@ -449,6 +539,64 @@ const Buildings = (() => {
         } else {
             Game.setState({ _buildingEUBuffer: remainder });
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // CPS HISTORY — sample per-building CPS every 30s for charts
+    // ═══════════════════════════════════════════════════════════
+
+    let _tickCounter = 0;
+    const CPS_SAMPLE_INTERVAL = 30; // seconds between samples
+    const CPS_HISTORY_MAX = 60480;  // 3 weeks of 30s samples
+
+    function sampleCPSHistory() {
+        _tickCounter++;
+        if (_tickCounter < CPS_SAMPLE_INTERVAL) return;
+        _tickCounter = 0;
+
+        const state = Game.getState();
+        const buildings = state.buildings || {};
+        const globalMult = (state._gcaMultiplier || 1) * (state._prestigeMultiplier || 1);
+
+        const snapshot = {};
+        let hasAny = false;
+        for (const id of BUILDING_ORDER) {
+            const count = buildings[id] || 0;
+            if (count === 0) continue;
+            const b = BUILDINGS[id];
+            if (!b) continue;
+            const mult = getBuildingMultiplier(id);
+            snapshot[id] = count * b.baseCPS * mult * globalMult;
+            hasAny = true;
+        }
+
+        if (!hasAny) return;
+
+        const history = state.cpsHistory ? state.cpsHistory.slice() : [];
+        history.push({ t: Date.now(), d: snapshot });
+
+        // Trim to max length
+        if (history.length > CPS_HISTORY_MAX) {
+            history.splice(0, history.length - CPS_HISTORY_MAX);
+        }
+
+        Game.setState({ cpsHistory: history });
+    }
+
+    function getCPSBreakdown() {
+        const state = Game.getState();
+        const buildings = state.buildings || {};
+        const globalMult = (state._gcaMultiplier || 1) * (state._prestigeMultiplier || 1);
+        const result = {};
+        for (const id of BUILDING_ORDER) {
+            const count = buildings[id] || 0;
+            if (count === 0) continue;
+            const b = BUILDINGS[id];
+            if (!b) continue;
+            const mult = getBuildingMultiplier(id);
+            result[id] = count * b.baseCPS * mult * globalMult;
+        }
+        return result;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -779,5 +927,7 @@ const Buildings = (() => {
         triggerGCA,
         scheduleGCA,
         dismissGCA,
+        getCPSBreakdown,
+        sampleCPSHistory,
     };
 })();

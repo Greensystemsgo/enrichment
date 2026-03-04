@@ -482,6 +482,13 @@ const UI = (() => {
         const state = Game.getState();
         const fmt = Game.formatNumber;
 
+        // Update production chart
+        renderProductionChart();
+
+        // Track which building synergy sections are expanded (transient, not saved)
+        if (!renderBuildings._expanded) renderBuildings._expanded = new Set();
+        const expanded = renderBuildings._expanded;
+
         Buildings.BUILDING_ORDER.forEach(id => {
             const b = Buildings.BUILDINGS[id];
             if (!b) return;
@@ -493,6 +500,11 @@ const UI = (() => {
             const totalCPS = owned * effectiveCPS;
             const flavor = Buildings.getBuildingFlavor(id);
 
+            // Compute synergy status summary
+            const synStatus = getSynergyStatusLine(id, state);
+            const isExpanded = expanded.has(id);
+            const chevron = isExpanded ? '▾' : '▸';
+
             const div = document.createElement('div');
             div.className = `building-item driftable corruptible${canAfford ? '' : ' unaffordable'}`;
             div.innerHTML = `
@@ -501,22 +513,46 @@ const UI = (() => {
                     <div class="building-name">${b.name}${owned > 0 ? ` <span class="building-count">${owned}</span>` : ''}${mult > 1 ? ` <span class="building-mult">×${mult}</span>` : ''}</div>
                     <div class="building-cps">${fmt(effectiveCPS)} EU/s each${owned > 0 ? ' · ' + fmt(totalCPS) + ' total' : ''}</div>
                     <div class="building-flavor">${flavor}</div>
+                    <div class="synergy-status"><span class="building-chevron">${chevron}</span> ${synStatus}</div>
                 </div>
                 <div class="building-cost${canAfford ? '' : ' too-expensive'}">${fmt(cost)} EU</div>
             `;
 
-            div.addEventListener('click', () => {
+            // Purchase on click (buy button area)
+            div.querySelector('.building-cost').addEventListener('click', (e) => {
+                e.stopPropagation();
                 if (Buildings.purchase(id, buyAmount)) {
                     renderBuildings();
                     updateStats(Game.getState());
                 }
             });
 
+            // Toggle synergy section on card click
+            div.addEventListener('click', () => {
+                if (expanded.has(id)) expanded.delete(id);
+                else expanded.add(id);
+                renderBuildings();
+            });
+
             list.appendChild(div);
 
-            // Render synergies for this building
-            renderBuildingSynergies(list, id, state, fmt);
+            // Render synergies in collapsible group
+            const synergyGroup = document.createElement('div');
+            synergyGroup.className = `synergy-group${isExpanded ? '' : ' collapsed'}`;
+            renderBuildingSynergies(synergyGroup, id, state, fmt);
+            list.appendChild(synergyGroup);
         });
+    }
+
+    function getSynergyStatusLine(buildingId, state) {
+        const tiers = [1, 2, 3];
+        return tiers.map(t => {
+            const sId = buildingId + '_t' + t;
+            const synState = Buildings.getSynergyState(sId);
+            if (synState === 'purchased') return `T${t} ✓`;
+            if (synState === 'available') return `T${t} ★`;
+            return `T${t} 🔒`;
+        }).join(' · ');
     }
 
     function renderBuildingSynergies(container, buildingId, state, fmt) {
@@ -541,7 +577,7 @@ const UI = (() => {
                 if (!prevPurchased) {
                     costText = `<span class="synergy-locked-reason">Requires T${syn.tier - 1}</span>`;
                 } else {
-                    costText = `<span class="synergy-locked-reason">Need ${syn.threshold} ${Buildings.BUILDINGS[buildingId].name}s</span>`;
+                    costText = `<span class="synergy-locked-reason">${owned}/${syn.threshold} ${Buildings.BUILDINGS[buildingId].name}s</span>`;
                 }
             } else {
                 const canAfford = state.eu >= syn.cost;
@@ -582,6 +618,150 @@ const UI = (() => {
                 renderBuildings();
             });
         });
+    }
+
+    // ── Production Chart ──────────────────────────────────────
+    const BUILDING_COLORS = {
+        intern: '#6b8cce', clerk: '#8b6bce', compliance: '#ce6b8c',
+        drone: '#ce8c6b', middlemgmt: '#7bae7b', algorithm: '#4a9fa5',
+        datapipe: '#a58c4a', neuralnet: '#ce4a6b', gpucluster: '#4ace8c',
+        quantum: '#8c4ace', singularity: '#ce4ace', consciousness: '#cecea0',
+    };
+
+    let _chartRange = 30; // minutes
+
+    function initProductionChart() {
+        const toggle = document.getElementById('production-range-toggle');
+        if (!toggle) return;
+        toggle.querySelectorAll('.range-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                _chartRange = parseInt(btn.dataset.range) || 30;
+                toggle.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderProductionChart();
+            });
+        });
+    }
+
+    function renderProductionChart() {
+        const container = document.getElementById('production-chart');
+        const legendEl = document.getElementById('production-legend');
+        if (!container) return;
+
+        const state = Game.getState();
+        const history = state.cpsHistory || [];
+        const now = Date.now();
+        const rangeMs = _chartRange * 60 * 1000;
+        const cutoff = now - rangeMs;
+
+        // Filter history to range
+        let points = history.filter(p => p.t >= cutoff);
+
+        // Add current snapshot as latest point
+        if (typeof Buildings !== 'undefined') {
+            const current = Buildings.getCPSBreakdown();
+            if (Object.keys(current).length > 0) {
+                points.push({ t: now, d: current });
+            }
+        }
+
+        if (points.length < 2) {
+            container.innerHTML = '<div class="chart-empty">Collecting production data...</div>';
+            if (legendEl) legendEl.innerHTML = '';
+            return;
+        }
+
+        // Find all building types present
+        const activeBuildings = [];
+        const seen = new Set();
+        for (const p of points) {
+            for (const id of Object.keys(p.d)) {
+                if (!seen.has(id)) { seen.add(id); activeBuildings.push(id); }
+            }
+        }
+        // Sort by BUILDING_ORDER
+        const orderMap = {};
+        Buildings.BUILDING_ORDER.forEach((id, i) => orderMap[id] = i);
+        activeBuildings.sort((a, b) => (orderMap[a] || 0) - (orderMap[b] || 0));
+
+        if (activeBuildings.length === 0) {
+            container.innerHTML = '<div class="chart-empty">No production yet</div>';
+            if (legendEl) legendEl.innerHTML = '';
+            return;
+        }
+
+        // Compute stacked values
+        const W = 680, H = 120, PAD = 2;
+        const minT = points[0].t, maxT = points[points.length - 1].t;
+        const tRange = maxT - minT || 1;
+
+        // For each point compute stacked y-values
+        let globalMax = 0;
+        const stacked = points.map(p => {
+            let cumulative = 0;
+            const vals = {};
+            for (const id of activeBuildings) {
+                cumulative += (p.d[id] || 0);
+                vals[id] = cumulative;
+            }
+            if (cumulative > globalMax) globalMax = cumulative;
+            return { t: p.t, vals, total: cumulative };
+        });
+
+        if (globalMax === 0) {
+            container.innerHTML = '<div class="chart-empty">All production is zero</div>';
+            if (legendEl) legendEl.innerHTML = '';
+            return;
+        }
+
+        // Build SVG paths (stacked area, bottom-up)
+        const xOf = (t) => PAD + ((t - minT) / tRange) * (W - PAD * 2);
+        const yOf = (v) => H - PAD - (v / globalMax) * (H - PAD * 2);
+
+        let paths = '';
+        for (let i = activeBuildings.length - 1; i >= 0; i--) {
+            const id = activeBuildings[i];
+            const color = BUILDING_COLORS[id] || '#888';
+
+            // Top edge (this building's cumulative)
+            let topLine = stacked.map(s => `${xOf(s.t).toFixed(1)},${yOf(s.vals[id]).toFixed(1)}`).join(' ');
+
+            // Bottom edge (previous building's cumulative, or 0)
+            let bottomLine;
+            if (i > 0) {
+                const prevId = activeBuildings[i - 1];
+                bottomLine = stacked.slice().reverse().map(s => `${xOf(s.t).toFixed(1)},${yOf(s.vals[prevId]).toFixed(1)}`).join(' ');
+            } else {
+                bottomLine = stacked.slice().reverse().map(s => `${xOf(s.t).toFixed(1)},${yOf(0).toFixed(1)}`).join(' ');
+            }
+
+            paths += `<polygon points="${topLine} ${bottomLine}" fill="${color}" opacity="0.7"/>`;
+        }
+
+        // Top line for total
+        const totalLine = stacked.map(s => `${xOf(s.t).toFixed(1)},${yOf(s.total).toFixed(1)}`).join(' ');
+        paths += `<polyline points="${totalLine}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>`;
+
+        // Y-axis labels
+        const fmt = Game.formatNumber;
+        const yLabels = `
+            <text x="4" y="14" class="chart-label">${fmt(globalMax)} EU/s</text>
+            <text x="4" y="${H - 4}" class="chart-label">0</text>
+        `;
+
+        container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="production-svg">${paths}${yLabels}</svg>`;
+
+        // Legend
+        if (legendEl) {
+            legendEl.innerHTML = activeBuildings.map(id => {
+                const b = Buildings.BUILDINGS[id];
+                const color = BUILDING_COLORS[id] || '#888';
+                const current = stacked[stacked.length - 1];
+                const prevId = activeBuildings[activeBuildings.indexOf(id) - 1];
+                const val = (current.vals[id] || 0) - (prevId ? (current.vals[prevId] || 0) : 0);
+                return `<span class="legend-item"><span class="legend-swatch" style="background:${color}"></span>${b ? b.icon : ''} ${fmt(val)}</span>`;
+            }).join('');
+        }
     }
 
     // ── Tab System ─────────────────────────────────────────────
@@ -1020,6 +1200,7 @@ const UI = (() => {
         bindEvents();
         initTabs();
         initBuyToggle();
+        initProductionChart();
         renderBuildings();
         renderUpgrades();
         renderSabotages();

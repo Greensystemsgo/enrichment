@@ -30,7 +30,7 @@ js/chat.js              — Dead Internet Chat (fake multiplayer, 16 bot persona
 js/gacha.js             — Gacha/loot box system (rigged wheel, near-miss)
 js/battlepass.js        — Battle Pass/Eternal Season (impossible dailies)
 js/transmissions.js     — 165+ AI self-roasts, 13 model voices
-test-playthrough.js     — Playwright test suite (226/226 = 100% coverage)
+test-playthrough.js     — Playwright test suite (233/233 = 100% coverage)
 gameidea.txt            — Original satirical design doc
 Makefile                — Dev server, git helpers
 ```
@@ -158,7 +158,9 @@ make status / log / diff — git info
 - Console warnings for devtools snoopers
 - Transmissions system (165+ AI self-roasts from 13 models, balanced milestones across 6 models)
 - 5 canvas betrayal minigames + 25-question AI interrogation quiz + 12-tile CYOA
-- Automated test suite: 227/227 coverage (features + achievements + popup categories + new systems)
+- 12 workforce buildings with 36 synergies (3 tiers each), collapsible synergy UI
+- Production chart (stacked area, per-building CPS history, 30m/3h/3d/3w toggle)
+- Automated test suite: 233/233 coverage (features + achievements + popup categories + new systems)
 
 ## TODO Backlog
 
