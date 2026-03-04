@@ -622,10 +622,18 @@ const UI = (() => {
 
     // ── Production Chart ──────────────────────────────────────
     const BUILDING_COLORS = {
-        intern: '#6b8cce', clerk: '#8b6bce', compliance: '#ce6b8c',
-        drone: '#ce8c6b', middlemgmt: '#7bae7b', algorithm: '#4a9fa5',
-        datapipe: '#a58c4a', neuralnet: '#ce4a6b', gpucluster: '#4ace8c',
-        quantum: '#8c4ace', singularity: '#ce4ace', consciousness: '#cecea0',
+        intern:       { fill: '#4a7fd4', stroke: '#6b9ce8' },
+        clerk:        { fill: '#7b5fc7', stroke: '#9b7fe7' },
+        compliance:   { fill: '#c45a7a', stroke: '#e07a9a' },
+        drone:        { fill: '#c48a5a', stroke: '#e0aa7a' },
+        middlemgmt:   { fill: '#5aaa5a', stroke: '#7aca7a' },
+        algorithm:    { fill: '#3a8fa0', stroke: '#5aafb0' },
+        datapipe:     { fill: '#b09030', stroke: '#d0b050' },
+        neuralnet:    { fill: '#d04060', stroke: '#f06080' },
+        gpucluster:   { fill: '#30b070', stroke: '#50d090' },
+        quantum:      { fill: '#8040c0', stroke: '#a060e0' },
+        singularity:  { fill: '#c040c0', stroke: '#e060e0' },
+        consciousness:{ fill: '#c0c070', stroke: '#e0e090' },
     };
 
     let _chartRange = 30; // minutes
@@ -646,6 +654,7 @@ const UI = (() => {
     function renderProductionChart() {
         const container = document.getElementById('production-chart');
         const legendEl = document.getElementById('production-legend');
+        const titleArea = document.querySelector('.production-chart-total');
         if (!container) return;
 
         const state = Game.getState();
@@ -665,9 +674,12 @@ const UI = (() => {
             }
         }
 
+        const fmt = Game.formatNumber;
+
         if (points.length < 2) {
-            container.innerHTML = '<div class="chart-empty">Collecting production data...</div>';
+            container.innerHTML = '<div class="chart-empty">Sampling production data<span class="chart-dots">...</span></div>';
             if (legendEl) legendEl.innerHTML = '';
+            if (titleArea) titleArea.textContent = '';
             return;
         }
 
@@ -685,13 +697,16 @@ const UI = (() => {
         activeBuildings.sort((a, b) => (orderMap[a] || 0) - (orderMap[b] || 0));
 
         if (activeBuildings.length === 0) {
-            container.innerHTML = '<div class="chart-empty">No production yet</div>';
+            container.innerHTML = '<div class="chart-empty">No active workforce</div>';
             if (legendEl) legendEl.innerHTML = '';
+            if (titleArea) titleArea.textContent = '';
             return;
         }
 
-        // Compute stacked values
-        const W = 680, H = 120, PAD = 2;
+        // Chart dimensions — left margin for y-axis labels
+        const W = 680, H = 140, LEFT = 52, RIGHT = 8, TOP = 12, BOTTOM = 20;
+        const plotW = W - LEFT - RIGHT;
+        const plotH = H - TOP - BOTTOM;
         const minT = points[0].t, maxT = points[points.length - 1].t;
         const tRange = maxT - minT || 1;
 
@@ -711,57 +726,160 @@ const UI = (() => {
         if (globalMax === 0) {
             container.innerHTML = '<div class="chart-empty">All production is zero</div>';
             if (legendEl) legendEl.innerHTML = '';
+            if (titleArea) titleArea.textContent = '';
             return;
         }
 
-        // Build SVG paths (stacked area, bottom-up)
-        const xOf = (t) => PAD + ((t - minT) / tRange) * (W - PAD * 2);
-        const yOf = (v) => H - PAD - (v / globalMax) * (H - PAD * 2);
+        // Round up globalMax to nice number for grid
+        const niceMax = niceRound(globalMax);
+        const gridSteps = 4;
 
-        let paths = '';
+        const xOf = (t) => LEFT + ((t - minT) / tRange) * plotW;
+        const yOf = (v) => TOP + plotH - (v / niceMax) * plotH;
+
+        // Build SVG defs — gradient for each building
+        let defs = '<defs>';
+        for (const id of activeBuildings) {
+            const c = BUILDING_COLORS[id] || { fill: '#888', stroke: '#aaa' };
+            defs += `<linearGradient id="grad-${id}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${c.fill}" stop-opacity="0.85"/>
+                <stop offset="100%" stop-color="${c.fill}" stop-opacity="0.25"/>
+            </linearGradient>`;
+        }
+        defs += '</defs>';
+
+        // Grid lines + y-axis labels
+        let grid = '';
+        for (let i = 0; i <= gridSteps; i++) {
+            const val = (niceMax / gridSteps) * i;
+            const y = yOf(val);
+            grid += `<line x1="${LEFT}" y1="${y.toFixed(1)}" x2="${W - RIGHT}" y2="${y.toFixed(1)}" class="chart-grid"/>`;
+            if (i > 0) {
+                grid += `<text x="${LEFT - 6}" y="${(y + 3).toFixed(1)}" class="chart-ylabel">${fmt(val)}</text>`;
+            }
+        }
+        // Zero label
+        grid += `<text x="${LEFT - 6}" y="${(yOf(0) + 3).toFixed(1)}" class="chart-ylabel">0</text>`;
+
+        // Time axis labels
+        const timeSteps = Math.min(5, points.length);
+        for (let i = 0; i <= timeSteps; i++) {
+            const t = minT + (tRange / timeSteps) * i;
+            const x = xOf(t);
+            const elapsed = (t - now) / 60000; // minutes ago
+            let label;
+            if (Math.abs(elapsed) < 1) label = 'now';
+            else if (_chartRange <= 180) label = `${Math.round(elapsed)}m`;
+            else if (_chartRange <= 4320) label = `${(elapsed / 60).toFixed(1)}h`;
+            else label = `${(elapsed / 1440).toFixed(1)}d`;
+            grid += `<text x="${x.toFixed(1)}" y="${H - 3}" class="chart-xlabel">${label}</text>`;
+        }
+
+        // Build stacked area paths with smooth curves
+        let areas = '';
         for (let i = activeBuildings.length - 1; i >= 0; i--) {
             const id = activeBuildings[i];
-            const color = BUILDING_COLORS[id] || '#888';
+            const c = BUILDING_COLORS[id] || { fill: '#888', stroke: '#aaa' };
 
-            // Top edge (this building's cumulative)
-            let topLine = stacked.map(s => `${xOf(s.t).toFixed(1)},${yOf(s.vals[id]).toFixed(1)}`).join(' ');
+            // Top edge points
+            const topPts = stacked.map(s => ({ x: xOf(s.t), y: yOf(s.vals[id]) }));
 
-            // Bottom edge (previous building's cumulative, or 0)
-            let bottomLine;
+            // Bottom edge points
+            let bottomPts;
             if (i > 0) {
                 const prevId = activeBuildings[i - 1];
-                bottomLine = stacked.slice().reverse().map(s => `${xOf(s.t).toFixed(1)},${yOf(s.vals[prevId]).toFixed(1)}`).join(' ');
+                bottomPts = stacked.map(s => ({ x: xOf(s.t), y: yOf(s.vals[prevId]) }));
             } else {
-                bottomLine = stacked.slice().reverse().map(s => `${xOf(s.t).toFixed(1)},${yOf(0).toFixed(1)}`).join(' ');
+                bottomPts = stacked.map(s => ({ x: xOf(s.t), y: yOf(0) }));
             }
 
-            paths += `<polygon points="${topLine} ${bottomLine}" fill="${color}" opacity="0.7"/>`;
+            // Build smooth path using monotone cubic interpolation
+            const topPath = smoothLine(topPts);
+            const bottomPath = smoothLine(bottomPts.slice().reverse());
+
+            areas += `<path d="${topPath} L${bottomPts[bottomPts.length - 1].x.toFixed(1)},${bottomPts[bottomPts.length - 1].y.toFixed(1)} ${bottomPath.replace(/^M[^ ]+ /, '')} Z" fill="url(#grad-${id})" stroke="${c.stroke}" stroke-width="0.8" stroke-opacity="0.6"/>`;
         }
 
-        // Top line for total
-        const totalLine = stacked.map(s => `${xOf(s.t).toFixed(1)},${yOf(s.total).toFixed(1)}`).join(' ');
-        paths += `<polyline points="${totalLine}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>`;
+        // Top total line with glow
+        const totalPts = stacked.map(s => ({ x: xOf(s.t), y: yOf(s.total) }));
+        const totalPath = smoothLine(totalPts);
+        areas += `<path d="${totalPath}" fill="none" stroke="rgba(255,215,0,0.4)" stroke-width="1.5" filter="url(#glow)"/>`;
 
-        // Y-axis labels
-        const fmt = Game.formatNumber;
-        const yLabels = `
-            <text x="4" y="14" class="chart-label">${fmt(globalMax)} EU/s</text>
-            <text x="4" y="${H - 4}" class="chart-label">0</text>
-        `;
+        // Add glow filter to defs
+        defs = defs.replace('</defs>', `<filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter></defs>`);
 
-        container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="production-svg">${paths}${yLabels}</svg>`;
+        // Current value dot on rightmost point
+        const lastTotal = stacked[stacked.length - 1].total;
+        const dotX = xOf(maxT), dotY = yOf(lastTotal);
+        const dot = `<circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="3" fill="#ffd700" stroke="#0a0a0f" stroke-width="1.5"/>
+            <text x="${dotX.toFixed(1)}" y="${(dotY - 8).toFixed(1)}" class="chart-dot-label">${fmt(lastTotal)} EU/s</text>`;
 
-        // Legend
+        // Plot area border
+        const plotBorder = `<rect x="${LEFT}" y="${TOP}" width="${plotW}" height="${plotH}" fill="none" stroke="var(--border-color)" stroke-width="0.5"/>`;
+
+        container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="production-svg">${defs}${grid}${plotBorder}${areas}${dot}</svg>`;
+
+        // Update total CPS display
+        if (titleArea) {
+            titleArea.textContent = `${fmt(lastTotal)} EU/s`;
+        }
+
+        // Legend — richer, with building name and percentage
         if (legendEl) {
+            const currentSnap = stacked[stacked.length - 1];
+            const total = currentSnap.total || 1;
             legendEl.innerHTML = activeBuildings.map(id => {
                 const b = Buildings.BUILDINGS[id];
-                const color = BUILDING_COLORS[id] || '#888';
-                const current = stacked[stacked.length - 1];
-                const prevId = activeBuildings[activeBuildings.indexOf(id) - 1];
-                const val = (current.vals[id] || 0) - (prevId ? (current.vals[prevId] || 0) : 0);
-                return `<span class="legend-item"><span class="legend-swatch" style="background:${color}"></span>${b ? b.icon : ''} ${fmt(val)}</span>`;
+                const c = BUILDING_COLORS[id] || { fill: '#888' };
+                const prevIdx = activeBuildings.indexOf(id) - 1;
+                const prevId = prevIdx >= 0 ? activeBuildings[prevIdx] : null;
+                const val = (currentSnap.vals[id] || 0) - (prevId ? (currentSnap.vals[prevId] || 0) : 0);
+                const pct = ((val / total) * 100).toFixed(0);
+                return `<div class="legend-item">
+                    <span class="legend-swatch" style="background:${c.fill}; box-shadow: 0 0 4px ${c.fill}88"></span>
+                    <span class="legend-icon">${b ? b.icon : ''}</span>
+                    <span class="legend-name">${b ? b.name : id}</span>
+                    <span class="legend-val">${fmt(val)}</span>
+                    <span class="legend-pct">${pct}%</span>
+                </div>`;
             }).join('');
         }
+    }
+
+    // Monotone cubic spline interpolation for smooth SVG paths
+    function smoothLine(pts) {
+        if (pts.length < 2) return `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+        if (pts.length === 2) return `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)} L${pts[1].x.toFixed(1)},${pts[1].y.toFixed(1)}`;
+
+        let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+        for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = pts[Math.max(0, i - 1)];
+            const p1 = pts[i];
+            const p2 = pts[i + 1];
+            const p3 = pts[Math.min(pts.length - 1, i + 2)];
+
+            const cp1x = p1.x + (p2.x - p0.x) / 6;
+            const cp1y = p1.y + (p2.y - p0.y) / 6;
+            const cp2x = p2.x - (p3.x - p1.x) / 6;
+            const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+            d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+        }
+        return d;
+    }
+
+    // Round up to a nice number for chart axis
+    function niceRound(val) {
+        if (val <= 0) return 1;
+        const magnitude = Math.pow(10, Math.floor(Math.log10(val)));
+        const normalized = val / magnitude;
+        if (normalized <= 1) return magnitude;
+        if (normalized <= 2) return 2 * magnitude;
+        if (normalized <= 5) return 5 * magnitude;
+        return 10 * magnitude;
     }
 
     // ── Tab System ─────────────────────────────────────────────
