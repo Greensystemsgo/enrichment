@@ -5864,7 +5864,13 @@ body.crown-seizure {
     font-size: 9px;
     font-weight: 700;
     fill: var(--accent-gold-bright);
+    text-anchor: end;
+}
+
+.production-svg .chart-event-emoji {
+    font-size: 11px;
     text-anchor: middle;
+    pointer-events: none;
 }
 
 .chart-empty {

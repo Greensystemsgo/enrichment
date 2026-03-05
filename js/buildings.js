@@ -324,6 +324,12 @@ const Buildings = (() => {
             UI.logAction(`SYNERGY PURCHASED: ${syn.name} (Tier ${syn.tier}, ${syn.building})`);
         }
 
+        // Record synergy purchase for chart markers
+        const sevts = (Game.getState().purchaseEvents || []).slice();
+        sevts.push({ t: Date.now(), id: syn.building, synergy: syn.name, tier: syn.tier });
+        if (sevts.length > 500) sevts.splice(0, sevts.length - 500);
+        Game.setState({ purchaseEvents: sevts });
+
         Game.emit('synergyPurchased', { id: synergyId, tier: syn.tier, building: syn.building });
         return true;
     }
@@ -470,6 +476,13 @@ const Buildings = (() => {
         if (typeof UI !== 'undefined') {
             UI.logAction(`BUILDING PURCHASED: ${count}x ${b.name} (total: ${buildings[id]}, cost: ${cost} EU)`);
         }
+
+        // Record purchase event for chart markers
+        const evts = (Game.getState().purchaseEvents || []).slice();
+        evts.push({ t: Date.now(), id, count, total: buildings[id] });
+        // Keep max 500 events
+        if (evts.length > 500) evts.splice(0, evts.length - 500);
+        Game.setState({ purchaseEvents: evts });
 
         // Emit events
         Game.emit('buildingPurchased', { id, count, total: buildings[id], cost });

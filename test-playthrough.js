@@ -1630,6 +1630,15 @@ async function main() {
             else fail('cps-breakdown', JSON.stringify(breakdown));
         } catch (e) { fail('cps-breakdown', e.message); }
 
+        // ── Purchase event markers ──
+        try {
+            Game.setState({ eu: 10000000, buildings: {}, purchaseEvents: [] });
+            Buildings.purchase('intern', 1);
+            const evts = Game.getState().purchaseEvents || [];
+            if (evts.length >= 1 && evts[0].id === 'intern' && evts[0].t > 0) pass('purchase-events: recorded with timestamp');
+            else fail('purchase-events', `events=${JSON.stringify(evts)}`);
+        } catch (e) { fail('purchase-events', e.message); }
+
         // ── CPS history sampling ──
         try {
             Game.setState({ eu: 10000000, buildings: { intern: 10 }, synergies: {}, cpsHistory: [], _gcaMultiplier: 1, _prestigeMultiplier: 1, totalBuildingsCPS: 1 });

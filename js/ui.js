@@ -738,14 +738,21 @@ const UI = (() => {
         const xOf = (t) => LEFT + ((t - minT) / tRange) * plotW;
         const yOf = (v) => TOP + plotH - (v / niceMax) * plotH;
 
-        // Build SVG defs — gradient for each building
+        // Build SVG defs — gradient + hatch pattern for each building
         let defs = '<defs>';
         for (const id of activeBuildings) {
             const c = BUILDING_COLORS[id] || { fill: '#888', stroke: '#aaa' };
+            // Gradient fill
             defs += `<linearGradient id="grad-${id}" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="${c.fill}" stop-opacity="0.85"/>
-                <stop offset="100%" stop-color="${c.fill}" stop-opacity="0.25"/>
+                <stop offset="0%" stop-color="${c.fill}" stop-opacity="0.9"/>
+                <stop offset="50%" stop-color="${c.fill}" stop-opacity="0.45"/>
+                <stop offset="100%" stop-color="${c.fill}" stop-opacity="0.12"/>
             </linearGradient>`;
+            // Diagonal hatch pattern
+            defs += `<pattern id="hatch-${id}" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+                <rect width="6" height="6" fill="url(#grad-${id})"/>
+                <line x1="0" y1="0" x2="0" y2="6" stroke="${c.stroke}" stroke-width="0.5" stroke-opacity="0.15"/>
+            </pattern>`;
         }
         defs += '</defs>';
 
@@ -798,30 +805,93 @@ const UI = (() => {
             const topPath = smoothLine(topPts);
             const bottomPath = smoothLine(bottomPts.slice().reverse());
 
-            areas += `<path d="${topPath} L${bottomPts[bottomPts.length - 1].x.toFixed(1)},${bottomPts[bottomPts.length - 1].y.toFixed(1)} ${bottomPath.replace(/^M[^ ]+ /, '')} Z" fill="url(#grad-${id})" stroke="${c.stroke}" stroke-width="0.8" stroke-opacity="0.6"/>`;
+            const areaPath = `${topPath} L${bottomPts[bottomPts.length - 1].x.toFixed(1)},${bottomPts[bottomPts.length - 1].y.toFixed(1)} ${bottomPath.replace(/^M[^ ]+ /, '')} Z`;
+
+            // Hatched fill layer + bright top stroke
+            areas += `<path d="${areaPath}" fill="url(#hatch-${id})"/>`;
+            areas += `<path d="${topPath}" fill="none" stroke="${c.stroke}" stroke-width="1.2" stroke-opacity="0.8" stroke-linejoin="round"/>`;
         }
 
         // Top total line with glow
         const totalPts = stacked.map(s => ({ x: xOf(s.t), y: yOf(s.total) }));
         const totalPath = smoothLine(totalPts);
-        areas += `<path d="${totalPath}" fill="none" stroke="rgba(255,215,0,0.4)" stroke-width="1.5" filter="url(#glow)"/>`;
+        areas += `<path d="${totalPath}" fill="none" stroke="rgba(255,215,0,0.5)" stroke-width="2" filter="url(#glow)"/>`;
 
-        // Add glow filter to defs
+        // Add glow filter + drop shadow for markers to defs
         defs = defs.replace('</defs>', `<filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
             <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="emoji-shadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000" flood-opacity="0.6"/>
         </filter></defs>`);
 
         // Current value dot on rightmost point
         const lastTotal = stacked[stacked.length - 1].total;
         const dotX = xOf(maxT), dotY = yOf(lastTotal);
-        const dot = `<circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="3" fill="#ffd700" stroke="#0a0a0f" stroke-width="1.5"/>
-            <text x="${dotX.toFixed(1)}" y="${(dotY - 8).toFixed(1)}" class="chart-dot-label">${fmt(lastTotal)} EU/s</text>`;
+        const dot = `<circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="3.5" fill="#ffd700" stroke="#0a0a0f" stroke-width="1.5" filter="url(#glow)"/>
+            <text x="${(dotX - 4).toFixed(1)}" y="${(dotY - 9).toFixed(1)}" class="chart-dot-label">${fmt(lastTotal)} EU/s</text>`;
+
+        // Purchase event markers — emoji annotations on the chart
+        let markers = '';
+        const purchaseEvents = state.purchaseEvents || [];
+        const visibleEvents = purchaseEvents.filter(e => e.t >= cutoff && e.t <= now);
+
+        // Dedupe nearby events (within 2% of chart width) to avoid emoji pile-ups
+        const deduped = [];
+        const minGapPx = plotW * 0.025;
+        for (const evt of visibleEvents) {
+            const ex = xOf(evt.t);
+            const tooClose = deduped.some(d => Math.abs(xOf(d.t) - ex) < minGapPx);
+            if (!tooClose) deduped.push(evt);
+            else {
+                // Merge: keep the one with the more interesting building (higher in order)
+                const existing = deduped.find(d => Math.abs(xOf(d.t) - ex) < minGapPx);
+                if (existing && (orderMap[evt.id] || 0) > (orderMap[existing.id] || 0)) {
+                    Object.assign(existing, evt);
+                }
+            }
+        }
+
+        for (const evt of deduped) {
+            const b = Buildings.BUILDINGS[evt.id];
+            if (!b) continue;
+            const ex = xOf(evt.t);
+            if (ex < LEFT || ex > W - RIGHT) continue;
+
+            // Find the total CPS at this timestamp by interpolating stacked data
+            let markerY = yOf(0);
+            for (let si = 0; si < stacked.length - 1; si++) {
+                if (stacked[si].t <= evt.t && stacked[si + 1].t >= evt.t) {
+                    const frac = (evt.t - stacked[si].t) / (stacked[si + 1].t - stacked[si].t || 1);
+                    const interpTotal = stacked[si].total + (stacked[si + 1].total - stacked[si].total) * frac;
+                    markerY = yOf(interpTotal);
+                    break;
+                }
+            }
+            // If after last data point, use last total
+            if (evt.t >= stacked[stacked.length - 1].t) {
+                markerY = yOf(stacked[stacked.length - 1].total);
+            }
+
+            const c = BUILDING_COLORS[evt.id] || { stroke: '#aaa' };
+
+            // Vertical tick line from marker to bottom
+            markers += `<line x1="${ex.toFixed(1)}" y1="${markerY.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${yOf(0).toFixed(1)}" stroke="${c.stroke}" stroke-width="0.6" stroke-opacity="0.35" stroke-dasharray="2,2"/>`;
+
+            // Small diamond at the CPS line
+            markers += `<circle cx="${ex.toFixed(1)}" cy="${markerY.toFixed(1)}" r="2" fill="${c.stroke}" stroke="#0a0a0f" stroke-width="0.8"/>`;
+
+            // Emoji above the chart area
+            const emojiY = Math.max(TOP + 2, markerY - 14);
+            const label = evt.synergy ? `T${evt.tier}` : b.icon;
+            markers += `<text x="${ex.toFixed(1)}" y="${emojiY.toFixed(1)}" class="chart-event-emoji" filter="url(#emoji-shadow)">${label}</text>`;
+        }
 
         // Plot area border
         const plotBorder = `<rect x="${LEFT}" y="${TOP}" width="${plotW}" height="${plotH}" fill="none" stroke="var(--border-color)" stroke-width="0.5"/>`;
 
-        container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="production-svg">${defs}${grid}${plotBorder}${areas}${dot}</svg>`;
+        container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="production-svg">${defs}${grid}${plotBorder}${areas}${markers}${dot}</svg>`;
 
         // Update total CPS display
         if (titleArea) {
