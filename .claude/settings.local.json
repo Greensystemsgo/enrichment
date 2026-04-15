@@ -95,7 +95,16 @@
       "WebFetch(domain:en.wikipedia.org)",
       "mcp__gemini__gemini-brainstorm",
       "Bash(sed:*)",
-      "mcp__qwen__chat-with-qwen-2_5-72b"
+      "mcp__qwen__chat-with-qwen-2_5-72b",
+      "Bash(claude --version)",
+      "Bash(claude config:*)",
+      "mcp__hermes__chat-with-hermes-3_405b",
+      "mcp__nvidia__chat-with-nvidia-nemotron",
+      "mcp__solar__chat-with-solar-pro_3",
+      "mcp__glm__chat-with-glm-4_5-air",
+      "mcp__gemma__chat-with-gemma-3_27b",
+      "mcp__gptoss__chat-with-gpt-oss-120b",
+      "Bash(wait)"
     ]
   },
   "enabledMcpjsonServers": [
@@ -106,6 +115,12 @@
     "deepseek",
     "mistral",
     "qwen",
-    "huggingface"
+    "huggingface",
+    "nvidia",
+    "solar",
+    "gemma",
+    "hermes",
+    "gptoss",
+    "glm"
   ]
 }

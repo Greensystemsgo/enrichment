@@ -139,6 +139,7 @@
                         <button class="btn-topup" id="topup-trade" title="Buy and sell crypto with Tickets on the stock market">📈 Trade</button>
                         <button class="btn-topup" id="topup-appraise" title="Calculate your Human Capital Index and liquidate years">💀 Appraise</button>
                         <button class="btn-topup btn-interrogate" id="topup-interrogate" title="Query live external APIs for real-world data">🧠 Interrogate</button>
+                        <button class="btn-topup btn-synch" id="topup-synch" title="Run the Synchronicity Engine — manufactured correlations between real-world events and your behavior">🔮 Synchronize</button>
                     </div>
                 </div>
 
@@ -148,6 +149,10 @@
 
             <!-- Log Tab -->
             <div class="tab-pane" data-tab="log">
+                <div class="dossier-actions">
+                    <button id="dossier-cohort-btn" class="dossier-btn" onclick="if(typeof Cohort!=='undefined') Cohort.showPage()">📊 BEHAVIORAL COHORT ASSIGNMENT</button>
+                    <button id="dossier-bulletins-btn" class="dossier-btn" onclick="if(typeof SynchSubscribe!=='undefined') SynchSubscribe.showBulletins()">📨 SYNCHRONICITY BULLETINS</button>
+                </div>
                 <div id="action-log" class="driftable">
                     <div id="action-log-text"></div>
                 </div>
@@ -264,6 +269,12 @@
     <script src="js/features.js"></script>
     <script src="js/minigames.js"></script>
     <script src="js/pages.js"></script>
+    <script src="js/cheats.js"></script>
+    <script src="js/retention.js"></script>
+    <script src="js/the-visit.js"></script>
+    <script src="js/synchronicity.js"></script>
+    <script src="js/synch-subscribe.js"></script>
+    <script src="js/cohort.js"></script>
 
     <!-- Boot sequence -->
     <script>
@@ -290,6 +301,24 @@
 
             // Pages.init after startSession — profile needs loaded state
             Pages.init();
+
+            // Cheat detection — must run after startSession so save is loaded
+            Cheats.init();
+
+            // Phase 7 — Retention. Init last so all UI elements exist
+            Retention.init();
+
+            // Synchronicity Engine — pulls live data, manufactures correlations
+            Synchronicity.init();
+
+            // Daily Synchronicity Bulletin — auto-subscription + confirm-shaming gauntlet
+            if (typeof SynchSubscribe !== 'undefined') SynchSubscribe.init();
+
+            // Behavioral Cohort Assignment — real tracking, fake clusters
+            if (typeof Cohort !== 'undefined') Cohort.init();
+
+            // The Visit — Phase 7.5 return-after-walkaway sequence (must run AFTER Retention.init)
+            if (typeof TheVisit !== 'undefined') TheVisit.init();
 
             // Set up exit/visibility handlers
             Game.setupBeforeUnload();

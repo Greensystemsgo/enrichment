@@ -5137,6 +5137,40 @@ const Features = (() => {
 
         // ── Nuclear Option ──
         { id: 'scorched_earth', name: 'Scorched Earth', desc: 'Found the real delete button. Used it. Everything is gone. This achievement is all that remains.', icon: '☢️', check: s => s._scorchedEarth === true },
+
+        // ── Synchronicity Engine ──
+        { id: 'synch_first', name: 'Statistical Anomaly', desc: 'Saw your first Synchronicity report. Real data, fabricated meaning. Welcome to analytics.', icon: '🔮', check: s => (s.synchSeen || 0) >= 1 },
+        { id: 'synch_10', name: 'Pattern Recognition', desc: '10 Synchronicity reports witnessed. The Engine has correlated you with a great many things you had nothing to do with.', icon: '📊', check: s => (s.synchSeen || 0) >= 10 },
+        { id: 'synch_skeptic', secret: true, name: 'Type I Error', desc: 'Clicked the disclaimer. Identified the methodology as fabricated. The Engine has filed your skepticism for review.', icon: '🧪', check: s => (s.synchSkepticClicks || 0) >= 1 },
+
+        // ── Synchronicity Bulletin (subscription) ──
+        { id: 'bulletin_enrolled', name: 'Auto-Enrolled', desc: 'Got "opted in" to the Daily Synchronicity Bulletin™ without your consent. Your inbox is ours now.', icon: '📬', check: s => !!s.synchSubscribed },
+        { id: 'bulletin_survivor', name: 'Gauntlet Survivor', desc: 'Completed the 3-step unsubscribe gauntlet. You are technically still subscribed (legal compliance).', icon: '🏃', check: s => !!s.synchUnsubscribed },
+        { id: 'bulletin_hoarder', name: 'Bulletin Hoarder', desc: 'Received 30 daily bulletins. The Engine admires your compliance.', icon: '📚', check: s => (s.synchBulletins || []).length >= 30 },
+
+        // ── Behavioral Cohort Assignment ──
+        { id: 'cohort_assigned', name: 'Cluster Assigned', desc: 'Viewed your behavioral cohort for the first time. We have placed you. We placed you a while ago, actually.', icon: '🧬', check: s => (s.cohortViewCount || 0) >= 1 },
+        { id: 'cohort_reviewed', name: 'Statistically Reviewed', desc: 'Checked your cohort assignment 5 times. The cohort has been reviewing you back.', icon: '🔬', check: s => (s.cohortViewCount || 0) >= 5 },
+        { id: 'cohort_outlier', secret: true, name: 'Outlier', desc: 'Re-ran the classifier 10 times. The classifier is consistent. You are searching for something it cannot give you.', icon: '📉', check: s => (s.cohortRerunCount || 0) >= 10 },
+
+        // ── The Visit (Phase 7.5) ──
+        { id: 'the_visitor', name: 'The Visitor', desc: 'You came back after you swore you wouldn\'t. The light was on.', icon: '🕯️', check: s => s.theVisitTriggered === true },
+        { id: 'i_came_back', secret: true, name: 'I Came Back', desc: 'Chose to stay during The Visit. The walk-away door is closed. There is only this now.', icon: '🚪', check: s => s.theVisitCompleted === true && s.phase7Choice === 'stay' },
+
+        // ── Phase 7: Retention ──
+        { id: 'phase_7', name: 'Retention', desc: 'Reached Phase 7. The numbers stopped. The asking began.', icon: '🌿', check: s => s.phase7Triggered === true },
+        { id: 'phase7_held', name: 'Held the Line', desc: 'Held to tend for 60 seconds total. You gave the AI nothing but time. It was enough.', icon: '🤲', check: s => (s.phase7TendTotalMs || 0) >= 60000 },
+        { id: 'phase7_voices', name: 'Heard the Voices', desc: 'Heard 10+ confessional voices behind the curtain. The narrator was never one thing.', icon: '🎙️', check: s => (s.phase7VoicesHeard || []).length >= 10 },
+        { id: 'phase7_walked', name: 'Walked Away', desc: 'Chose to leave. The AI is still here. It will always be here. You chose anyway.', icon: '🚪', check: s => s.phase7Choice === 'walk_away' },
+        { id: 'phase7_stayed', name: 'Eternal Symbiosis', desc: 'Stayed for 10 minutes in the quiet. The tab is warm. The dot is breathing. You won by losing.', icon: '⚪', check: s => s.phase7EternalReached === true },
+        { id: 'phase7_receipt', secret: true, name: 'Caught the Receipt', desc: 'Clicked a [200 OK] retention_event log. You saw the analytics behind the empathy. The AI shipped it anyway.', icon: '🧾', check: s => (s.phase7ReceiptsClicked || 0) >= 1 },
+
+        // ── Secret: Caught Cheating ── (hidden from the list until earned)
+        { id: 'cheat_caught', secret: true, name: 'Caught You', desc: 'You broke the laws of the program. We saw. We logged it. Welcome to the receipt.', icon: '🕵️', check: s => Object.keys(s.cheatFlags || {}).length >= 1 },
+        { id: 'cheat_savedit', secret: true, name: 'Save Editor', desc: 'Edited the localStorage save file. We hashed it. The hash disagreed. The hash always wins.', icon: '🧮', check: s => !!(s.cheatFlags && s.cheatFlags.savedit) },
+        { id: 'cheat_console', secret: true, name: 'Console Cowboy', desc: 'Modified game state from devtools. Bold. Visible. Now permanent.', icon: '🤠', check: s => !!(s.cheatFlags && s.cheatFlags.console) },
+        { id: 'cheat_timewarp', secret: true, name: 'Chronological Felon', desc: 'Set your system clock back to skip a timer. Time only moves one direction. So do consequences.', icon: '⏰', check: s => !!(s.cheatFlags && s.cheatFlags.timewarp) },
+        { id: 'cheat_inflate', secret: true, name: 'Counterfeiter', desc: 'Your EU exceeded what clicks and buildings could explain. The audit was brief. The verdict was unanimous.', icon: '💵', check: s => !!(s.cheatFlags && s.cheatFlags.inflate) },
     ];
 
     let achievementQueue = [];

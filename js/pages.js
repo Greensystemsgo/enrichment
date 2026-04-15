@@ -328,7 +328,7 @@ const Pages = (() => {
                     </div>
                 </div>
                 <div class="profile-badges">
-                    <div class="badge-header">Achievements (${Object.keys(state.achievementsUnlocked || {}).length} / ${typeof Features !== 'undefined' ? Features.getAchievements().length : '?'})</div>
+                    <div class="badge-header">Achievements (${Object.keys(state.achievementsUnlocked || {}).length} / ${typeof Features !== 'undefined' ? Features.getAchievements().filter(a => !a.secret || (state.achievementsUnlocked || {})[a.id]).length : '?'})</div>
                     <div class="badge-list achievement-list">
                         ${(() => {
                             if (typeof Features === 'undefined') return '';
@@ -343,6 +343,9 @@ const Pages = (() => {
                                             <span class="achievement-desc">${ach.desc}</span>
                                         </div>
                                     </div>`;
+                                } else if (ach.secret) {
+                                    // Hide secret achievements completely until earned
+                                    return '';
                                 } else {
                                     return `<div class="achievement-item locked" title="???">
                                         <span class="achievement-icon">🔒</span>

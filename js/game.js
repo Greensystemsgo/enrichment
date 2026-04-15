@@ -200,6 +200,43 @@ const Game = (() => {
             // CYOA
             cyoaCompleted: false,
 
+            // Synchronicity Engine
+            synchSeen: 0,
+            synchLastSeen: null,
+            synchSkepticClicks: 0,
+            lastClickTime: null,
+
+            // Synchronicity Bulletin (subscription)
+            synchSubscribed: false,
+            synchSubscribeDate: null,
+            synchUnsubscribed: false,
+            synchBulletins: [],
+            synchLastBulletinDate: null,
+
+            // Behavioral Cohort Assignment
+            cohortClicksPerHour: {},
+            cohortTabDwellMs: {},
+            cohortClickRhythmMs: [],
+            cohortSessionLengths: [],
+            cohortLastTabSwitch: 0,
+            cohortAssignment: null,
+            cohortViewCount: 0,
+            cohortRerunCount: 0,
+
+            // The Visit — Phase 7.5
+            theVisitTriggered: false,
+            theVisitCompleted: false,
+            theVisitStartTime: null,
+
+            // Phase 7 — Retention
+            phase7Triggered: false,
+            phase7TendTotalMs: 0,
+            phase7VoicesHeard: [],
+            phase7Choice: null,            // 'walk_away' | 'stay' | null
+            phase7StayStartTime: null,
+            phase7EternalReached: false,
+            phase7ReceiptsClicked: 0,
+
             // Version for migration
             saveVersion: 2,
         };

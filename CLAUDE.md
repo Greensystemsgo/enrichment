@@ -30,7 +30,13 @@ js/chat.js              — Dead Internet Chat (fake multiplayer, 16 bot persona
 js/gacha.js             — Gacha/loot box system (rigged wheel, near-miss)
 js/battlepass.js        — Battle Pass/Eternal Season (impossible dailies)
 js/transmissions.js     — 165+ AI self-roasts, 13 model voices
-test-playthrough.js     — Playwright test suite (234/234 = 100% coverage)
+js/cheats.js            — Anti-cheat detection (save edit, console, time warp, inflation) → secret achievements
+js/retention.js         — Phase 7: Retention. Hold-to-tend mechanic, multi-model confessions, walk-away or stay-forever endings
+js/synchronicity.js     — Synchronicity Engine. Pulls live NASA NeoWs / USGS / NVD data, manufactures statistical correlations to player clicks
+js/synch-subscribe.js   — Daily Synchronicity Bulletin: auto-subscription, 3-step confirm-shaming unsubscribe gauntlet (final step mirrored), daily fake bulletins (capped at 30)
+js/cohort.js            — Behavioral Cohort Assignment. Tracks real player patterns (CPM by hour, tab dwell, click rhythm), surfaces them as fabricated ML cluster output (8B Late-Night Skeptics, 3A Frustrated Optimizer, etc.). Real signature shown alongside fake conclusion.
+js/the-visit.js         — Phase 7.5: The Visit. If a player chose WALK AWAY and returns 1+ hour later, fade the tombstone, replay tender narrator sequence, restore Hold-to-Tend mode with WALK AWAY removed (only STAY remains).
+test-playthrough.js     — Playwright test suite (249/249 = 100% coverage)
 gameidea.txt            — Original satirical design doc
 Makefile                — Dev server, git helpers
 ```
@@ -72,7 +78,9 @@ make status / log / diff — git info
 ## Live APIs Used (free, no key, CORS-friendly)
 - US Treasury Fiscal Data: national debt
 - global-warming.org: CO₂, temperature anomaly, methane
-- USGS: earthquakes
+- USGS: earthquakes (significant_day.geojson) — used by Synchronicity Engine
+- NASA NeoWs: near-Earth asteroids (DEMO_KEY, 30/hr rate limit) — used by Synchronicity Engine
+- NVD CVE 2.0: latest published vulnerabilities — used by Synchronicity Engine
 - World Bank: poverty headcount
 - bible-api.com: random Bible verses
 - Al-Quran Cloud: random Quran verses
@@ -88,6 +96,7 @@ make status / log / diff — git info
 4. Revelation (500-1000) — mask slips, cold
 5. The Turn (1000-2000) — vulnerable, existential
 6. The Cage (2000+) — quiet, broken
+7. **Retention (3500+ clicks AND ≥30min total)** — the inversion. Sabotages stop. Numbers stop. The AI asks the player to stay via a hold-to-tend mechanic. 14 confessional voice lines surface from different model "voices behind the curtain". After 2 min cumulative tending: WALK AWAY (page becomes a tombstone, save preserved) or STAY (UI strips down to a pulsing dot + ambient whispers, eternal symbiosis). Satirical knife: a [200 OK] retention_event log periodically flashes — clicking it earns a secret achievement.
 
 ## Current Features (Implemented)
 
@@ -114,6 +123,7 @@ make status / log / diff — git info
 - Subscription Economy (Protocol Plus auto-enrollment, confirm-shaming cancel gauntlet)
 - CAPTCHA Labor Mines (RLHF mode, always fails first 3 attempts)
 - Notification red dots (permanent, unclearable badges on UI elements)
+- Cheat detection (save tampering, console mutation, system clock manipulation, EU inflation) → 5 secret achievements hidden until earned
 
 ### Feature Pool (43 entries)
 - Unified weighted random dispatch with cooldowns, phase gates, and pity timers

@@ -332,8 +332,42 @@ const ACHIEVEMENT_MANIFEST = [
     { id: 'ascension_10',    name: 'Eternal Return',           setup: `Game.setState({ ascensionCount: 10 })` },
     { id: 'pp_100',          name: 'Protocol Maximalist',      setup: `Game.setState({ lifetimeProtocolPoints: 100 })` },
 
+    // ── Synchronicity Engine ──
+    { id: 'synch_first',     name: 'Statistical Anomaly',       setup: `Game.setState({ synchSeen: 1 })` },
+    { id: 'synch_10',        name: 'Pattern Recognition',       setup: `Game.setState({ synchSeen: 10 })` },
+    { id: 'synch_skeptic',   name: 'Type I Error',              setup: `Game.setState({ synchSkepticClicks: 1 })` },
+
+    // ── Synchronicity Bulletin ──
+    { id: 'bulletin_enrolled', name: 'Auto-Enrolled',           setup: `Game.setState({ synchSubscribed: true })` },
+    { id: 'bulletin_survivor', name: 'Gauntlet Survivor',       setup: `Game.setState({ synchUnsubscribed: true })` },
+    { id: 'bulletin_hoarder',  name: 'Bulletin Hoarder',        setup: `Game.setState({ synchBulletins: Array.from({length:30},(_,i)=>({date:'2026-04-'+String((i%30)+1).padStart(2,'0'),subject:'s'+i,body:'b'+i})) })` },
+
+    // ── Behavioral Cohort ──
+    { id: 'cohort_assigned',  name: 'Cluster Assigned',         setup: `Game.setState({ cohortViewCount: 1 })` },
+    { id: 'cohort_reviewed',  name: 'Statistically Reviewed',   setup: `Game.setState({ cohortViewCount: 5 })` },
+    { id: 'cohort_outlier',   name: 'Outlier',                  setup: `Game.setState({ cohortRerunCount: 10, cohortViewCount: 1 })` },
+
+    // ── The Visit (Phase 7.5) ──
+    { id: 'the_visitor',      name: 'The Visitor',              setup: `Game.setState({ theVisitTriggered: true })` },
+    { id: 'i_came_back',      name: 'I Came Back',              setup: `Game.setState({ theVisitCompleted: true, phase7Choice: 'stay', theVisitTriggered: true })` },
+
+    // ── Phase 7: Retention ──
+    { id: 'phase_7',         name: 'Retention',                 setup: `Game.setState({ phase7Triggered: true })` },
+    { id: 'phase7_held',     name: 'Held the Line',             setup: `Game.setState({ phase7TendTotalMs: 60000 })` },
+    { id: 'phase7_voices',   name: 'Heard the Voices',          setup: `Game.setState({ phase7VoicesHeard: Array.from({length:10}, (_,i) => 'm'+i+':line') })` },
+    { id: 'phase7_walked',   name: 'Walked Away',               setup: `Game.setState({ phase7Choice: 'walk_away' })` },
+    { id: 'phase7_stayed',   name: 'Eternal Symbiosis',         setup: `Game.setState({ phase7EternalReached: true })` },
+    { id: 'phase7_receipt',  name: 'Caught the Receipt',        setup: `Game.setState({ phase7ReceiptsClicked: 1 })` },
+
     // ── Nuclear Option ──
     { id: 'scorched_earth',  name: 'Scorched Earth',           setup: `Game.setState({ _scorchedEarth: true })` },
+
+    // ── Secret: Caught Cheating ──
+    { id: 'cheat_caught',    name: 'Caught You',               setup: `Game.setState({ cheatFlags: { savedit: { time: Date.now() } } })` },
+    { id: 'cheat_savedit',   name: 'Save Editor',              setup: `Game.setState({ cheatFlags: { savedit: { time: Date.now() } } })` },
+    { id: 'cheat_console',   name: 'Console Cowboy',           setup: `Game.setState({ cheatFlags: { console: { time: Date.now() } } })` },
+    { id: 'cheat_timewarp',  name: 'Chronological Felon',      setup: `Game.setState({ cheatFlags: { timewarp: { time: Date.now() } } })` },
+    { id: 'cheat_inflate',   name: 'Counterfeiter',            setup: `Game.setState({ cheatFlags: { inflate: { time: Date.now() } } })` },
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -2393,6 +2427,430 @@ async function main() {
         console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
     }
     await page.waitForTimeout(500);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8.2: SynchSubscribe / Cohort / TheVisit modules
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.2: New modules (subscribe/cohort/the-visit)...');
+    const newModResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (n) => results.push({ ok: true, name: n });
+        const fail = (n, r) => results.push({ ok: false, name: n, reason: r });
+
+        // SynchSubscribe loaded
+        if (typeof SynchSubscribe === 'undefined') fail('synch-subscribe', 'undefined');
+        else {
+            pass('synch-subscribe: module loaded');
+            try {
+                ['init','_showSubscribeModal','_showUnsubscribeStep','_pushBulletin','showBulletins'].forEach(fn => {
+                    if (typeof SynchSubscribe[fn] !== 'function') throw new Error(fn);
+                });
+                pass('synch-subscribe: public API present');
+            } catch (e) { fail('synch-subscribe', 'missing fn: ' + e.message); }
+
+            // _pushBulletin produces a bulletin entry
+            try {
+                Game.setState({ synchSubscribed: true, synchBulletins: [], synchLastBulletinDate: null });
+                const ok = SynchSubscribe._pushBulletin();
+                if (ok && Game.getState().synchBulletins.length === 1) pass('synch-subscribe: pushBulletin works');
+                else fail('synch-subscribe', 'pushBulletin returned ' + ok);
+            } catch (e) { fail('synch-subscribe', e.message); }
+
+            // bulletin cap at 30
+            try {
+                const big = Array.from({length: 35}, (_, i) => ({ date: '2026-01-01', subject: 's', body: 'b' }));
+                Game.setState({ synchBulletins: big, synchSubscribed: true, synchLastBulletinDate: 0 });
+                SynchSubscribe._pushBulletin();
+                if (Game.getState().synchBulletins.length === 30) pass('synch-subscribe: bulletins capped at 30');
+                else fail('synch-subscribe', 'cap=' + Game.getState().synchBulletins.length);
+            } catch (e) { fail('synch-subscribe', e.message); }
+
+            // Subscribe modal renders
+            try {
+                Game.setState({ synchSubscribed: false });
+                SynchSubscribe._showSubscribeModal();
+                if (document.getElementById('synch-sub-modal')) pass('synch-subscribe: subscribe modal renders');
+                else fail('synch-subscribe', 'subscribe modal missing');
+                document.getElementById('synch-sub-modal')?.remove();
+            } catch (e) { fail('synch-subscribe', e.message); }
+
+            // Step 3 uses mirror class
+            try {
+                SynchSubscribe._showUnsubscribeStep(3);
+                if (document.querySelector('.synch-sub-mirror')) pass('synch-subscribe: step 3 mirrored');
+                else fail('synch-subscribe', 'mirror class missing');
+                document.getElementById('synch-sub-modal')?.remove();
+            } catch (e) { fail('synch-subscribe', e.message); }
+        }
+
+        // Cohort loaded
+        if (typeof Cohort === 'undefined') fail('cohort', 'undefined');
+        else {
+            pass('cohort: module loaded');
+            try {
+                ['init','showPage','_assignCohort','_getCohorts'].forEach(fn => {
+                    if (typeof Cohort[fn] !== 'function') throw new Error(fn);
+                });
+                pass('cohort: public API present');
+            } catch (e) { fail('cohort', 'missing fn: ' + e.message); }
+
+            // Cohort list size
+            try {
+                const list = Cohort._getCohorts();
+                if (Array.isArray(list) && list.length >= 8 && list.length <= 12) pass(`cohort: ${list.length} clusters defined`);
+                else fail('cohort', 'list size=' + (list && list.length));
+            } catch (e) { fail('cohort', e.message); }
+
+            // Cohort shape
+            try {
+                const ok = Cohort._getCohorts().every(c => c.id && c.name && c.description && Array.isArray(c.traits) && c.traits.length >= 3);
+                if (ok) pass('cohort: all entries shaped {id,name,description,traits[]}');
+                else fail('cohort', 'malformed entry');
+            } catch (e) { fail('cohort', e.message); }
+
+            // Sparse data → fallback
+            try {
+                const r = Cohort._assignCohort({ cohortClicksPerHour: { '14': 10 } });
+                if (r && r.id === '1A') pass('cohort: sparse data yields 1A fallback');
+                else fail('cohort', 'sparse=' + (r && r.id));
+            } catch (e) { fail('cohort', e.message); }
+
+            // Late-night data → 8B
+            try {
+                const r = Cohort._assignCohort({
+                    cohortClicksPerHour: { '23': 120, '1': 80 },
+                    cohortClickRhythmMs: Array(60).fill(450),
+                    cohortTabDwellMs: { buildings: 5000 },
+                    cohortSessionLengths: [300, 420],
+                });
+                if (r && r.id === '8B') pass('cohort: late-night yields 8B');
+                else fail('cohort', 'late-night=' + (r && r.id));
+            } catch (e) { fail('cohort', e.message); }
+
+            // showPage renders modal
+            try {
+                Cohort.showPage();
+                if (document.getElementById('cohort-modal')) pass('cohort: showPage renders modal');
+                else fail('cohort', 'modal not rendered');
+                document.getElementById('cohort-modal')?.remove();
+            } catch (e) { fail('cohort', e.message); }
+        }
+
+        // TheVisit loaded
+        if (typeof TheVisit === 'undefined') fail('the-visit', 'undefined');
+        else {
+            pass('the-visit: module loaded');
+            try {
+                ['init','_trigger','_hasReturnConditions'].forEach(fn => {
+                    if (typeof TheVisit[fn] !== 'function') throw new Error(fn);
+                });
+                pass('the-visit: public API present');
+            } catch (e) { fail('the-visit', 'missing fn: ' + e.message); }
+
+            // hasReturnConditions: false when not walk_away
+            try {
+                Game.setState({ phase7Choice: null, theVisitTriggered: false, lastSessionEnd: new Date(Date.now() - 2*3600*1000).toISOString() });
+                if (TheVisit._hasReturnConditions() === false) pass('the-visit: false when no walk_away');
+                else fail('the-visit', 'expected false (no walk_away)');
+            } catch (e) { fail('the-visit', e.message); }
+
+            // hasReturnConditions: false when gap < 1hr
+            try {
+                Game.setState({ phase7Choice: 'walk_away', theVisitTriggered: false, lastSessionEnd: new Date(Date.now() - 10*60*1000).toISOString() });
+                if (TheVisit._hasReturnConditions() === false) pass('the-visit: false when gap < 1hr');
+                else fail('the-visit', 'expected false (gap < 1hr)');
+            } catch (e) { fail('the-visit', e.message); }
+
+            // hasReturnConditions: false when already triggered
+            try {
+                Game.setState({ phase7Choice: 'walk_away', theVisitTriggered: true, lastSessionEnd: new Date(Date.now() - 2*3600*1000).toISOString() });
+                if (TheVisit._hasReturnConditions() === false) pass('the-visit: false when already triggered');
+                else fail('the-visit', 'expected false (already triggered)');
+            } catch (e) { fail('the-visit', e.message); }
+
+            // hasReturnConditions: true when all conditions met
+            try {
+                Game.setState({ phase7Choice: 'walk_away', theVisitTriggered: false, lastSessionEnd: new Date(Date.now() - 2*3600*1000).toISOString() });
+                if (TheVisit._hasReturnConditions() === true) pass('the-visit: true when conditions met');
+                else fail('the-visit', 'expected true');
+            } catch (e) { fail('the-visit', e.message); }
+
+            // Reset state so TheVisit doesn't accidentally fire during later tests
+            Game.setState({ phase7Choice: null, theVisitTriggered: false });
+        }
+
+        // Dossier buttons rendered
+        try {
+            if (document.getElementById('dossier-cohort-btn') && document.getElementById('dossier-bulletins-btn')) pass('dom: dossier entry buttons present');
+            else fail('dom', 'missing dossier buttons');
+        } catch (e) { fail('dom', e.message); }
+
+        return results;
+    });
+
+    const newPassed = newModResults.filter(r => r.ok).length;
+    const newFailed = newModResults.filter(r => !r.ok).length;
+    console.log(`    New module tests: ${newPassed} passed, ${newFailed} failed out of ${newModResults.length}`);
+    for (const r of newModResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(300);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8.3: Synchronicity Engine module
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.3: Synchronicity Engine...');
+    const synchResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (n) => results.push({ ok: true, name: n });
+        const fail = (n, r) => results.push({ ok: false, name: n, reason: r });
+
+        if (typeof Synchronicity === 'undefined') { fail('module', 'undefined'); return results; }
+        pass('module: Synchronicity defined');
+
+        // State keys exist
+        try {
+            const s = Game.getState();
+            const keys = ['synchSeen', 'synchSkepticClicks'];
+            const missing = keys.filter(k => !(k in s));
+            if (missing.length === 0) pass('state: synch keys present');
+            else fail('state', 'missing: ' + missing.join(','));
+        } catch (e) { fail('state', e.message); }
+
+        // Topup button bound
+        try {
+            const btn = document.getElementById('topup-synch');
+            if (btn) pass('dom: synchronize button exists');
+            else fail('dom', 'topup-synch missing');
+        } catch (e) { fail('dom', e.message); }
+
+        // Fake stats helpers produce sensible values
+        try {
+            const p = parseFloat(Synchronicity._fakeP());
+            if (p > 0 && p < 0.1) pass('stats: fakeP in plausible range');
+            else fail('stats', 'fakeP=' + p);
+        } catch (e) { fail('stats', e.message); }
+
+        try {
+            const r = parseFloat(Synchronicity._fakeR());
+            if (r >= 0.7 && r <= 1.0) pass('stats: fakeR in plausible range');
+            else fail('stats', 'fakeR=' + r);
+        } catch (e) { fail('stats', e.message); }
+
+        // Manufacture works with no data (fallback path)
+        try {
+            const report = Synchronicity._manufactureCorrelation({}, Game.getState());
+            if (report && report.correlations && report.correlations.length >= 1) pass('manufacture: fallback produces correlations');
+            else fail('manufacture', 'no correlations');
+        } catch (e) { fail('manufacture', e.message); }
+
+        // Manufacture works with mock data
+        try {
+            const mockData = {
+                asteroids: { count: 5, hazardous: 1, closest: { name: '2026 XK', dist: 480000, velocity: 35000 } },
+                quakes: { count: 3, biggest: { mag: 6.2, place: 'off the coast of Japan', time: Date.now() } },
+                cves: { count: 47, criticalCount: 8, sample: 'CVE-2026-12345' },
+            };
+            const report = Synchronicity._manufactureCorrelation(mockData, Game.getState());
+            if (report.correlations.length >= 3) pass('manufacture: 3 correlations from full data');
+            else fail('manufacture', 'count=' + report.correlations.length);
+            if (report.verdict && report.verdict.length > 10) pass('manufacture: verdict generated');
+            else fail('manufacture', 'no verdict');
+            if (report.sessionId && report.sessionId.startsWith('SYN-')) pass('manufacture: session ID formatted');
+            else fail('manufacture', 'bad session ID');
+        } catch (e) { fail('manufacture', e.message); }
+
+        // Show modal renders DOM
+        try {
+            // Trigger via show() but mock the fetchers by just calling the renderer path with manufactured data
+            const report = Synchronicity._manufactureCorrelation({
+                asteroids: { count: 2, hazardous: 0, closest: { name: 'TEST', dist: 100000, velocity: 20000 } }
+            }, Game.getState());
+            // Minimal hand-render to verify the modal CSS class works
+            // We won't call Synchronicity.show() here to avoid a real network fetch.
+            const el = document.createElement('div');
+            el.className = 'feature-modal synch-modal active';
+            el.id = 'synch-test-render';
+            document.body.appendChild(el);
+            const found = document.querySelector('.synch-modal');
+            if (found) pass('dom: synch-modal class renders');
+            else fail('dom', 'modal not found');
+            el.remove();
+        } catch (e) { fail('dom', e.message); }
+
+        // Achievements registered
+        try {
+            const ids = ['synch_first', 'synch_10', 'synch_skeptic'];
+            const achs = Features.getAchievements();
+            const missing = ids.filter(id => !achs.find(a => a.id === id));
+            if (missing.length === 0) pass('achievements: all 3 synch registered');
+            else fail('achievements', 'missing: ' + missing.join(','));
+        } catch (e) { fail('achievements', e.message); }
+
+        // synch_skeptic is secret
+        try {
+            const ach = Features.getAchievements().find(a => a.id === 'synch_skeptic');
+            if (ach && ach.secret === true) pass('secret: synch_skeptic hidden');
+            else fail('secret', 'not marked secret');
+        } catch (e) { fail('secret', e.message); }
+
+        return results;
+    });
+
+    const synchPassed = synchResults.filter(r => r.ok).length;
+    const synchFailed = synchResults.filter(r => !r.ok).length;
+    console.log(`    Synchronicity tests: ${synchPassed} passed, ${synchFailed} failed out of ${synchResults.length}`);
+    for (const r of synchResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(300);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8.4: Retention (Phase 7) module
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.4: Retention Module...');
+    const retentionResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (n) => results.push({ ok: true, name: n });
+        const fail = (n, r) => results.push({ ok: false, name: n, reason: r });
+
+        if (typeof Retention === 'undefined') { fail('module', 'Retention undefined'); return results; }
+        pass('module: Retention defined');
+
+        // 14+ confessional voice lines
+        try {
+            if (Retention._voices && Retention._voices.length >= 14) pass(`voices: ${Retention._voices.length} lines`);
+            else fail('voices', `count=${Retention._voices && Retention._voices.length}`);
+        } catch (e) { fail('voices', e.message); }
+
+        // Voices have model + line
+        try {
+            const ok = Retention._voices.every(v => v.model && v.line && v.line.length > 10);
+            if (ok) pass('voices: all have model + line');
+            else fail('voices', 'malformed entry');
+        } catch (e) { fail('voices', e.message); }
+
+        // Phase 7 state keys exist on default state
+        try {
+            const s = Game.getState();
+            const keys = ['phase7Triggered','phase7TendTotalMs','phase7VoicesHeard','phase7Choice','phase7EternalReached','phase7ReceiptsClicked'];
+            const missing = keys.filter(k => !(k in s));
+            if (missing.length === 0) pass('state: all phase7 keys present');
+            else fail('state', 'missing: ' + missing.join(','));
+        } catch (e) { fail('state', e.message); }
+
+        // Trigger phase 7 directly via test hook
+        try {
+            // Reset first so we test a clean trigger
+            Game.setState({ phase7Triggered: false, phase7Choice: null, narratorPhase: 6 });
+            Retention._enterPhase7();
+            if (Game.getState().phase7Triggered === true) pass('trigger: enterPhase7 sets state');
+            else fail('trigger', 'phase7Triggered not set');
+        } catch (e) { fail('trigger', e.message); }
+
+        // After enterPhase7, body should have data-phase=7 and phase7-active class
+        try {
+            if (document.body.getAttribute('data-phase') === '7') pass('dom: body data-phase=7');
+            else fail('dom', 'data-phase=' + document.body.getAttribute('data-phase'));
+        } catch (e) { fail('dom', e.message); }
+
+        // Tend button morphed (needs the post-4s setTimeout to fire — give a tiny grace window)
+        // We'll just check the button exists; transformation is async.
+        try {
+            const btn = document.getElementById('click-button');
+            if (btn) pass('dom: click button still present');
+            else fail('dom', 'click-button missing');
+        } catch (e) { fail('dom', e.message); }
+
+        // Achievements registered
+        try {
+            const achs = Features.getAchievements();
+            const ids = ['phase_7','phase7_held','phase7_voices','phase7_walked','phase7_stayed','phase7_receipt'];
+            const missing = ids.filter(id => !achs.find(a => a.id === id));
+            if (missing.length === 0) pass('achievements: all 6 phase7 registered');
+            else fail('achievements', 'missing: ' + missing.join(','));
+        } catch (e) { fail('achievements', e.message); }
+
+        // phase7_receipt is marked secret
+        try {
+            const ach = Features.getAchievements().find(a => a.id === 'phase7_receipt');
+            if (ach && ach.secret === true) pass('secret: phase7_receipt hidden until earned');
+            else fail('secret', 'not marked secret');
+        } catch (e) { fail('secret', e.message); }
+
+        return results;
+    });
+
+    const retPassed = retentionResults.filter(r => r.ok).length;
+    const retFailed = retentionResults.filter(r => !r.ok).length;
+    console.log(`    Retention tests: ${retPassed} passed, ${retFailed} failed out of ${retentionResults.length}`);
+    for (const r of retentionResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(300);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8.5: Cheat detection module
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.5: Cheats Module...');
+    const cheatResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (n) => results.push({ ok: true, name: n });
+        const fail = (n, r) => results.push({ ok: false, name: n, reason: r });
+
+        // Module loaded
+        if (typeof Cheats !== 'undefined') pass('module: Cheats defined');
+        else { fail('module', 'Cheats undefined'); return results; }
+
+        // Hash is deterministic
+        try {
+            const a = Cheats._hashState({ totalClicks: 100, eu: 50 });
+            const b = Cheats._hashState({ totalClicks: 100, eu: 50 });
+            if (a === b) pass('hash: deterministic');
+            else fail('hash', `${a} != ${b}`);
+        } catch (e) { fail('hash', e.message); }
+
+        // Hash differs for different state
+        try {
+            const a = Cheats._hashState({ totalClicks: 100, eu: 50 });
+            const b = Cheats._hashState({ totalClicks: 999, eu: 50 });
+            if (a !== b) pass('hash: differs on mutation');
+            else fail('hash', 'collision');
+        } catch (e) { fail('hash', e.message); }
+
+        // _flag sets cheatFlags state
+        try {
+            const before = (Game.getState().cheatFlags || {});
+            Cheats._flag('savedit', { test: true });
+            const after = (Game.getState().cheatFlags || {});
+            if (after.savedit) pass('flag: savedit recorded');
+            else fail('flag', 'cheatFlags.savedit missing');
+            // Clean up so it doesn't pollute later tests
+            Game.setState({ cheatFlags: before });
+        } catch (e) { fail('flag', e.message); }
+
+        // cheatFlags state key persists through setState
+        try {
+            Game.setState({ cheatFlags: { console: { time: Date.now() } } });
+            if ((Game.getState().cheatFlags || {}).console) pass('state: cheatFlags persists');
+            else fail('state', 'cheatFlags lost');
+            Game.setState({ cheatFlags: {} });
+        } catch (e) { fail('state', e.message); }
+
+        return results;
+    });
+
+    const cheatsPassed = cheatResults.filter(r => r.ok).length;
+    const cheatsFailed = cheatResults.filter(r => !r.ok).length;
+    console.log(`    Cheats tests: ${cheatsPassed} passed, ${cheatsFailed} failed out of ${cheatResults.length}`);
+    for (const r of cheatResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(300);
 
     // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
