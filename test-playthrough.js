@@ -3169,6 +3169,188 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.8: Bug fixes — cheat false positive, tombstone
+    //            achievement suppression, Visit dev hatch
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.8: Post-ship bug fixes...');
+    const bugfixResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (n) => results.push({ ok: true, name: n });
+        const fail = (n, r) => results.push({ ok: false, name: n, reason: r });
+
+        // ── Fix #1: checkSaveIntegrity hashes the PARSED SAVE, not in-memory.
+        // Simulate the reload sequence that previously false-positived:
+        //   1. save at sessionCount=N, checksum written
+        //   2. reload → load() → startSession increments sessionCount to N+1
+        //   3. checkSaveIntegrity should NOT flag (parsed save still hashes to N's checksum)
+        try {
+            // Reset cheatFlags and baseline state
+            Game.setState({ cheatFlags: {}, sessionCount: 5, totalClicks: 100, eu: 50 });
+            // Save + rebake checksum atomically (wrapped Game.save does this)
+            Game.save();
+            // Mimic the load-side mutation: bump sessionCount in memory to N+1
+            Game.setState({ sessionCount: 6 });
+            // Now run the integrity check — must NOT flag
+            Cheats._checkSaveIntegrity();
+            const flags = Game.getState().cheatFlags || {};
+            if (!flags.savedit) pass('integrity: no false positive after sessionCount bump');
+            else fail('integrity', 'savedit flagged falsely: ' + JSON.stringify(flags.savedit));
+        } catch (e) { fail('integrity', e.message); }
+
+        // ── Fix #1b: checkSaveIntegrity still catches actual tampering.
+        // Write a legit save, then mutate the raw save in localStorage so
+        // its hash no longer matches the stored checksum.
+        try {
+            Game.setState({ cheatFlags: {}, sessionCount: 5, totalClicks: 100, eu: 50 });
+            Game.save();
+            // Tamper: rewrite the save file with a different totalClicks
+            const raw = localStorage.getItem('enrichment_save');
+            const obj = JSON.parse(raw);
+            obj.totalClicks = 999999;
+            obj.eu = 999999;
+            localStorage.setItem('enrichment_save', JSON.stringify(obj));
+            // Reload parsed state into memory (as a real reload would)
+            Game.setState({ totalClicks: obj.totalClicks, eu: obj.eu });
+            // Run the check
+            Cheats._checkSaveIntegrity();
+            const flags = Game.getState().cheatFlags || {};
+            if (flags.savedit) pass('integrity: still catches actual tampering');
+            else fail('integrity', 'tamper not detected');
+            // Clean up so later tests see fresh state
+            Game.setState({ cheatFlags: {} });
+            Game.save();
+        } catch (e) { fail('integrity', e.message); }
+
+        // ── Fix #1c: healBogusSavedit retracts a false flag + its achievement
+        // when the current save actually validates.
+        try {
+            // Pretend the player was previously flagged (by the old bug) AND
+            // already unlocked the cheat_savedit achievement.
+            Game.setState({
+                cheatFlags: { savedit: { time: Date.now() - 10000, detail: null } },
+                achievementsUnlocked: { ...(Game.getState().achievementsUnlocked || {}), cheat_savedit: { time: Date.now() - 10000 } },
+                totalClicks: 200, eu: 100, sessionCount: 7,
+            });
+            Game.save();  // baseline a clean save + checksum
+            Cheats._healBogusSavedit();
+            const s = Game.getState();
+            if (!(s.cheatFlags || {}).savedit) pass('self-heal: savedit flag retracted on clean save');
+            else fail('self-heal', 'savedit flag not retracted');
+            if (!(s.achievementsUnlocked || {}).cheat_savedit) pass('self-heal: cheat_savedit achievement retracted');
+            else fail('self-heal', 'cheat_savedit still unlocked');
+        } catch (e) { fail('self-heal', e.message); }
+
+        // ── Fix #1d: healBogusSavedit does NOT retract when save is actually tampered.
+        try {
+            Game.setState({ cheatFlags: {}, totalClicks: 50, eu: 25, sessionCount: 3 });
+            Game.save();
+            // Set a savedit flag as if we JUST detected real tampering
+            Game.setState({
+                cheatFlags: { savedit: { time: Date.now(), detail: null } },
+                achievementsUnlocked: { ...(Game.getState().achievementsUnlocked || {}), cheat_savedit: { time: Date.now() } },
+            });
+            // Actually tamper the raw save so hash doesn't match checksum
+            const raw = localStorage.getItem('enrichment_save');
+            const obj = JSON.parse(raw);
+            obj.totalClicks = 999999;
+            localStorage.setItem('enrichment_save', JSON.stringify(obj));
+            // Heal should NOT retract — save is dirty
+            Cheats._healBogusSavedit();
+            const s = Game.getState();
+            if ((s.cheatFlags || {}).savedit) pass('self-heal: does NOT retract when save is dirty');
+            else fail('self-heal', 'incorrectly retracted on dirty save');
+            // Clean up
+            Game.setState({ cheatFlags: {} });
+            Game.save();
+        } catch (e) { fail('self-heal', e.message); }
+
+        // ── Fix #2: achievements on tombstone — still unlock in state,
+        // but no UI.logAction "ACHIEVEMENT UNLOCKED:" call.
+        // Spy on UI.logAction so we don't rely on async toast DOM timing.
+        try {
+            const origLog = UI.logAction;
+            const logged = [];
+            UI.logAction = function (msg) { logged.push(msg); return origLog.apply(UI, arguments); };
+            try {
+                Game.setState({
+                    phase7Triggered: true,
+                    phase7Choice: 'walk_away',
+                    achievementsUnlocked: {},
+                    totalClicks: 100,  // trips 'centurion'
+                });
+                Features.checkAchievements();
+                const unlockedLogs = logged.filter(m => String(m).includes('ACHIEVEMENT UNLOCKED'));
+                if (unlockedLogs.length === 0) pass('walkaway: no ACHIEVEMENT UNLOCKED log entries');
+                else fail('walkaway', 'logged: ' + unlockedLogs.length);
+                const unlocked = (Game.getState().achievementsUnlocked || {});
+                if (unlocked.centurion) pass('walkaway: achievement still recorded in state');
+                else fail('walkaway', 'centurion not unlocked despite trigger');
+            } finally {
+                UI.logAction = origLog;
+                Game.setState({ phase7Choice: null, phase7Triggered: false });
+            }
+        } catch (e) { fail('walkaway', e.message); }
+
+        // ── Fix #2b: achievement surfacing DOES work when NOT on tombstone.
+        try {
+            const origLog = UI.logAction;
+            const logged = [];
+            UI.logAction = function (msg) { logged.push(msg); return origLog.apply(UI, arguments); };
+            try {
+                Game.setState({
+                    phase7Choice: null,
+                    phase7Triggered: false,
+                    achievementsUnlocked: {},
+                    totalClicks: 100,
+                });
+                Features.checkAchievements();
+                const unlockedLogs = logged.filter(m => String(m).includes('ACHIEVEMENT UNLOCKED'));
+                if (unlockedLogs.length > 0) pass('non-walkaway: ACHIEVEMENT UNLOCKED logged normally');
+                else fail('non-walkaway', 'no log entry when expected');
+            } finally {
+                UI.logAction = origLog;
+                // Remove any toasts this test produced so they don't clutter
+                document.querySelectorAll('.achievement-toast').forEach(t => t.remove());
+            }
+        } catch (e) { fail('non-walkaway', e.message); }
+
+        // ── Fix #3: TheVisit dev hatch bypasses the 1hr gate.
+        try {
+            if (typeof TheVisit === 'undefined') { fail('visit-hatch', 'TheVisit undefined'); return results; }
+            // Baseline: walked away just now (no time elapsed yet)
+            Game.setState({
+                phase7Choice: 'walk_away',
+                theVisitTriggered: false,
+                lastSessionEnd: new Date().toISOString(),  // right now — normally would block
+            });
+            // Without hatch → false
+            localStorage.removeItem('enrichment_visit_now');
+            if (!TheVisit._hasReturnConditions()) pass('visit-hatch: gate holds without hatch');
+            else fail('visit-hatch', 'gate fell open without hatch');
+
+            // With hatch → true
+            localStorage.setItem('enrichment_visit_now', '1');
+            if (TheVisit._hasReturnConditions()) pass('visit-hatch: dev hatch opens gate');
+            else fail('visit-hatch', 'hatch did not bypass gate');
+
+            // Clean up
+            localStorage.removeItem('enrichment_visit_now');
+            Game.setState({ phase7Choice: null, theVisitTriggered: false });
+        } catch (e) { fail('visit-hatch', e.message); }
+
+        return results;
+    });
+
+    const bugfixPassed = bugfixResults.filter(r => r.ok).length;
+    const bugfixFailed = bugfixResults.filter(r => !r.ok).length;
+    console.log(`    Bug-fix tests: ${bugfixPassed} passed, ${bugfixFailed} failed out of ${bugfixResults.length}`);
+    for (const r of bugfixResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 9: Reading Dossier...');

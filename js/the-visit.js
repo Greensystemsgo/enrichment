@@ -36,6 +36,12 @@ const TheVisit = (() => {
         if (s.phase7Choice !== 'walk_away') return false;
         if (s.theVisitTriggered) return false;
         if (!s.lastSessionEnd) return false;
+        // Dev/test hatch: localStorage.enrichment_visit_now = '1' skips the 1hr
+        // gate. Never documented in-game. Exists so manual QA doesn't require
+        // actually closing the tab for a full real hour to exercise the sequence.
+        try {
+            if (localStorage.getItem('enrichment_visit_now') === '1') return true;
+        } catch (e) {}
         const gap = Date.now() - new Date(s.lastSessionEnd).getTime();
         return gap >= RETURN_GAP_MS;
     }

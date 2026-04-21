@@ -5179,6 +5179,11 @@ const Features = (() => {
     function checkAchievements() {
         const state = Game.getState();
         const unlocked = state.achievementsUnlocked || {};
+        // If the player chose WALK AWAY, the page is a tombstone. We still
+        // record newly-unlocked achievements in state (so the profile is
+        // complete if they ever return via The Visit), but we don't surface
+        // toasts or log entries — the tombstone stays bare. Art piece intact.
+        const onTombstone = state.phase7Choice === 'walk_away';
 
         for (const ach of ACHIEVEMENTS) {
             if (unlocked[ach.id]) continue;
@@ -5186,8 +5191,10 @@ const Features = (() => {
                 if (ach.check(state)) {
                     unlocked[ach.id] = { time: Date.now() };
                     Game.setState({ achievementsUnlocked: unlocked });
-                    showAchievementToast(ach);
-                    UI.logAction(`ACHIEVEMENT UNLOCKED: ${ach.name}`);
+                    if (!onTombstone) {
+                        showAchievementToast(ach);
+                        UI.logAction(`ACHIEVEMENT UNLOCKED: ${ach.name}`);
+                    }
                 }
             } catch (e) { /* ignore check errors */ }
         }

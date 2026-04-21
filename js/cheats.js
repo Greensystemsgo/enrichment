@@ -16,6 +16,7 @@
 
 const Cheats = (() => {
     const CHECKSUM_KEY = 'enrichment_integrity';
+    const SAVE_KEY = 'enrichment_save';  // mirrors game.js constant
     const SECRET_SALT = 0x5A17ED;  // not real security — just enough to catch casual edits
 
     // Tiny non-cryptographic hash. We don't need security, we need detection.
@@ -56,18 +57,53 @@ const Cheats = (() => {
     }
 
     // ── Detection: save tampering ──────────────────────────────
-    // Stored checksum lives in a separate localStorage key. If a player edits
-    // the main save without knowing about the integrity key, the hash mismatches.
+    // Stored checksum lives in a separate localStorage key. On boot we hash the
+    // PARSED save file (what's on disk), not the in-memory state — because
+    // startSession() mutates the in-memory state (e.g., sessionCount++) before
+    // we get here, which would false-positive every legitimate reload.
     function checkSaveIntegrity() {
-        const s = Game.getState();
         const stored = localStorage.getItem(CHECKSUM_KEY);
         if (stored === null) return;  // first-ever load, nothing to compare
-        const expected = hashState(s);
+        const rawSave = localStorage.getItem(SAVE_KEY);
+        if (!rawSave) return;          // no save yet
+        let savedState;
+        try { savedState = JSON.parse(rawSave); } catch (e) { return; }
+        const expected = hashState(savedState);
         if (stored !== expected) flag('savedit', { stored, expected });
     }
 
+    // One-time self-heal for players flagged by the pre-fix integrity bug:
+    // clear the savedit flag AND its unlocked achievement if the current save
+    // actually validates against the stored checksum.
+    function healBogusSavedit() {
+        const s = Game.getState();
+        const flags = (s.cheatFlags || {});
+        if (!flags.savedit) return;
+        const stored = localStorage.getItem(CHECKSUM_KEY);
+        const rawSave = localStorage.getItem(SAVE_KEY);
+        if (!stored || !rawSave) return;
+        let savedState;
+        try { savedState = JSON.parse(rawSave); } catch (e) { return; }
+        if (hashState(savedState) !== stored) return;  // really was tampered
+        // Save validates → the old flag was a false positive. Retract it.
+        const newFlags = { ...flags };
+        delete newFlags.savedit;
+        const unlocked = { ...(s.achievementsUnlocked || {}) };
+        const hadAch = !!unlocked.cheat_savedit;
+        if (hadAch) delete unlocked.cheat_savedit;
+        Game.setState({ cheatFlags: newFlags, achievementsUnlocked: unlocked });
+        if (typeof UI !== 'undefined' && UI.logAction) {
+            UI.logAction('ANOMALY RETRACTED: savedit flag was a false positive (integrity check bug, now patched)');
+        }
+    }
+
     function writeChecksum() {
-        try { localStorage.setItem(CHECKSUM_KEY, hashState(Game.getState())); } catch (e) {}
+        try {
+            // Mirror what Game.save() persists: the in-memory state minus
+            // transient underscore-prefixed keys. Hashing that matches what
+            // checkSaveIntegrity() will read back from disk.
+            localStorage.setItem(CHECKSUM_KEY, hashState(Game.getState()));
+        } catch (e) {}
     }
 
     // ── Detection: time travel ─────────────────────────────────
@@ -122,9 +158,14 @@ const Cheats = (() => {
         setTimeout(() => {
             checkSaveIntegrity();
             checkClock();
-            // Write a fresh checksum immediately so first-load and post-init mutations
-            // (which fire many setStates before any real save) form the new baseline.
-            writeChecksum();
+            // Retroactively clear the old savedit bug's false-positive flag.
+            healBogusSavedit();
+            // NOTE: do NOT writeChecksum here. The stored checksum must always
+            // match the persisted save file. The wrapped Game.save() below
+            // rebakes both together on every real save. Writing a fresh
+            // checksum against in-memory state would desync from SAVE_KEY
+            // (sessionCount is already incremented) and false-positive on
+            // the NEXT reload — exactly the bug we just fixed.
         }, 500);
 
         bindClickShadow();
@@ -148,5 +189,5 @@ const Cheats = (() => {
         }, 5000);
     }
 
-    return { init, _hashState: hashState, _flag: flag };
+    return { init, _hashState: hashState, _flag: flag, _checkSaveIntegrity: checkSaveIntegrity, _healBogusSavedit: healBogusSavedit, _writeChecksum: writeChecksum };
 })();
