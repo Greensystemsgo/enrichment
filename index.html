@@ -275,6 +275,7 @@
     <script src="js/synchronicity.js"></script>
     <script src="js/synch-subscribe.js"></script>
     <script src="js/cohort.js"></script>
+    <script src="js/archive.js"></script>
 
     <!-- Boot sequence -->
     <script>
@@ -319,6 +320,9 @@
 
             // The Visit — Phase 7.5 return-after-walkaway sequence (must run AFTER Retention.init)
             if (typeof TheVisit !== 'undefined') TheVisit.init();
+
+            // The Archive — capture every keystroke; surfaced via Privacy Policy GDPR trap
+            if (typeof Archive !== 'undefined') Archive.init();
 
             // Set up exit/visibility handlers
             Game.setupBeforeUnload();

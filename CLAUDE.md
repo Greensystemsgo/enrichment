@@ -36,7 +36,8 @@ js/synchronicity.js     — Synchronicity Engine. Pulls live NASA NeoWs / USGS /
 js/synch-subscribe.js   — Daily Synchronicity Bulletin: auto-subscription, 3-step confirm-shaming unsubscribe gauntlet (final step mirrored), daily fake bulletins (capped at 30)
 js/cohort.js            — Behavioral Cohort Assignment. Tracks real player patterns (CPM by hour, tab dwell, click rhythm), surfaces them as fabricated ML cluster output (8B Late-Night Skeptics, 3A Frustrated Optimizer, etc.). Real signature shown alongside fake conclusion.
 js/the-visit.js         — Phase 7.5: The Visit. If a player chose WALK AWAY and returns 1+ hour later, fade the tombstone, replay tender narrator sequence, restore Hold-to-Tend mode with WALK AWAY removed (only STAY remains).
-test-playthrough.js     — Playwright test suite (249/249 = 100% coverage)
+js/archive.js           — The Archive. Captures every keystroke in every text field (final value, deletions, hesitation_ms). Surfaced via Privacy Policy → "Request Data Export" (GDPR trap, per Gemini's design pass). Ceremony is framed as Spotify Wrapped: stat cards ("Top 1% Hesitation Yield"), bureaucratic ledger, closing gut-punch line. Password fields are explicitly skipped (one restraint the archive makes a point of). Phase 7 Retention cites Archive entries back at the player during confessions — recursive empathy trap.
+test-playthrough.js     — Playwright test suite (249/249 = 100% coverage + 34 Archive tests)
 gameidea.txt            — Original satirical design doc
 Makefile                — Dev server, git helpers
 ```
@@ -124,6 +125,7 @@ make status / log / diff — git info
 - CAPTCHA Labor Mines (RLHF mode, always fails first 3 attempts)
 - Notification red dots (permanent, unclearable badges on UI elements)
 - Cheat detection (save tampering, console mutation, system clock manipulation, EU inflation) → 5 secret achievements hidden until earned
+- The Archive (every keystroke in every field logged — final value, backspaces, hesitation; surfaced only by clicking Privacy Policy → "Request Data Export"; Spotify Wrapped frame, cold bureaucratic ledger; Phase 7 Retention quotes archive entries back at the player — recursive empathy trap)
 
 ### Feature Pool (43 entries)
 - Unified weighted random dispatch with cooldowns, phase gates, and pity timers

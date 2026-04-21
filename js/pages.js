@@ -1028,11 +1028,41 @@ const Pages = (() => {
             const doc = body.querySelector('#privacy-doc');
             doc.innerHTML = escapeHTML(privacyDocText) + '<span class="privacy-cutoff">— CONNECTION LOST —</span>';
             body.querySelector('#privacy-writer').textContent = 'Worker disconnected. Document incomplete.';
+            injectGDPRTrap(body);
             return;
         }
 
         // Continue typing from where we left off
         startPrivacyTyping(body);
+    }
+
+    // GDPR "Request Data Export" trap — clicking this pops the Archive ceremony.
+    // Placed after the privacy cutoff. Looks like a legal escape hatch. Isn't.
+    function injectGDPRTrap(body) {
+        if (body.querySelector('#gdpr-trap')) return;
+        const container = body.querySelector('.privacy-container');
+        if (!container) return;
+        const trap = document.createElement('div');
+        trap.id = 'gdpr-trap';
+        trap.className = 'privacy-gdpr';
+        trap.innerHTML = `
+            <div class="privacy-gdpr-head">Exercise Your Rights</div>
+            <div class="privacy-gdpr-body">
+                Under <em>GDPR Article 15</em>, you are entitled to a copy of all personal data we hold about you.
+                The document above was lost. The data was not.
+            </div>
+            <button class="privacy-gdpr-btn" id="btn-request-data-export">REQUEST DATA EXPORT</button>
+            <div class="privacy-gdpr-fine">Request processed in real-time. No response required from our legal team. No data will be transmitted — it is already local to your session.</div>
+        `;
+        container.appendChild(trap);
+        const btn = trap.querySelector('#btn-request-data-export');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                if (typeof Archive !== 'undefined' && Archive.showArchive) {
+                    Archive.showArchive();
+                }
+            });
+        }
     }
 
     function startPrivacyTyping(body) {
@@ -1051,6 +1081,8 @@ const Pages = (() => {
 
                 Narrator.queueMessage("The privacy policy writer has been terminated. Budget cuts. The policy remains incomplete. Like most things here.");
                 UI.logAction('PRIVACY POLICY: Worker disconnected mid-sentence');
+                // Surface the GDPR "Request Data Export" escape hatch. It is not one.
+                injectGDPRTrap(body);
                 return;
             }
 

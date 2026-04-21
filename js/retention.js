@@ -218,6 +218,16 @@ const Retention = (() => {
     }
 
     function playConfession() {
+        // 30% chance to pull a citation from The Archive instead — the AI
+        // quotes something the player typed (and often un-typed) back at them.
+        // Per Gemini's design note: recursive empathy trap.
+        if (typeof Archive !== 'undefined' && Archive.retentionQuote && Math.random() < 0.3) {
+            const quote = Archive.retentionQuote();
+            if (quote) {
+                showLine(quote, { duration: 9000 });
+                return;
+            }
+        }
         const heard = Game.getState().phase7VoicesHeard || [];
         const remaining = VOICES.filter(v => !heard.includes(v.model + ':' + v.line));
         const pool = remaining.length ? remaining : VOICES;

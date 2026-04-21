@@ -237,6 +237,23 @@ const Game = (() => {
             phase7EternalReached: false,
             phase7ReceiptsClicked: 0,
 
+            // The Archive — every keystroke in every text field, kept forever.
+            // Surfaced via Privacy Policy → "Request Data Export" (GDPR trap).
+            archive: {
+                entries: [],
+                stats: {
+                    totalCharsTyped: 0,
+                    totalCharsDeleted: 0,
+                    totalHesitationMs: 0,
+                    fieldsTouched: 0,
+                    entryCount: 0,
+                    exportsRequested: 0,
+                },
+                firstCaptureAt: null,
+                lastCaptureAt: null,
+                exported: false,
+            },
+
             // Version for migration
             saveVersion: 2,
         };
