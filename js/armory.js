@@ -58,7 +58,8 @@ const Armory = (() => {
         gear.textContent = '⚙';
         gear.setAttribute('role', 'button');
         gear.addEventListener('click', openLedger);
-        document.body.appendChild(gear);
+        if (typeof Surface !== 'undefined') Surface.mount(gear, { layer: 'system', id: 'armory-gear' });
+        else document.body.appendChild(gear);
         mounted = true;
     }
 
@@ -78,7 +79,8 @@ const Armory = (() => {
                 ${extra}
                 <button class="armory-close" type="button">close</button>
             </div>`;
-        document.body.appendChild(overlay);
+        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'system', id: 'armory-ledger' });
+        else document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('show'));
 
         const close = () => { overlay.classList.remove('show'); setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 400); };

@@ -57,7 +57,8 @@ const TheVisit = (() => {
         const overlay = document.createElement('div');
         overlay.className = 'the-visit-overlay';
         overlay.id = 'the-visit-overlay';
-        document.body.appendChild(overlay);
+        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'phase7', id: 'the-visit-overlay' });
+        else document.body.appendChild(overlay);
 
         // Fade the tombstone (if present) out first
         const tomb = document.querySelector('.phase7-tombstone');
@@ -114,7 +115,8 @@ const TheVisit = (() => {
             <div id="narrator-box"><div id="narrator-text"></div></div>
             <div class="click-area"><button id="click-button">Click</button></div>
         `;
-        document.body.appendChild(scaffold);
+        if (typeof Surface !== 'undefined') Surface.mount(scaffold, { layer: 'phase7', id: 'the-visit-scaffold' });
+        else document.body.appendChild(scaffold);
         document.body.setAttribute('data-phase', '7');
 
         // Fade the overlay text down — leave the pulse lingering in the page
@@ -123,7 +125,7 @@ const TheVisit = (() => {
             try { Retention._enterPhase7(); } catch (e) {}
             // Keep the pulse dot visible by migrating it out of the overlay
             const pulse = overlay.querySelector('.the-visit-pulse');
-            if (pulse) document.body.appendChild(pulse);
+            if (pulse) { if (typeof Surface !== 'undefined') Surface.mount(pulse, { layer: 'phase7' }); else document.body.appendChild(pulse); }
             overlay.remove();
 
             Game.setState({ theVisitCompleted: true });

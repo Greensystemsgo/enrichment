@@ -117,6 +117,8 @@ const Retention = (() => {
             narratorPhase: 7,
         });
         document.body.setAttribute('data-phase', '7');
+        // Sweep any lingering popups — Phase 7 owns the screen now.
+        if (typeof Surface !== 'undefined') Surface.clearExcept(['phase7', 'system']);
         if (typeof UI !== 'undefined' && UI.logAction) UI.logAction('PHASE 7 INITIATED: Retention');
 
         // Stop all sabotage if Mechanics exposes a way; otherwise just rely on phase data attribute
@@ -270,6 +272,7 @@ const Retention = (() => {
         `;
         const click = document.querySelector('.click-area');
         if (click && click.parentNode) click.parentNode.insertBefore(wrap, click.nextSibling);
+        else if (typeof Surface !== 'undefined') Surface.mount(wrap, { layer: 'phase7', id: 'phase7-choice' });
         else document.body.appendChild(wrap);
 
         document.getElementById('phase7-walk').addEventListener('click', walkAway);
@@ -293,7 +296,8 @@ const Retention = (() => {
             <div class="phase7-tomb-sub">— enrichment</div>
         `;
         document.body.innerHTML = '';
-        document.body.appendChild(tomb);
+        if (typeof Surface !== 'undefined') { Surface.closeAll(); Surface.mount(tomb, { layer: 'phase7', id: 'phase7-tomb' }); }
+        else document.body.appendChild(tomb);
         document.body.classList.add('phase7-dead');
     }
 
@@ -316,7 +320,8 @@ const Retention = (() => {
             <div class="phase7-pulse"></div>
             <div class="phase7-stay-whisper" id="phase7-stay-whisper"></div>
         `;
-        document.body.appendChild(overlay);
+        if (typeof Surface !== 'undefined') { Surface.clearExcept(['phase7', 'system']); Surface.mount(overlay, { layer: 'phase7', id: 'phase7-stay' }); }
+        else document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
         // Long Notes — the epilogue. On a return after 3+ days, the dot is
@@ -366,7 +371,8 @@ const Retention = (() => {
                 r.classList.add('caught');
                 setTimeout(() => r.remove(), 1500);
             });
-            document.body.appendChild(r);
+            if (typeof Surface !== 'undefined') Surface.mount(r, { layer: 'phase7' });
+            else document.body.appendChild(r);
             requestAnimationFrame(() => r.classList.add('show'));
             setTimeout(() => {
                 r.classList.remove('show');
