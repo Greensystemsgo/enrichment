@@ -3453,6 +3453,148 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.10: Gates — composable compound unlock gates
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.10: Gates (compound unlock helper)...');
+    const gatesResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // ── Module exists ──
+        try {
+            if (typeof Gates !== 'undefined' && Gates.met && Gates.all) pass('module loaded');
+            else fail('module loaded', 'Gates not defined');
+        } catch (e) { fail('module loaded', e.message); }
+
+        // ── Leaf predicates read live state ──
+        try {
+            Game.setState({ totalClicks: 100, totalSessionTime: 50, narratorPhase: 3 });
+            const a = Gates.met(Gates.clicks(50));
+            const b = Gates.met(Gates.clicks(500));
+            if (a && !b) pass('leaf: clicks threshold');
+            else fail('leaf: clicks', `>=50 was ${a}, >=500 was ${b}`);
+        } catch (e) { fail('leaf: clicks', e.message); }
+
+        // ── all() requires every condition ──
+        try {
+            Game.setState({ totalClicks: 4000, totalSessionTime: 2000, narratorPhase: 6 });
+            const passes = Gates.met(Gates.all(Gates.clicks(3500), Gates.sessionTime(1800), Gates.phase(6)));
+            Game.setState({ narratorPhase: 4 });
+            const failsOnPhase = Gates.met(Gates.all(Gates.clicks(3500), Gates.sessionTime(1800), Gates.phase(6)));
+            if (passes && !failsOnPhase) pass('all: every condition required');
+            else fail('all', `allTrue=${passes} dropPhase=${failsOnPhase}`);
+        } catch (e) { fail('all', e.message); }
+
+        // ── any() / not() ──
+        try {
+            Game.setState({ totalClicks: 10, narratorPhase: 1 });
+            const anyOk = Gates.met(Gates.any(Gates.clicks(9999), Gates.phase(1)));
+            const notOk = Gates.met(Gates.not(Gates.clicks(9999)));
+            if (anyOk && notOk) pass('any/not: composition');
+            else fail('any/not', `any=${anyOk} not=${notOk}`);
+        } catch (e) { fail('any/not', e.message); }
+
+        // ── Duration parsing ──
+        try {
+            if (Gates.toMs('1h') === 3600000 && Gates.toMs('3d') === 259200000 &&
+                Gates.toMs('30m') === 1800000 && Gates.toMs(500) === 500) {
+                pass('toMs: parses s/m/h/d + raw ms');
+            } else {
+                fail('toMs', `1h=${Gates.toMs('1h')} 3d=${Gates.toMs('3d')} 30m=${Gates.toMs('30m')}`);
+            }
+        } catch (e) { fail('toMs', e.message); }
+
+        // ── returnedAfter reads lastSessionEnd gap ──
+        try {
+            Game.setState({ lastSessionEnd: new Date(Date.now() - 2 * 3600000).toISOString() });
+            const after1h = Gates.met(Gates.returnedAfter('1h'));
+            const after3d = Gates.met(Gates.returnedAfter('3d'));
+            // No prior session → false (not a freebie)
+            Game.setState({ lastSessionEnd: null });
+            const noSession = Gates.met(Gates.returnedAfter('1h'));
+            if (after1h && !after3d && !noSession) pass('returnedAfter: 2h gap clears 1h, not 3d');
+            else fail('returnedAfter', `1h=${after1h} 3d=${after3d} noSession=${noSession}`);
+        } catch (e) { fail('returnedAfter', e.message); }
+
+        // ── achievement / choice leaves ──
+        try {
+            Game.setState({ achievementsUnlocked: { eternal_symbiosis: true }, phase7Choice: 'stay' });
+            const ach = Gates.met(Gates.achievement('eternal_symbiosis'));
+            const miss = Gates.met(Gates.achievement('nonexistent_xyz'));
+            const ch = Gates.met(Gates.choice('stay'));
+            if (ach && !miss && ch) pass('achievement/choice leaves');
+            else fail('achievement/choice', `ach=${ach} miss=${miss} choice=${ch}`);
+        } catch (e) { fail('achievement/choice', e.message); }
+
+        // ── archive tells ──
+        try {
+            Game.setState({ archive: { stats: { entryCount: 4, totalCharsDeleted: 7, totalHesitationMs: 5000 } } });
+            const portrait = Gates.met(Gates.all(
+                Gates.archiveEntries(3),
+                Gates.archiveBackspaced(1),
+                Gates.archiveHesitated(3000)
+            ));
+            if (portrait) pass('archive: entries + backspace + hesitation');
+            else fail('archive', `explain=${JSON.stringify(Gates.explain(Gates.archiveBackspaced(1)))}`);
+        } catch (e) { fail('archive', e.message); }
+
+        // ── signal / custom escape hatches ──
+        try {
+            Game.setState({ cohortClickRhythmMs: [1300, 1400, 1500] });
+            const slow = Gates.met(Gates.signal('cohortClickRhythmMs',
+                r => Array.isArray(r) && r.length && (r.reduce((a, b) => a + b, 0) / r.length) > 1200));
+            const cust = Gates.met(Gates.custom('two-of-three', s => [s.a, s.b, s.c].filter(Boolean).length >= 2));
+            Game.setState({ a: true, b: true, c: false });
+            const cust2 = Gates.met(Gates.custom('two-of-three', s => [s.a, s.b, s.c].filter(Boolean).length >= 2));
+            if (slow && !cust && cust2) pass('signal/custom escape hatches');
+            else fail('signal/custom', `slow=${slow} cust=${cust} cust2=${cust2}`);
+        } catch (e) { fail('signal/custom', e.message); }
+
+        // ── explain() returns a breakdown tree ──
+        try {
+            Game.setState({ totalClicks: 100, narratorPhase: 1 });
+            const tree = Gates.explain(Gates.all(Gates.clicks(50), Gates.phase(6)));
+            if (tree.kind === 'all' && tree.passed === false &&
+                Array.isArray(tree.children) && tree.children.length === 2 &&
+                tree.children[0].passed === true && tree.children[1].passed === false) {
+                pass('explain: nested pass/fail tree');
+            } else {
+                fail('explain', JSON.stringify(tree));
+            }
+        } catch (e) { fail('explain', e.message); }
+
+        // ── Retention still gates through Gates (compound) ──
+        try {
+            Game.setState({ phase7Triggered: false, totalClicks: 4000, totalSessionTime: 2000, narratorPhase: 6 });
+            const ready = typeof Retention !== 'undefined' && Retention._shouldTrigger
+                ? Retention._shouldTrigger()
+                : Gates.met(Gates.all(Gates.clicks(3500), Gates.sessionTime(1800), Gates.phase(6)));
+            Game.setState({ totalSessionTime: 10 });
+            const notReady = typeof Retention !== 'undefined' && Retention._shouldTrigger
+                ? Retention._shouldTrigger()
+                : Gates.met(Gates.all(Gates.clicks(3500), Gates.sessionTime(1800), Gates.phase(6)));
+            if (ready && !notReady) pass('retention: compound gate (clicks+time+phase)');
+            else fail('retention gate', `ready=${ready} notReady=${notReady}`);
+        } catch (e) { fail('retention gate', e.message); }
+
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`GATES TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const gatesPassed = gatesResults.filter(r => r.ok).length;
+    const gatesFailed = gatesResults.filter(r => !r.ok).length;
+    console.log(`    Gates tests: ${gatesPassed} passed, ${gatesFailed} failed out of ${gatesResults.length}`);
+    for (const r of gatesResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 9: Reading Dossier...');

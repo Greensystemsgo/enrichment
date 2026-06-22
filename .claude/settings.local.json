@@ -104,7 +104,8 @@
       "mcp__glm__chat-with-glm-4_5-air",
       "mcp__gemma__chat-with-gemma-3_27b",
       "mcp__gptoss__chat-with-gpt-oss-120b",
-      "Bash(wait)"
+      "Bash(wait)",
+      "mcp__gpt__chat-with-gpt-5_5"
     ]
   },
   "enabledMcpjsonServers": [

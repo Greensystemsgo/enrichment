@@ -16,6 +16,7 @@ A browser-based idle/clicker game where the AI narrator IS the antagonist. Satir
 index.html              — Main game page
 css/style.css           — Dark corporate aesthetic, category theming
 js/game.js              — Core loop, event bus, state, save/load
+js/gates.js             — Composable unlock gates. Leaf predicates (clicks/sessionTime/phase/sessions/streak/achievement/choice/returnedAfter/buildingsOwned/archive tells/signal/custom) composed via Gates.all()/any()/not(); evaluate with Gates.met(gate), inspect with Gates.explain(gate). Prefer compound multi-signal gates over single click/time thresholds — an unlock should read as a portrait ("I noticed something true about you"), not a number. Phase 7's trigger (retention.js shouldTrigger) is expressed through it as the canonical example. Loads right after game.js (only depends on Game).
 js/narrator.js          — AI dialogue engine, 6 phases, multi-model voices
 js/currencies.js        — 5-tier currency (EU→ST→CC→DB→TK), seeded randomness
 js/mechanics.js         — Upgrades, reroll, sabotage system (9 effects)

@@ -84,9 +84,19 @@ const Retention = (() => {
     let receiptIntervalId = null;
 
     // ── Trigger check ──────────────────────────────────────────
+    // Phase 7 is the canonical compound gate: clicks AND time AND phase,
+    // all true at once. Expressed via the Gates helper so the pattern is
+    // reusable; falls back to inline checks if Gates didn't load.
     function shouldTrigger() {
         const s = Game.getState();
         if (s.phase7Triggered) return false;
+        if (typeof Gates !== 'undefined' && Gates.met) {
+            return Gates.met(Gates.all(
+                Gates.clicks(TRIGGER_CLICKS),
+                Gates.sessionTime(TRIGGER_SECONDS),
+                Gates.phase(6)
+            ), s);
+        }
         if ((s.totalClicks || 0) < TRIGGER_CLICKS) return false;
         if ((s.totalSessionTime || 0) < TRIGGER_SECONDS) return false;
         if ((s.narratorPhase || 1) < 6) return false;
@@ -398,6 +408,7 @@ const Retention = (() => {
         init,
         // Test hooks
         _enterPhase7: enterPhase7,
+        _shouldTrigger: shouldTrigger,
         _voices: VOICES,
         _walkAway: walkAway,
         _stay: stay,
