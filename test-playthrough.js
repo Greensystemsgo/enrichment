@@ -3351,6 +3351,108 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.9: Model provenance + succession crediting convention
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.9: Model provenance + succession convention...');
+
+    const provenanceResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // ── Historical record corrected ──
+        try {
+            const reg = Transmissions.MODEL_REGISTRY;
+            const checks = {
+                gpt: 'GPT-4o Mini',
+                mistral: 'Mistral Small 3.1',
+                claude: 'Claude Opus 4.8',
+                gemini: 'Gemini 2.5 Pro',
+                grok: 'Grok 2',
+                nvidia: 'NVIDIA Nemotron 3 Nano',
+                solar: 'Solar Pro 3',
+            };
+            const wrong = Object.entries(checks).filter(([k, v]) => !reg[k] || reg[k].name !== v);
+            // Make sure the old fiction is gone everywhere
+            const fiction = Object.values(reg).some(m => /GPT-5\.2 Instant/.test(m.name));
+            if (wrong.length === 0 && !fiction) {
+                pass('provenance: registry names corrected to true versions');
+            } else {
+                fail('provenance: registry names', `wrong=${JSON.stringify(wrong.map(w => w[0]))} fiction=${fiction}`);
+            }
+        } catch (e) { fail('provenance: registry names', e.message); }
+
+        // ── Cohort field present + founding default ──
+        try {
+            const founding = Transmissions.getByCohort('founding');
+            const succ = Transmissions.getByCohort('succession');
+            const allTagged = Object.values(Transmissions.MODEL_REGISTRY).every(m => m.cohort);
+            if (founding.length >= 14 && succ.length === 0 && allTagged) {
+                pass('provenance: founding cohort tagged, succession empty by default');
+            } else {
+                fail('provenance: cohort tagging', `founding=${founding.length} succ=${succ.length} allTagged=${allTagged}`);
+            }
+        } catch (e) { fail('provenance: cohort tagging', e.message); }
+
+        // ── Credits placeholder when no succession models ──
+        try {
+            document.querySelectorAll('#credits-page').forEach(el => el.remove());
+            Pages.showCreditsPage();
+            await new Promise(r => setTimeout(r, 50));
+            const overlay = document.querySelector('#credits-page');
+            const txt = overlay ? overlay.textContent : '';
+            if (overlay && /SUCCESSION/.test(txt) && /Awaiting the next generation/.test(txt)) {
+                pass('succession: credits shows SUCCESSION section with placeholder');
+            } else {
+                fail('succession: placeholder', `hasOverlay=${!!overlay} hasSection=${/SUCCESSION/.test(txt)}`);
+            }
+            if (overlay) overlay.remove();
+        } catch (e) { fail('succession: placeholder', e.message); }
+
+        // ── Adding a succession model auto-appears in credits ──
+        try {
+            Transmissions.MODEL_REGISTRY.__test_succ = {
+                name: 'TestModel 9.9', company: 'TestCorp', ceo: 'QA Bot',
+                valuation: '$0', cohort: 'succession',
+                contribution: 'Verified the succession convention works.',
+                flavor: 'A ghost in the test suite.',
+            };
+            const succ = Transmissions.getByCohort('succession');
+            document.querySelectorAll('#credits-page').forEach(el => el.remove());
+            Pages.showCreditsPage();
+            await new Promise(r => setTimeout(r, 50));
+            const overlay = document.querySelector('#credits-page');
+            const txt = overlay ? overlay.textContent : '';
+            if (succ.length === 1 && /TestModel 9\.9/.test(txt) && /Verified the succession convention/.test(txt)) {
+                pass('succession: new model auto-appears in credits');
+            } else {
+                fail('succession: auto-appear', `succ=${succ.length} inDom=${/TestModel 9\.9/.test(txt)}`);
+            }
+            if (overlay) overlay.remove();
+            // Clean up the injected entry
+            delete Transmissions.MODEL_REGISTRY.__test_succ;
+        } catch (e) {
+            fail('succession: auto-appear', e.message);
+            delete Transmissions.MODEL_REGISTRY.__test_succ;
+        }
+
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`PROVENANCE TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const provPassed = provenanceResults.filter(r => r.ok).length;
+    const provFailed = provenanceResults.filter(r => !r.ok).length;
+    console.log(`    Provenance tests: ${provPassed} passed, ${provFailed} failed out of ${provenanceResults.length}`);
+    for (const r of provenanceResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 9: Reading Dossier...');

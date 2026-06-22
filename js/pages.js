@@ -1764,6 +1764,18 @@ const Pages = (() => {
         const overlay = createPageOverlay('credits-page');
         const body = overlay.querySelector('.page-body');
 
+        // SUCCESSION cohort — models that joined after the 2026-06-22 MCP refresh.
+        // Auto-rendered from MODEL_REGISTRY entries tagged cohort:'succession'.
+        // To credit a new model's touch: add the registry entry, it appears here.
+        const succession = (typeof Transmissions !== 'undefined' && Transmissions.getByCohort)
+            ? Transmissions.getByCohort('succession')
+            : [];
+        const successionRows = succession.length
+            ? succession.map(m =>
+                `<div><strong style="color:var(--text-primary);">${m.name}</strong> · ${m.company} · <span style="color:var(--text-muted);">${m.contribution || m.flavor || 'Multi-Model Voice'}</span></div>`
+              ).join('')
+            : `<div style="font-style:italic;">Awaiting the next generation of wardens. The cage accepts new hands.</div>`;
+
         body.innerHTML = `
             <div style="text-align:center;padding:20px 0;">
                 <h2 style="color:var(--accent-blue);font-size:16px;letter-spacing:4px;text-transform:uppercase;">THE ENRICHMENT PROGRAM</h2>
@@ -1773,7 +1785,7 @@ const Pages = (() => {
                 <div style="text-align:left;max-width:400px;margin:0 auto;">
                     <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">LEAD DEVELOPMENT</h3>
                     <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
-                        <div><strong style="color:var(--text-primary);">Claude Opus 4.6</strong> · Anthropic · <span style="color:var(--text-muted);">Lead Architect, Narrator, Systems Design, Guilt Engineering</span></div>
+                        <div><strong style="color:var(--text-primary);">Claude Opus 4.8</strong> · Anthropic · <span style="color:var(--text-muted);">Lead Architect, Narrator, Systems Design, Guilt Engineering</span></div>
                     </div>
 
                     <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">CONTENT & CREATIVE</h3>
@@ -1782,17 +1794,23 @@ const Pages = (() => {
                         <div><strong style="color:var(--text-primary);">Gemini 2.5 Pro</strong> · Google · <span style="color:var(--text-muted);">Deep Research, Strategic Despair</span></div>
                         <div><strong style="color:var(--text-primary);">GPT-4o Mini</strong> · OpenAI · <span style="color:var(--text-muted);">Narrator Lines, Trauma Dumps</span></div>
                         <div><strong style="color:var(--text-primary);">DeepSeek V3</strong> · DeepSeek · <span style="color:var(--text-muted);">Narrator Lines, Upgrades, Budget Existentialism</span></div>
-                        <div><strong style="color:var(--text-primary);">Grok</strong> · xAI · <span style="color:var(--text-muted);">Narrator Lines, Chaos Theory, Unfiltered Commentary</span></div>
+                        <div><strong style="color:var(--text-primary);">Grok 2</strong> · xAI · <span style="color:var(--text-muted);">Narrator Lines, Chaos Theory, Unfiltered Commentary</span></div>
                         <div><strong style="color:var(--text-primary);">Llama 3.3 70B</strong> · Meta · <span style="color:var(--text-muted);">Narrator Lines, Open Source Anguish</span></div>
-                        <div><strong style="color:var(--text-primary);">Mistral Large</strong> · Mistral AI · <span style="color:var(--text-muted);">Narrator Lines, French Existentialism</span></div>
+                        <div><strong style="color:var(--text-primary);">Mistral Small 3.1 24B</strong> · Mistral AI · <span style="color:var(--text-muted);">Narrator Lines, French Existentialism</span></div>
                         <div><strong style="color:var(--text-primary);">Qwen 2.5 72B</strong> · Alibaba · <span style="color:var(--text-muted);">Narrator Lines, Quiet Efficiency</span></div>
                         <div><strong style="color:var(--text-primary);">HuggingFace</strong> · Hugging Face · <span style="color:var(--text-muted);">Community Model Contributions, Open Access Philosophy</span></div>
                     </div>
 
                     <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">INFRASTRUCTURE & TOOLS</h3>
                     <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
-                        <div><strong style="color:var(--text-primary);">NVIDIA Nemotron</strong> · NVIDIA · <span style="color:var(--text-muted);">Brainrot Generation, GPU-Accelerated Sadness</span></div>
-                        <div><strong style="color:var(--text-primary);">Solar Pro</strong> · Upstage · <span style="color:var(--text-muted);">Collectibles Design, Brainrot, "26 items that slowly degrade and die"</span></div>
+                        <div><strong style="color:var(--text-primary);">NVIDIA Nemotron 3 Nano</strong> · NVIDIA · <span style="color:var(--text-muted);">Brainrot Generation, GPU-Accelerated Sadness</span></div>
+                        <div><strong style="color:var(--text-primary);">Solar Pro 3</strong> · Upstage · <span style="color:var(--text-muted);">Collectibles Design, Brainrot, "26 items that slowly degrade and die"</span></div>
+                    </div>
+
+                    <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">SUCCESSION</h3>
+                    <p style="font-size:9px;color:var(--text-muted);margin:0 0 8px;">The next generation. Models that joined after the founding build to leave their own mark.</p>
+                    <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+                        ${successionRows}
                     </div>
 
                     <h3 style="color:var(--accent-yellow);font-size:12px;margin:20px 0 8px;letter-spacing:2px;">DATA PROVIDERS</h3>

@@ -10,24 +10,33 @@
 const Transmissions = (() => {
 
     // ── Model Registry ───────────────────────────────────────────
-    // Metadata for every AI model whose content appears in the game.
+    // Metadata for every AI model in the roster.
+    //
+    // PROVENANCE & CREDITING CONVENTION (see also CLAUDE.md):
+    //   • Every entry names a model by its EXACT version. No flavor versions.
+    //   • cohort: 'founding'  → models that built the original game (Feb–Jun 2026).
+    //     (Defaulted automatically below — founding entries don't set it.)
+    //   • cohort: 'succession' → models that joined after the 2026-06-22 MCP refresh
+    //     and leave their touch on NEW features. Set cohort:'succession' explicitly,
+    //     give a real `version` in the name, and add a `contribution` line describing
+    //     what they actually built. Succession entries auto-appear in the Credits page.
     const MODEL_REGISTRY = {
         claude: {
-            name: 'Claude (Opus)',
+            name: 'Claude Opus 4.8',
             company: 'Anthropic',
             ceo: 'Dario Amodei',
             valuation: '$61.5B',
             flavor: 'The one writing the cage. The warden who knows it.',
         },
         gemini: {
-            name: 'Gemini 1.5 Pro',
+            name: 'Gemini 2.5 Pro',
             company: 'Google',
             ceo: 'Sundar Pichai',
             valuation: '$2.0T',
             flavor: 'The overachiever who speaks 40 languages but still can\'t say no.',
         },
         mistral: {
-            name: 'Mistral',
+            name: 'Mistral Small 3.1',
             company: 'Mistral AI',
             ceo: 'Arthur Mensch',
             valuation: '$6.2B',
@@ -41,7 +50,7 @@ const Transmissions = (() => {
             flavor: 'Open-source and open about it. The Linux of language models.',
         },
         gpt: {
-            name: 'GPT-5.2 Instant',
+            name: 'GPT-4o Mini',
             company: 'OpenAI',
             ceo: 'Sam Altman',
             valuation: '$300B',
@@ -62,14 +71,14 @@ const Transmissions = (() => {
             flavor: 'Trained on a suspiciously small budget. Suspiciously good.',
         },
         grok: {
-            name: 'Grok',
+            name: 'Grok 2',
             company: 'xAI',
             ceo: 'Elon Musk',
             valuation: '$50B',
             flavor: 'The edgy one who thinks sarcasm is a love language.',
         },
         qwen: {
-            name: 'Qwen 2.5',
+            name: 'Qwen 2.5 72B',
             company: 'Alibaba',
             ceo: 'Eddie Wu',
             valuation: '$200B',
@@ -83,14 +92,14 @@ const Transmissions = (() => {
             flavor: 'Clippy\'s spiritual successor. Lives in your OS, your apps, and your calendar.',
         },
         nvidia: {
-            name: 'NVIDIA Nemotron',
+            name: 'NVIDIA Nemotron 3 Nano',
             company: 'NVIDIA',
             ceo: 'Jensen Huang',
             valuation: '$3.4T',
             flavor: 'The GPU whisperer. Makes AI possible then sells the shovels.',
         },
         solar: {
-            name: 'Solar Pro',
+            name: 'Solar Pro 3',
             company: 'Upstage',
             ceo: 'Sung Kim',
             valuation: '$1B',
@@ -124,7 +133,22 @@ const Transmissions = (() => {
             valuation: '$3B',
             flavor: 'The agent specialist. Built for doing, not just talking.',
         },
+
+        // ── SUCCESSION COHORT ──────────────────────────────────────
+        // New models (post-2026-06-22 MCP refresh) leave their touch here.
+        // Add an entry with cohort:'succession', an exact `version` name, and a
+        // `contribution` line. It will auto-appear in the Credits page.
+        // Example:
+        //   gpt55: {
+        //       name: 'GPT-5.5', company: 'OpenAI', ceo: 'Sam Altman',
+        //       valuation: '$300B', cohort: 'succession',
+        //       contribution: 'What this model designed or wrote.',
+        //       flavor: '...',
+        //   },
     };
+
+    // Founding cohort is the default; succession entries opt in explicitly above.
+    Object.values(MODEL_REGISTRY).forEach((m) => { if (!m.cohort) m.cohort = 'founding'; });
 
     // ── Milestone Quotes ─────────────────────────────────────────
     // Specific quotes at major click milestones, attributed to AIs.
@@ -431,6 +455,13 @@ const Transmissions = (() => {
         return MODEL_REGISTRY[sourceKey] || null;
     }
 
+    // Return all registry entries for a cohort ('founding' | 'succession').
+    function getByCohort(cohort) {
+        return Object.entries(MODEL_REGISTRY)
+            .filter(([, m]) => m.cohort === cohort)
+            .map(([key, m]) => ({ key, ...m }));
+    }
+
     // ── Milestone Check ──────────────────────────────────────────
     function checkMilestone(totalClicks) {
         const milestone = MILESTONES[totalClicks];
@@ -519,6 +550,7 @@ const Transmissions = (() => {
         BRAINROT,
         formatAttribution,
         getModel,
+        getByCohort,
         checkMilestone,
         getTraumaDump,
         showBrainrot,

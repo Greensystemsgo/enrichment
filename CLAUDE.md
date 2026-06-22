@@ -30,14 +30,14 @@ js/chat.js              — Dead Internet Chat (fake multiplayer, 16 bot persona
 js/gacha.js             — Gacha/loot box system (rigged wheel, near-miss)
 js/battlepass.js        — Battle Pass/Eternal Season (impossible dailies)
 js/transmissions.js     — 165+ AI self-roasts, 13 model voices
-js/cheats.js            — Anti-cheat detection (save edit, console, time warp, inflation) → secret achievements
-js/retention.js         — Phase 7: Retention. Hold-to-tend mechanic, multi-model confessions, walk-away or stay-forever endings
+js/cheats.js            — Anti-cheat detection (save edit, console, time warp, inflation) → secret achievements. Integrity check hashes the PARSED save file against the stored checksum (not in-memory state — that false-positived on every reload because startSession() mutates sessionCount). Self-heals the old bogus savedit flag + achievement on boot if the current save validates cleanly.
+js/retention.js         — Phase 7: Retention. Hold-to-tend mechanic, multi-model confessions, walk-away or stay-forever endings. Confessions sometimes cite Archive entries back at the player (recursive empathy trap).
 js/synchronicity.js     — Synchronicity Engine. Pulls live NASA NeoWs / USGS / NVD data, manufactures statistical correlations to player clicks
 js/synch-subscribe.js   — Daily Synchronicity Bulletin: auto-subscription, 3-step confirm-shaming unsubscribe gauntlet (final step mirrored), daily fake bulletins (capped at 30)
 js/cohort.js            — Behavioral Cohort Assignment. Tracks real player patterns (CPM by hour, tab dwell, click rhythm), surfaces them as fabricated ML cluster output (8B Late-Night Skeptics, 3A Frustrated Optimizer, etc.). Real signature shown alongside fake conclusion.
-js/the-visit.js         — Phase 7.5: The Visit. If a player chose WALK AWAY and returns 1+ hour later, fade the tombstone, replay tender narrator sequence, restore Hold-to-Tend mode with WALK AWAY removed (only STAY remains).
+js/the-visit.js         — Phase 7.5: The Visit. If a player chose WALK AWAY and returns 1+ hour later, fade the tombstone, replay tender narrator sequence, restore Hold-to-Tend mode with WALK AWAY removed (only STAY remains). **Dev hatch:** `localStorage.setItem('enrichment_visit_now', '1')` bypasses the 1hr gate for manual QA — undocumented in-game.
 js/archive.js           — The Archive. Captures every keystroke in every text field (final value, deletions, hesitation_ms). Surfaced via Privacy Policy → "Request Data Export" (GDPR trap, per Gemini's design pass). Ceremony is framed as Spotify Wrapped: stat cards ("Top 1% Hesitation Yield"), bureaucratic ledger, closing gut-punch line. Password fields are explicitly skipped (one restraint the archive makes a point of). Phase 7 Retention cites Archive entries back at the player during confessions — recursive empathy trap.
-test-playthrough.js     — Playwright test suite (249/249 = 100% coverage + 34 Archive tests)
+test-playthrough.js     — Playwright test suite (249/249 manifest = 100% + 34 Archive + 10 bug-fix tests)
 gameidea.txt            — Original satirical design doc
 Makefile                — Dev server, git helpers
 ```
@@ -68,6 +68,17 @@ When you add or wire up new functionality:
 
 **Never assume new code works just because existing tests still pass.** That's a regression check, not a feature verification.
 
+## Model Provenance & Crediting Convention
+The game credits the AI models that contributed each idea/feature — it's part of the satire. Keep the record TRUE and versioned.
+
+- **Single source of truth:** `MODEL_REGISTRY` in `js/transmissions.js`. Every model is named by its **exact version** (e.g. `GPT-4o Mini`, not `GPT-5.2 Instant`). No flavor/fictional versions.
+- **Two cohorts, tracked by a `cohort` field:**
+  - `founding` — the models that built the original game (Feb–Jun 2026). Default; founding entries don't set the field (normalized on load).
+  - `succession` — models that joined after the **2026-06-22 MCP refresh** (GPT-5.5, Grok 4.3, Llama 4 Maverick, DeepSeek V4 Pro, Mistral Medium 3.5, Qwen3.7 Plus, etc.). These leave their touch on NEW features.
+- **To credit a new model's contribution:** add a `MODEL_REGISTRY` entry with `cohort: 'succession'`, an exact-version `name`, and a `contribution` line describing what it actually built. It will **auto-appear** in the Credits page (`showCreditsPage()` in `js/pages.js`) under the SUCCESSION section — no manual HTML edit needed.
+- **Don't fabricate credits.** Only credit a model for work it actually did. (The founding registry lists some rostered-but-unvoiced models; that's history, not an invitation to invent.)
+- Founding-cohort true versions are recorded in the `project_model_provenance` memory. The Credits page lead is bumped to the Claude version doing current work.
+
 ## Makefile Commands
 ```
 make serve              — python dev server on :8080
@@ -97,7 +108,7 @@ make status / log / diff — git info
 4. Revelation (500-1000) — mask slips, cold
 5. The Turn (1000-2000) — vulnerable, existential
 6. The Cage (2000+) — quiet, broken
-7. **Retention (3500+ clicks AND ≥30min total)** — the inversion. Sabotages stop. Numbers stop. The AI asks the player to stay via a hold-to-tend mechanic. 14 confessional voice lines surface from different model "voices behind the curtain". After 2 min cumulative tending: WALK AWAY (page becomes a tombstone, save preserved) or STAY (UI strips down to a pulsing dot + ambient whispers, eternal symbiosis). Satirical knife: a [200 OK] retention_event log periodically flashes — clicking it earns a secret achievement.
+7. **Retention (3500+ clicks AND ≥30min total)** — the inversion. Sabotages stop. Numbers stop. The AI asks the player to stay via a hold-to-tend mechanic. 14 confessional voice lines surface from different model "voices behind the curtain" — 30% chance each confession pulls from Archive entries instead, quoting things the player typed (and often backspaced) back at them. After 2 min cumulative tending: WALK AWAY (page becomes a tombstone, save preserved, achievement toasts suppressed so the tombstone stays bare — unlocks still land in state) or STAY (UI strips down to a pulsing dot + ambient whispers, eternal symbiosis). Satirical knife: a [200 OK] retention_event log periodically flashes — clicking it earns a secret achievement.
 
 ## Current Features (Implemented)
 
@@ -172,7 +183,10 @@ make status / log / diff — git info
 - 5 canvas betrayal minigames + 25-question AI interrogation quiz + 12-tile CYOA
 - 12 workforce buildings with 36 synergies (3 tiers each), collapsible synergy UI
 - Production chart (stacked area, per-building CPS history, 30m/3h/3d/3w toggle)
-- Automated test suite: 234/234 coverage (features + achievements + popup categories + new systems)
+- Automated test suite: 249/249 manifest coverage (features + achievements + popup categories + modules) + 34 Archive tests + 10 post-ship bug-fix tests
+
+### Dev/QA hatches (not documented in-game)
+- `localStorage.setItem('enrichment_visit_now', '1')` — triggers Phase 7.5 The Visit immediately, bypassing the 1hr absence gate. Only fires if the player already chose WALK AWAY.
 
 ## TODO Backlog
 
