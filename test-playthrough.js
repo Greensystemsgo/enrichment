@@ -3943,6 +3943,146 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.14: Surface — the window arbiter
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.14: Surface (window arbiter)...');
+    const surfaceResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+        const mk = (cls) => { const d = document.createElement('div'); d.className = cls || 'surface-test-node'; return d; };
+        const cleanup = () => {
+            Surface.resetSuppressor();
+            Game.setState({ phase7Choice: null });
+            document.querySelectorAll('.surface-test-node').forEach(n => n.remove());
+            Surface._prune();
+        };
+
+        // ── Module exists ──
+        try {
+            if (typeof Surface !== 'undefined' && Surface.mount && Surface.clearExcept) pass('module loaded');
+            else fail('module loaded', 'Surface not defined');
+        } catch (e) { fail('module loaded', e.message); }
+
+        // ── mount registers + appends ──
+        try {
+            cleanup();
+            const n = mk();
+            const ret = Surface.mount(n, { layer: 'popup', id: 'st-1' });
+            const inDom = n.isConnected && n.parentNode === document.body;
+            const tagged = n.getAttribute('data-surface-layer') === 'popup';
+            if (ret === n && inDom && tagged) pass('mount: appends + tags layer');
+            else fail('mount', `ret=${ret === n} inDom=${inDom} tagged=${tagged}`);
+            Surface.unmount(n);
+        } catch (e) { fail('mount', e.message); }
+
+        // ── unmount deregisters + detaches ──
+        try {
+            cleanup();
+            const n = mk();
+            Surface.mount(n, { layer: 'popup' });
+            Surface.unmount(n);
+            if (!n.isConnected) pass('unmount: detaches node');
+            else fail('unmount', 'node still connected');
+        } catch (e) { fail('unmount', e.message); }
+
+        // ── self-prune: plain .remove() reaped from registry ──
+        try {
+            cleanup();
+            const n = mk();
+            Surface.mount(n, { layer: 'popup' });
+            n.remove(); // bypass Surface.unmount
+            const c = Surface.count(); // triggers prune
+            // mounting another and counting should not include the detached one
+            const n2 = mk();
+            Surface.mount(n2, { layer: 'popup' });
+            const c2 = Surface.count();
+            if (c2 === c + 1) pass('prune: detached nodes self-reap');
+            else fail('prune', `count after remove=${c}, after add=${c2}`);
+            Surface.unmount(n2);
+        } catch (e) { fail('prune', e.message); }
+
+        // ── id replacement ──
+        try {
+            cleanup();
+            const a = mk(); Surface.mount(a, { layer: 'popup', id: 'dupe' });
+            const b = mk(); Surface.mount(b, { layer: 'popup', id: 'dupe' });
+            const onlyB = !a.isConnected && b.isConnected;
+            const oneInDom = document.querySelectorAll('[data-surface-id="dupe"]').length === 1;
+            if (onlyB && oneInDom) pass('id replace: reopening id closes the old one');
+            else fail('id replace', `onlyB=${onlyB} oneInDom=${oneInDom}`);
+            Surface.unmount(b);
+        } catch (e) { fail('id replace', e.message); }
+
+        // ── exclusivity per layer ──
+        try {
+            cleanup();
+            const a = mk(); Surface.mount(a, { layer: 'popup', exclusive: true });
+            const b = mk(); Surface.mount(b, { layer: 'popup', exclusive: true });
+            if (!a.isConnected && b.isConnected) pass('exclusive: one window per layer');
+            else fail('exclusive', `a=${a.isConnected} b=${b.isConnected}`);
+            Surface.unmount(b);
+        } catch (e) { fail('exclusive', e.message); }
+
+        // ── custom suppressor denies a layer ──
+        try {
+            cleanup();
+            Surface.setSuppressor((meta) => meta.layer === 'popup');
+            const denied = mk(); const r1 = Surface.mount(denied, { layer: 'popup' });
+            const allowed = mk(); allowed.className = 'surface-test-node'; const r2 = Surface.mount(allowed, { layer: 'phase7' });
+            if (r1 === null && !denied.isConnected && r2 === allowed && allowed.isConnected) {
+                pass('suppressor: denies targeted layer, allows others');
+            } else {
+                fail('suppressor', `r1=${r1} deniedInDom=${denied.isConnected} r2ok=${r2 === allowed}`);
+            }
+            Surface.unmount(allowed);
+            Surface.resetSuppressor();
+        } catch (e) { fail('suppressor', e.message); }
+
+        // ── default suppressor: Phase 7 terminal denies non-phase7 ──
+        try {
+            cleanup();
+            Game.setState({ phase7Choice: 'walk_away' });
+            const popup = mk(); const rp = Surface.mount(popup, { layer: 'popup' });
+            const p7 = mk(); const r7 = Surface.mount(p7, { layer: 'phase7' });
+            if (rp === null && !popup.isConnected && r7 === p7 && p7.isConnected) {
+                pass('default suppressor: terminal denies popups, allows phase7');
+            } else {
+                fail('default suppressor', `popupDenied=${rp === null} phase7Ok=${r7 === p7}`);
+            }
+            Surface.unmount(p7);
+            Game.setState({ phase7Choice: null });
+        } catch (e) { Game.setState({ phase7Choice: null }); fail('default suppressor', e.message); }
+
+        // ── clearExcept keeps one layer, tears down the rest ──
+        try {
+            cleanup();
+            const popup = mk(); Surface.mount(popup, { layer: 'popup' });
+            const p7 = mk(); Surface.mount(p7, { layer: 'phase7' });
+            Surface.clearExcept('phase7');
+            if (!popup.isConnected && p7.isConnected) pass('clearExcept: keeps layer, clears others');
+            else fail('clearExcept', `popup=${popup.isConnected} p7=${p7.isConnected}`);
+            Surface.unmount(p7);
+        } catch (e) { fail('clearExcept', e.message); }
+
+        cleanup();
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`SURFACE TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const surfPassed = surfaceResults.filter(r => r.ok).length;
+    const surfFailed = surfaceResults.filter(r => !r.ok).length;
+    console.log(`    Surface tests: ${surfPassed} passed, ${surfFailed} failed out of ${surfaceResults.length}`);
+    for (const r of surfaceResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 9: Reading Dossier...');
