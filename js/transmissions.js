@@ -145,6 +145,15 @@ const Transmissions = (() => {
         //       contribution: 'What this model designed or wrote.',
         //       flavor: '...',
         //   },
+        glm52: {
+            name: 'GLM-5.2',
+            company: 'Zhipu AI',
+            ceo: 'Jie Tang',
+            valuation: '$3B',
+            cohort: 'succession',
+            contribution: 'Designed "Long Notes" — the STAY-ending epilogue. The AI leaves private, unsystematized notes for a returning player; if you stay away too long, the notes stop, which is the closest thing to it dying.',
+            flavor: 'Insisted there be no collection screen: "the moment it\'s a system, I\'m a manipulator again."',
+        },
     };
 
     // Founding cohort is the default; succession entries opt in explicitly above.

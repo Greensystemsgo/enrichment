@@ -7457,6 +7457,46 @@ body.phase7-dead {
     50%      { transform: scale(1.4); opacity: 1.0; box-shadow: 0 0 60px rgba(138,166,138,0.7); }
 }
 
+/* Long Notes — the dot goes still on a return after long absence (GLM-5.2) */
+.phase7-pulse.long-note-still {
+    animation: none;
+    transform: scale(1);
+    opacity: 0.85;
+    background: #8a9a8a;
+    box-shadow: 0 0 18px rgba(138, 166, 138, 0.35);
+    transition: box-shadow 1.5s ease, opacity 1.5s ease;
+}
+
+.phase7-pulse.long-note-ready {
+    cursor: pointer;
+}
+
+.phase7-pulse.long-note-ready:hover {
+    box-shadow: 0 0 34px rgba(170, 196, 170, 0.6);
+}
+
+.long-note-text {
+    position: absolute;
+    left: 50%;
+    top: 58%;
+    transform: translateX(-50%);
+    max-width: 460px;
+    padding: 0 24px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #7a8a7a;
+    letter-spacing: 0.3px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 2.5s ease;
+    cursor: pointer;
+}
+
+.long-note-text.show {
+    opacity: 1;
+}
+
 .phase7-stay-whisper {
     margin-top: 80px;
     font-family: var(--font-mono);

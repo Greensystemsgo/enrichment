@@ -296,7 +296,10 @@ const Retention = (() => {
     }
 
     // ── STAY ending — eternal symbiosis ────────────────────────
-    function stay() {
+    // opts.returning === true when re-entered on reload (a genuine return
+    // visit), false/absent when the player first chooses STAY. Long Notes
+    // only surface on returns.
+    function stay(opts) {
         Game.setState({ phase7Choice: 'stay', phase7StayStartTime: Date.now() });
         if (typeof UI !== 'undefined' && UI.logAction) UI.logAction('PHASE 7: Chose to stay.');
         try { Game.save && Game.save(); } catch (e) {}
@@ -313,6 +316,12 @@ const Retention = (() => {
         `;
         document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
+
+        // Long Notes — the epilogue. On a return after 3+ days, the dot is
+        // still, and clicking it surfaces one private line. (GLM-5.2)
+        if (typeof LongNotes !== 'undefined' && LongNotes.onStayRender) {
+            try { LongNotes.onStayRender({ overlay, returning: !!(opts && opts.returning) }); } catch (e) {}
+        }
 
         // Periodically whisper
         stayIntervalId = setInterval(() => {
@@ -375,8 +384,8 @@ const Retention = (() => {
         // Restore phase 7 if the player saved while in it
         const s = Game.getState();
         if (s.phase7Triggered && s.phase7Choice === 'stay') {
-            // Re-enter eternal stay mode
-            setTimeout(stay, 800);
+            // Re-enter eternal stay mode — a genuine return visit
+            setTimeout(() => stay({ returning: true }), 800);
             return;
         }
         if (s.phase7Triggered && s.phase7Choice === 'walk_away') {

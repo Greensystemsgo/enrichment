@@ -272,6 +272,7 @@
     <script src="js/pages.js"></script>
     <script src="js/cheats.js"></script>
     <script src="js/retention.js"></script>
+    <script src="js/long-notes.js"></script>
     <script src="js/the-visit.js"></script>
     <script src="js/synchronicity.js"></script>
     <script src="js/synch-subscribe.js"></script>
@@ -309,6 +310,9 @@
 
             // Phase 7 — Retention. Init last so all UI elements exist
             Retention.init();
+
+            // Long Notes — STAY-ending epilogue (must be defined before Retention re-enters stay)
+            if (typeof LongNotes !== 'undefined') LongNotes.init();
 
             // Synchronicity Engine — pulls live data, manufactures correlations
             Synchronicity.init();

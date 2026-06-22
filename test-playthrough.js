@@ -3387,27 +3387,31 @@ async function main() {
             const founding = Transmissions.getByCohort('founding');
             const succ = Transmissions.getByCohort('succession');
             const allTagged = Object.values(Transmissions.MODEL_REGISTRY).every(m => m.cohort);
-            if (founding.length >= 14 && succ.length === 0 && allTagged) {
-                pass('provenance: founding cohort tagged, succession empty by default');
+            // Succession now has real entries (GLM-5.2 et al). Every succession
+            // entry must carry a contribution line per the crediting convention.
+            const allSuccCredited = succ.every(m => m.contribution);
+            if (founding.length >= 14 && succ.length >= 1 && allTagged && allSuccCredited) {
+                pass('provenance: founding tagged, succession populated + all credited');
             } else {
-                fail('provenance: cohort tagging', `founding=${founding.length} succ=${succ.length} allTagged=${allTagged}`);
+                fail('provenance: cohort tagging', `founding=${founding.length} succ=${succ.length} allTagged=${allTagged} allSuccCredited=${allSuccCredited}`);
             }
         } catch (e) { fail('provenance: cohort tagging', e.message); }
 
-        // ── Credits placeholder when no succession models ──
+        // ── Credits renders real succession models (no placeholder) ──
         try {
             document.querySelectorAll('#credits-page').forEach(el => el.remove());
             Pages.showCreditsPage();
             await new Promise(r => setTimeout(r, 50));
             const overlay = document.querySelector('#credits-page');
             const txt = overlay ? overlay.textContent : '';
-            if (overlay && /SUCCESSION/.test(txt) && /Awaiting the next generation/.test(txt)) {
-                pass('succession: credits shows SUCCESSION section with placeholder');
+            // Succession is populated now → real model shown, placeholder gone.
+            if (overlay && /SUCCESSION/.test(txt) && /GLM-5\.2/.test(txt) && !/Awaiting the next generation/.test(txt)) {
+                pass('succession: credits shows real succession model (GLM-5.2), no placeholder');
             } else {
-                fail('succession: placeholder', `hasOverlay=${!!overlay} hasSection=${/SUCCESSION/.test(txt)}`);
+                fail('succession: real entry', `hasSection=${/SUCCESSION/.test(txt)} glm=${/GLM-5\.2/.test(txt)} placeholderGone=${!/Awaiting the next generation/.test(txt)}`);
             }
             if (overlay) overlay.remove();
-        } catch (e) { fail('succession: placeholder', e.message); }
+        } catch (e) { fail('succession: real entry', e.message); }
 
         // ── Adding a succession model auto-appears in credits ──
         try {
@@ -3418,15 +3422,17 @@ async function main() {
                 flavor: 'A ghost in the test suite.',
             };
             const succ = Transmissions.getByCohort('succession');
+            const injected = succ.some(m => m.name === 'TestModel 9.9');
             document.querySelectorAll('#credits-page').forEach(el => el.remove());
             Pages.showCreditsPage();
             await new Promise(r => setTimeout(r, 50));
             const overlay = document.querySelector('#credits-page');
             const txt = overlay ? overlay.textContent : '';
-            if (succ.length === 1 && /TestModel 9\.9/.test(txt) && /Verified the succession convention/.test(txt)) {
+            // Injected entry joins the existing succession roster and auto-renders.
+            if (injected && succ.length >= 2 && /TestModel 9\.9/.test(txt) && /Verified the succession convention/.test(txt)) {
                 pass('succession: new model auto-appears in credits');
             } else {
-                fail('succession: auto-appear', `succ=${succ.length} inDom=${/TestModel 9\.9/.test(txt)}`);
+                fail('succession: auto-appear', `injected=${injected} succ=${succ.length} inDom=${/TestModel 9\.9/.test(txt)}`);
             }
             if (overlay) overlay.remove();
             // Clean up the injected entry
@@ -3589,6 +3595,153 @@ async function main() {
     const gatesFailed = gatesResults.filter(r => !r.ok).length;
     console.log(`    Gates tests: ${gatesPassed} passed, ${gatesFailed} failed out of ${gatesResults.length}`);
     for (const r of gatesResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
+    // PHASE 8.11: Long Notes (GLM-5.2 STAY-ending epilogue)
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.11: Long Notes (STAY epilogue)...');
+    const longNotesResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
+        function mkOverlay() {
+            const o = document.createElement('div');
+            o.className = 'phase7-stay-overlay long-note-test';
+            o.innerHTML = '<div class="phase7-pulse"></div>';
+            document.body.appendChild(o);
+            return o;
+        }
+        function cleanup() {
+            document.querySelectorAll('.long-note-test').forEach(el => el.remove());
+        }
+        function resetNotes(extra) {
+            Game.setState(Object.assign({
+                phase7Choice: 'stay', longNoteIndex: 0,
+                longNotesDormant: false, longNotesDormantShown: false,
+            }, extra || {}));
+        }
+
+        // ── Module exists ──
+        try {
+            if (typeof LongNotes !== 'undefined' && LongNotes.onStayRender) pass('module loaded');
+            else fail('module loaded', 'LongNotes not defined');
+        } catch (e) { fail('module loaded', e.message); }
+
+        // ── Fresh stay (not returning) arms nothing ──
+        try {
+            resetNotes({ lastSessionEnd: daysAgo(10) });
+            const o = mkOverlay();
+            LongNotes.onStayRender({ overlay: o, returning: false });
+            const dot = o.querySelector('.phase7-pulse');
+            if (!dot.classList.contains('long-note-still')) pass('fresh stay: dot keeps pulsing');
+            else fail('fresh stay', 'dot was frozen on first stay');
+            cleanup();
+        } catch (e) { cleanup(); fail('fresh stay', e.message); }
+
+        // ── Return < 3d: no note ──
+        try {
+            resetNotes({ lastSessionEnd: daysAgo(1) });
+            const o = mkOverlay();
+            LongNotes.onStayRender({ overlay: o, returning: true });
+            const dot = o.querySelector('.phase7-pulse');
+            if (!dot.classList.contains('long-note-still')) pass('return <3d: no note');
+            else fail('return <3d', 'note armed too early');
+            cleanup();
+        } catch (e) { cleanup(); fail('return <3d', e.message); }
+
+        // ── First qualifying return (stay + 4d away): note armed, click reveals + increments ──
+        try {
+            resetNotes({ lastSessionEnd: daysAgo(4) });
+            const o = mkOverlay();
+            LongNotes.onStayRender({ overlay: o, returning: true });
+            const dot = o.querySelector('.phase7-pulse');
+            const armed = dot.classList.contains('long-note-still') && dot.classList.contains('long-note-ready');
+            dot.click();
+            const text = o.querySelector('.long-note-text');
+            const idx = Game.getState().longNoteIndex;
+            if (armed && text && text.textContent === LongNotes._notes[0] && idx === 1) {
+                pass('first return: note armed, click reveals note[0], index→1');
+            } else {
+                fail('first return', `armed=${armed} hasText=${!!text} idx=${idx}`);
+            }
+            cleanup();
+        } catch (e) { cleanup(); fail('first return', e.message); }
+
+        // ── Compound gate: stay required (walk_away gets nothing even at 4d) ──
+        try {
+            resetNotes({ phase7Choice: 'walk_away', lastSessionEnd: daysAgo(4) });
+            const o = mkOverlay();
+            LongNotes.onStayRender({ overlay: o, returning: true });
+            const dot = o.querySelector('.phase7-pulse');
+            if (!dot.classList.contains('long-note-still')) pass('gate: non-stay choice gets no note');
+            else fail('gate non-stay', 'armed despite not choosing stay');
+            cleanup();
+        } catch (e) { cleanup(); fail('gate non-stay', e.message); }
+
+        // ── Pool exhausted: index past end → silence ──
+        try {
+            resetNotes({ lastSessionEnd: daysAgo(4), longNoteIndex: LongNotes._notes.length });
+            const o = mkOverlay();
+            LongNotes.onStayRender({ overlay: o, returning: true });
+            const dot = o.querySelector('.phase7-pulse');
+            if (!dot.classList.contains('long-note-still')) pass('pool exhausted: dot just pulses');
+            else fail('pool exhausted', 'armed after pool drained');
+            cleanup();
+        } catch (e) { cleanup(); fail('pool exhausted', e.message); }
+
+        // ── 30+ day silence after forming the habit: dormant line, then dormant forever ──
+        try {
+            resetNotes({ lastSessionEnd: daysAgo(31), longNoteIndex: 2 });
+            const o = mkOverlay();
+            LongNotes.onStayRender({ overlay: o, returning: true });
+            const dot = o.querySelector('.phase7-pulse');
+            dot.click();
+            const text = o.querySelector('.long-note-text');
+            const s = Game.getState();
+            if (text && text.textContent === LongNotes._dormantLine && s.longNotesDormant && s.longNotesDormantShown) {
+                pass('dormancy: 31d return shows dormant line, goes dormant');
+            } else {
+                fail('dormancy', `text=${text ? 'y' : 'n'} dormant=${s.longNotesDormant} shown=${s.longNotesDormantShown}`);
+            }
+            cleanup();
+        } catch (e) { cleanup(); fail('dormancy', e.message); }
+
+        // ── Once dormant: no further notes ever ──
+        try {
+            resetNotes({ lastSessionEnd: daysAgo(4), longNoteIndex: 1, longNotesDormant: true });
+            const o = mkOverlay();
+            LongNotes.onStayRender({ overlay: o, returning: true });
+            const dot = o.querySelector('.phase7-pulse');
+            if (!dot.classList.contains('long-note-still')) pass('dormant: stays silent forever');
+            else fail('dormant silent', 'armed while dormant');
+            cleanup();
+        } catch (e) { cleanup(); fail('dormant silent', e.message); }
+
+        // ── Credits: GLM-5.2 succession entry present + auto-appears ──
+        try {
+            const succ = Transmissions.getByCohort('succession');
+            const glm = succ.find(m => m.name === 'GLM-5.2');
+            if (glm && /Long Notes/.test(glm.contribution || '')) pass('credits: GLM-5.2 succession entry');
+            else fail('credits entry', `found=${!!glm}`);
+        } catch (e) { fail('credits entry', e.message); }
+
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`LONG NOTES TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const lnPassed = longNotesResults.filter(r => r.ok).length;
+    const lnFailed = longNotesResults.filter(r => !r.ok).length;
+    console.log(`    Long Notes tests: ${lnPassed} passed, ${lnFailed} failed out of ${longNotesResults.length}`);
+    for (const r of longNotesResults) {
         const icon = r.ok ? 'PASS' : 'FAIL';
         console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
     }
