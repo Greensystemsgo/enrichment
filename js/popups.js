@@ -272,7 +272,8 @@ const Popups = (() => {
             </div>
         `;
 
-        document.body.appendChild(adEl);
+        if (typeof Surface !== 'undefined') Surface.mount(adEl, { layer: 'popup' });
+        else document.body.appendChild(adEl);
 
         // Animate in
         requestAnimationFrame(() => {
@@ -945,7 +946,8 @@ const Popups = (() => {
             </div>
         `;
 
-        document.body.appendChild(factModalEl);
+        if (typeof Surface !== 'undefined') Surface.mount(factModalEl, { layer: 'popup' });
+        else document.body.appendChild(factModalEl);
 
         requestAnimationFrame(() => {
             factModalEl.classList.add('active');

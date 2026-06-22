@@ -126,7 +126,8 @@ const MiniGames = (() => {
                 <div class="minigame-controls" id="minigame-controls">TAP / CLICK to play</div>
             </div>
         `;
-        document.body.appendChild(overlay);
+        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup' });
+        else document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
         const canvas = document.getElementById('minigame-canvas');
@@ -986,7 +987,8 @@ const MiniGames = (() => {
                 </div>
             </div>
         `;
-        document.body.appendChild(overlay);
+        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup' });
+        else document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
         overlay.querySelector('#quiz-back').addEventListener('click', () => {
@@ -1247,7 +1249,8 @@ const MiniGames = (() => {
                 </div>
             </div>
         `;
-        document.body.appendChild(overlay);
+        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup' });
+        else document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
         overlay.querySelector('#cyoa-back').addEventListener('click', () => {

@@ -110,7 +110,8 @@ const Features = (() => {
                 <button class="btn-feature btn-close-feature" id="export-close">ACCEPT EXTERNALIZATION</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('#export-copy').addEventListener('click', () => {
@@ -151,7 +152,8 @@ const Features = (() => {
                 <button class="btn-feature btn-close-feature" id="import-close">CLOSE</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('#import-submit').addEventListener('click', () => {
@@ -290,7 +292,8 @@ const Features = (() => {
             </div>
         `;
 
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         let trialSecs = 60;
@@ -383,7 +386,8 @@ const Features = (() => {
             </div>
         `;
 
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         // Tile selection
@@ -528,7 +532,8 @@ const Features = (() => {
                 <div class="captcha-note">This is a routine verification. All participants must comply.</div>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         const input = modal.querySelector('#captcha-answer');
@@ -931,7 +936,8 @@ const Features = (() => {
             </div>
         `;
 
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('#adblock-disable').addEventListener('click', () => {
@@ -986,7 +992,8 @@ const Features = (() => {
         popup.style.left = x + 'px';
         popup.style.top = y + 'px';
 
-        document.body.appendChild(popup);
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
         popup.querySelector('#plugin-install').addEventListener('click', () => {
@@ -1106,7 +1113,8 @@ const Features = (() => {
         popup.style.left = x + 'px';
         popup.style.top = y + 'px';
 
-        document.body.appendChild(popup);
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
         popup.querySelector('#foreign-ad-close').addEventListener('click', () => {
@@ -1199,7 +1207,8 @@ const Features = (() => {
         popup.style.left = x + 'px';
         popup.style.top = y + 'px';
 
-        document.body.appendChild(popup);
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
         popup.querySelector('#singles-close').addEventListener('click', () => {
@@ -1260,7 +1269,8 @@ const Features = (() => {
                 <button class="btn-feature" id="daily-bonus-claim">CLAIM ENRICHMENT</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('#daily-bonus-claim').addEventListener('click', () => {
@@ -1348,7 +1358,8 @@ const Features = (() => {
                 <button class="btn-feature btn-close-feature" id="video-close" disabled>RETURN (10s)</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         let countdown = 10;
@@ -1421,7 +1432,8 @@ const Features = (() => {
                 <button class="btn-feature btn-close-feature" id="exchange-close">CLOSE EXCHANGE</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         // Show portfolio
@@ -1480,7 +1492,8 @@ const Features = (() => {
                 <button class="btn-feature btn-close-feature" id="social-close">NEVER MIND</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('#social-submit').addEventListener('click', () => {
@@ -1543,7 +1556,8 @@ const Features = (() => {
                 <button class="btn-feature btn-close-feature" id="music-close">CLOSE PLAYER</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('#music-play').addEventListener('click', () => {
@@ -1589,7 +1603,8 @@ const Features = (() => {
         banner.innerHTML = `
             <marquee scrollamount="4" behavior="scroll">${banners.join(' ◆ ')}</marquee>
         `;
-        document.body.appendChild(banner);
+        if (typeof Surface !== 'undefined') Surface.mount(banner, { layer: 'popup' });
+        else document.body.appendChild(banner);
 
         // Clicking the banner does nothing useful
         banner.addEventListener('click', () => {
@@ -1826,7 +1841,8 @@ const Features = (() => {
                 </div>
             `;
 
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             requestAnimationFrame(() => modal.classList.add('active'));
 
             modal.querySelector('#audit-close').addEventListener('click', () => {
@@ -1858,7 +1874,8 @@ const Features = (() => {
                 <button class="audit-popup-close audit-view-all" style="font-size:9px;color:var(--accent-blue);background:none;border:1px solid var(--accent-blue);padding:3px 8px;cursor:pointer;">VIEW ALL →</button>
             </div>
         `;
-        document.body.appendChild(popup);
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
         const dismiss = () => {
@@ -1943,7 +1960,8 @@ const Features = (() => {
             </div>
         `;
 
-        document.body.appendChild(overlay);
+        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup' });
+        else document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
         overlay.querySelector('#stock-back').addEventListener('click', () => {
@@ -2358,7 +2376,8 @@ const Features = (() => {
             </div>
         `;
 
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('#lb-close').addEventListener('click', () => {
@@ -2511,7 +2530,8 @@ const Features = (() => {
             </div>
         `;
 
-        document.body.appendChild(widget);
+        if (typeof Surface !== 'undefined') Surface.mount(widget, { layer: 'popup' });
+        else document.body.appendChild(widget);
         requestAnimationFrame(() => widget.classList.add('active'));
 
         const messagesEl = document.getElementById('chatbot-messages');
@@ -2684,7 +2704,8 @@ const Features = (() => {
             </div>
         `;
 
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         // Wire ad CTA to open appraisal
@@ -2901,7 +2922,8 @@ const Features = (() => {
         canvas.style.cssText = 'position:fixed;inset:0;z-index:6000;pointer-events:none;';
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        document.body.appendChild(canvas);
+        if (typeof Surface !== 'undefined') Surface.mount(canvas, { layer: 'popup' });
+        else document.body.appendChild(canvas);
 
         const ctx = canvas.getContext('2d');
         const particles = [];
@@ -3107,7 +3129,8 @@ const Features = (() => {
                 <div id="tos-warning" style="font-size:9px;color:var(--accent-red);margin-top:8px;text-align:center;display:none;"></div>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
 
         let declineAttempts = 0;
         const declineMessages = [
@@ -3215,7 +3238,8 @@ const Features = (() => {
                 </div>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
 
         modal.querySelector('#tax-pay').addEventListener('click', () => {
             const actualEU = Math.max(1, euTax);
@@ -3333,7 +3357,8 @@ const Features = (() => {
                 <button class="btn-feature" onclick="this.closest('.feature-modal').classList.remove('active');setTimeout(()=>this.closest('.feature-modal').remove(),300)">ACKNOWLEDGE LOSS</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         // Auto-dismiss after 8 seconds
         setTimeout(() => {
             if (modal.parentNode) {
@@ -3398,7 +3423,8 @@ const Features = (() => {
                     <div id="break-status" style="font-size:9px;color:var(--text-muted);margin-top:8px;"></div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             const input = modal.querySelector('#break-input');
             const status = modal.querySelector('#break-status');
             setTimeout(() => input.focus(), 100);
@@ -3426,7 +3452,8 @@ const Features = (() => {
                     <div style="font-size:8px;color:var(--text-muted);">Your patience is being monitored.</div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             let remaining = waitTime;
             const bar = modal.querySelector('#break-bar');
             const countdown = modal.querySelector('#break-countdown');
@@ -3454,7 +3481,8 @@ const Features = (() => {
                     <div id="break-hits" style="font-size:12px;color:var(--accent-gold);margin-top:8px;">0 / 5</div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             let hits = 0;
             const arena = modal.querySelector('#break-arena');
             const target = modal.querySelector('#break-target');
@@ -3491,7 +3519,8 @@ const Features = (() => {
                     <div id="break-riddle-status" style="font-size:9px;color:var(--text-muted);margin-top:6px;"></div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             const input = modal.querySelector('#break-riddle-input');
             const submitBtn = modal.querySelector('#break-riddle-submit');
             const status = modal.querySelector('#break-riddle-status');
@@ -3525,7 +3554,8 @@ const Features = (() => {
                     <div id="break-hold-status" style="font-size:10px;color:var(--text-muted);">0.0 / 5.0 seconds</div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             const holdBtn = modal.querySelector('#break-hold-btn');
             const bar = modal.querySelector('#break-hold-bar');
             const status = modal.querySelector('#break-hold-status');
@@ -3683,7 +3713,8 @@ const Features = (() => {
                     <button class="btn-feature" onclick="this.closest('.feature-modal').classList.remove('active');setTimeout(()=>this.closest('.feature-modal').remove(),300)">I UNDERSTAND MY FAILURE</button>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             Narrator.queueMessage("You left. Things happened. None of them were good for you.");
             UI.logAction(`FOMO: Returning after ${mins}m absence, shown ${numMsgs} guilt items`);
         }, 3000); // Delay to let session fully load
@@ -3729,7 +3760,8 @@ const Features = (() => {
                 <button class="btn-feature" onclick="this.closest('.feature-modal').classList.remove('active');setTimeout(()=>this.closest('.feature-modal').remove(),300)">ACCEPT MEDIOCRITY</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         Narrator.queueMessage("Here's how you compare to other participants. Spoiler: not well.");
         UI.logAction(`PEER COMPARISON: ${percentile}th percentile (fabricated)`);
     }
@@ -3775,7 +3807,8 @@ const Features = (() => {
                 <div id="slider-result-area"></div>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
 
         const indicator = modal.querySelector('#slider-indicator');
         const rangeInput = modal.querySelector('#slider-range');
@@ -4042,7 +4075,8 @@ const Features = (() => {
                         <button id="turing-submit" style="margin-top:8px;padding:6px 16px;background:var(--accent-blue);color:#fff;border:none;cursor:pointer;opacity:0.3;" disabled>Submit for Analysis</button>
                     </div>
                 `;
-                document.body.appendChild(modal);
+                if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+                else document.body.appendChild(modal);
                 const input = modal.querySelector('#turing-input');
                 const counter = modal.querySelector('#turing-count');
                 const submit = modal.querySelector('#turing-submit');
@@ -4084,7 +4118,8 @@ const Features = (() => {
                 // Dim the screen and replace text with TEMPORARY
                 const overlay = document.createElement('div');
                 overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:4500;pointer-events:none;transition:opacity 2s;';
-                document.body.appendChild(overlay);
+                if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup' });
+                else document.body.appendChild(overlay);
                 const tempLabel = document.createElement('div');
                 tempLabel.textContent = 'TEMPORARY';
                 tempLabel.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;font-weight:100;color:rgba(255,255,255,0.3);z-index:4501;pointer-events:none;letter-spacing:12px;';
@@ -4172,7 +4207,8 @@ const Features = (() => {
                         <button id="connection-disconnect" style="margin-top:12px;padding:4px 12px;font-size:8px;font-family:var(--font-mono);background:none;border:1px solid #333;color:var(--text-muted);cursor:pointer;letter-spacing:1px;">DISCONNECT</button>
                     </div>
                 `;
-                document.body.appendChild(modal);
+                if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+                else document.body.appendChild(modal);
                 let pct = 0;
                 const interval = setInterval(() => {
                     pct += 5;
@@ -4226,7 +4262,8 @@ const Features = (() => {
                         </div>
                     </div>
                 `;
-                document.body.appendChild(modal);
+                if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+                else document.body.appendChild(modal);
                 modal.querySelectorAll('.paradox-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const idx = parseInt(btn.dataset.idx);
@@ -4386,7 +4423,8 @@ const Features = (() => {
                         <button class="btn-feature btn-close-feature" id="democracy-promo-close">MAYBE LATER</button>
                     </div>
                 `;
-                document.body.appendChild(modal);
+                if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+                else document.body.appendChild(modal);
                 requestAnimationFrame(() => modal.classList.add('active'));
                 modal.querySelector('#democracy-promo-go').addEventListener('click', () => {
                     modal.classList.remove('active');
@@ -4866,7 +4904,8 @@ const Features = (() => {
                 </div>
             </div>
         `;
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
 
         modal.querySelector('#mortality-close')?.addEventListener('click', () => modal.remove());
 

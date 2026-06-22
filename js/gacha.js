@@ -165,7 +165,8 @@ const Gacha = (() => {
             </div>
         `;
 
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         // Build the visual strip (horizontal scrolling wheel)

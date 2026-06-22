@@ -1204,7 +1204,11 @@ async function main() {
     console.log('\n  Phase 6: Trading grind...');
 
     await page.evaluate(() => {
-        // Restore reasonable state after achievement manipulation
+        // Restore reasonable state after achievement manipulation.
+        // The grind sets phase7Choice='walk_away'/'stay' to unlock endgame
+        // achievements; clear it so it doesn't leave the game in a terminal
+        // state (which Surface correctly treats as "deny all popups").
+        Game.setState({ phase7Choice: null, phase7Triggered: false });
         Game.setState({
             totalClicks: 7000,
             eu: 5000,

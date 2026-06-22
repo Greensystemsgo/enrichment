@@ -83,7 +83,8 @@ const SynchSubscribe = (() => {
                     </div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             Game.setState({ synchSubscribed: true, synchSubscribeDate: Date.now() });
             log('SYNCHRONICITY: Auto-subscribed to Daily Bulletin');
 
@@ -134,7 +135,8 @@ const SynchSubscribe = (() => {
                     </div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             document.getElementById('synch-sub-big').addEventListener('click', () => {
                 modal.classList.remove('active');
                 setTimeout(removeModal, 250);
@@ -170,7 +172,8 @@ const SynchSubscribe = (() => {
                     </div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             document.getElementById('synch-sub-ack2').addEventListener('click', () => {
                 modal.classList.remove('active');
                 setTimeout(removeModal, 250);
@@ -221,7 +224,8 @@ const SynchSubscribe = (() => {
                     </div>
                 </div>
             `;
-            document.body.appendChild(modal);
+            if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+            else document.body.appendChild(modal);
             document.getElementById('synch-sub-close').addEventListener('click', () => {
                 modal.classList.remove('active');
                 setTimeout(removeModal, 250);

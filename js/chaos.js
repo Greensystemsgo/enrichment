@@ -122,7 +122,8 @@ const Chaos = (() => {
                 canvas.className = 'chaos-matrix-canvas';
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
-                document.body.appendChild(canvas);
+                if (typeof Surface !== 'undefined') Surface.mount(canvas, { layer: 'chaos', id: 'chaos-matrix' });
+                else document.body.appendChild(canvas);
 
                 const ctx = canvas.getContext('2d');
                 const chars = 'ENRICHMENT0123456789COMPLIANCE';
@@ -243,7 +244,8 @@ const Chaos = (() => {
             container = document.createElement('div');
             container.className = 'chaos-overlay';
             container.id = 'chaos-overlay';
-            document.body.appendChild(container);
+            if (typeof Surface !== 'undefined') Surface.mount(container, { layer: 'chaos', id: 'chaos-overlay' });
+            else document.body.appendChild(container);
         }
 
         // Execute the chaos event
@@ -291,7 +293,8 @@ const Chaos = (() => {
 
             // Always append to body with fixed positioning (never inside container — gets buried)
             closeBtn.id = 'chaos-close-btn';
-            document.body.appendChild(closeBtn);
+            if (typeof Surface !== 'undefined') Surface.mount(closeBtn, { layer: 'chaos', id: 'chaos-close-btn' });
+            else document.body.appendChild(closeBtn);
 
             // Auto-end after extra 10 seconds
             setTimeout(() => {

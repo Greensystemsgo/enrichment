@@ -441,7 +441,8 @@ const Transmissions = (() => {
             </div>
         `;
 
-        document.body.appendChild(popup);
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
         popup.querySelector('#brainrot-close').addEventListener('click', () => {

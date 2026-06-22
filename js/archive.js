@@ -373,7 +373,8 @@ const Archive = (() => {
             </div>
         `;
 
-        document.body.appendChild(overlay);
+        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup' });
+        else document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
         const closeBtn = overlay.querySelector('#archive-export-btn');

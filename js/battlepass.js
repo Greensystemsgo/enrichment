@@ -171,7 +171,8 @@ const BattlePass = (() => {
             </div>
         `;
 
-        document.body.appendChild(modal);
+        if (typeof Surface !== 'undefined') Surface.mount(modal, { layer: 'popup' });
+        else document.body.appendChild(modal);
         requestAnimationFrame(() => modal.classList.add('active'));
 
         // Premium upgrade button — always fails

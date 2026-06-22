@@ -192,7 +192,8 @@ const DeadInternetChat = (() => {
             </div>
         `;
 
-        document.body.appendChild(chatPanel);
+        if (typeof Surface !== 'undefined') Surface.mount(chatPanel, { layer: 'popup' });
+        else document.body.appendChild(chatPanel);
         messagesArea = chatPanel.querySelector('#dic-messages');
 
         // Minimize button

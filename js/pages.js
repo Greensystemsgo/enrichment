@@ -1634,7 +1634,8 @@ const Pages = (() => {
             </div>
         `;
 
-        document.body.appendChild(overlay);
+        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup' });
+        else document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
         overlay.querySelector('#page-back').addEventListener('click', () => closePage(overlay));
