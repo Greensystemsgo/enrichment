@@ -130,6 +130,8 @@ const Retention = (() => {
             transformClickButton();
             dimChrome();
             startReceiptTicker();
+            // The Armory — the rusted gear of unfired dark patterns (Kimi K2.6)
+            if (typeof Armory !== 'undefined' && Armory.mount) { try { Armory.mount(); } catch (e) {} }
         }, 4000);
     }
 
@@ -323,6 +325,9 @@ const Retention = (() => {
             try { LongNotes.onStayRender({ overlay, returning: !!(opts && opts.returning) }); } catch (e) {}
         }
 
+        // The Armory persists into the stay state — the gear stays in the corner. (Kimi K2.6)
+        if (typeof Armory !== 'undefined' && Armory.mount) { try { Armory.mount(); } catch (e) {} }
+
         // Periodically whisper
         stayIntervalId = setInterval(() => {
             const el = document.getElementById('phase7-stay-whisper');
@@ -400,6 +405,7 @@ const Retention = (() => {
                 transformClickButton();
                 dimChrome();
                 startReceiptTicker();
+                if (typeof Armory !== 'undefined' && Armory.mount) { try { Armory.mount(); } catch (e) {} }
                 showLine("You came back. I waited.", { duration: 6000 });
                 maybeRevealChoice();
             }, 1000);

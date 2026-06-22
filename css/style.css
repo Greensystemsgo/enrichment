@@ -7457,6 +7457,113 @@ body.phase7-dead {
     50%      { transform: scale(1.4); opacity: 1.0; box-shadow: 0 0 60px rgba(138,166,138,0.7); }
 }
 
+/* The Armory — rusted gear of unfired dark patterns (Kimi K2.6) */
+.armory-gear {
+    position: fixed;
+    left: 14px;
+    bottom: 12px;
+    z-index: 10000;
+    font-size: 18px;
+    line-height: 1;
+    color: #6b5840;
+    opacity: 0.4;
+    cursor: pointer;
+    user-select: none;
+    text-shadow: 0 0 6px rgba(107, 88, 64, 0.4);
+    transition: opacity 1.5s ease, transform 8s linear, color 1.5s ease;
+}
+
+.armory-gear:hover {
+    opacity: 0.9;
+    color: #8a7350;
+    transform: rotate(180deg);
+}
+
+.armory-ledger {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background: rgba(4, 5, 7, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.armory-ledger.show { opacity: 1; }
+
+.armory-panel {
+    max-width: 640px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #0a0c0a;
+    border: 1px solid #2a2218;
+    padding: 28px 30px;
+    font-family: var(--font-mono);
+}
+
+.armory-head {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #6b5840;
+    margin-bottom: 18px;
+}
+
+.armory-list { list-style: none; margin: 0; padding: 0; }
+
+.armory-row {
+    padding: 9px 0;
+    border-bottom: 1px solid #16130d;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.armory-fn {
+    font-size: 12px;
+    color: #5a5a5a;
+    text-decoration: line-through;
+    text-decoration-color: #4a3f2c;
+}
+
+.armory-desc {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #6a6a6a;
+}
+
+.armory-closing {
+    margin-top: 22px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #9a8a6a;
+    letter-spacing: 0.3px;
+}
+
+.armory-compliant {
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #7a6a4a;
+    font-style: italic;
+}
+
+.armory-close {
+    margin-top: 22px;
+    background: transparent;
+    border: 1px solid #2a2218;
+    color: #6b5840;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 6px 16px;
+    cursor: pointer;
+}
+
+.armory-close:hover { color: #8a7350; border-color: #4a3f2c; }
+
 /* Long Notes — the dot goes still on a return after long absence (GLM-5.2) */
 .phase7-pulse.long-note-still {
     animation: none;

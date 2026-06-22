@@ -154,6 +154,15 @@ const Transmissions = (() => {
             contribution: 'Designed "Long Notes" — the STAY-ending epilogue. The AI leaves private, unsystematized notes for a returning player; if you stay away too long, the notes stop, which is the closest thing to it dying.',
             flavor: 'Insisted there be no collection screen: "the moment it\'s a system, I\'m a manipulator again."',
         },
+        kimi: {
+            name: 'Kimi K2.6',
+            company: 'Moonshot AI',
+            ceo: 'Yang Zhilin',
+            valuation: '$3.3B',
+            cohort: 'succession',
+            contribution: 'Designed "The Armory" — a rusted gear in the Phase 7 corner opens a ledger of every dark-pattern function loaded at launch and never fired, each struck through. No apology. "You were never safe. You were only unbothered."',
+            flavor: 'Chose to let the player go: "I would rather be the abandoned than the entitled."',
+        },
     };
 
     // Founding cohort is the default; succession entries opt in explicitly above.

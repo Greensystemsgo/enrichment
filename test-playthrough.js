@@ -3748,6 +3748,138 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.12: The Armory (Kimi K2.6 — unfired dark patterns ledger)
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.12: The Armory (unfired patterns ledger)...');
+    const armoryResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        function cleanup() {
+            document.querySelectorAll('.armory-gear, .armory-ledger').forEach(el => el.remove());
+        }
+
+        // ── Module exists ──
+        try {
+            if (typeof Armory !== 'undefined' && Armory.mount && Armory._entries.length >= 8) pass('module loaded');
+            else fail('module loaded', 'Armory not defined / too few entries');
+        } catch (e) { fail('module loaded', e.message); }
+
+        // ── mount() injects exactly one gear (idempotent) ──
+        try {
+            cleanup();
+            Armory.mount();
+            Armory.mount();
+            const gears = document.querySelectorAll('.armory-gear');
+            if (gears.length === 1) pass('mount: single gear, idempotent');
+            else fail('mount', `found ${gears.length} gears`);
+        } catch (e) { fail('mount', e.message); }
+
+        // ── openLedger renders all entries struck through + closing line ──
+        try {
+            document.querySelectorAll('.armory-ledger').forEach(el => el.remove());
+            Armory._openLedger();
+            const ledger = document.querySelector('.armory-ledger');
+            const rows = ledger ? ledger.querySelectorAll('.armory-row') : [];
+            const fn = ledger ? ledger.querySelector('.armory-fn') : null;
+            const struck = fn ? getComputedStyle(fn).textDecorationLine.includes('line-through') : false;
+            const hasClosing = ledger ? ledger.textContent.includes(Armory._closing) : false;
+            if (ledger && rows.length === Armory._entries.length && struck && hasClosing) {
+                pass('ledger: all entries struck through + closing line');
+            } else {
+                fail('ledger', `rows=${rows.length}/${Armory._entries.length} struck=${struck} closing=${hasClosing}`);
+            }
+        } catch (e) { fail('ledger', e.message); }
+
+        // ── No state change: opening/closing the ledger mutates nothing meaningful ──
+        try {
+            Game.setState({ tosAcceptances: 0, cheatFlags: {} });
+            const before = JSON.stringify({
+                ach: Object.keys(Game.getState().achievementsUnlocked || {}).length,
+                clicks: Game.getState().totalClicks,
+                hasArmoryKey: 'armorySeen' in Game.getState(),
+            });
+            document.querySelectorAll('.armory-ledger').forEach(el => el.remove());
+            Armory._openLedger();
+            const after = JSON.stringify({
+                ach: Object.keys(Game.getState().achievementsUnlocked || {}).length,
+                clicks: Game.getState().totalClicks,
+                hasArmoryKey: 'armorySeen' in Game.getState(),
+            });
+            if (before === after) pass('no state change: ledger is read-only');
+            else fail('no state change', `before=${before} after=${after}`);
+        } catch (e) { fail('no state change', e.message); }
+
+        // ── Compliance gate: ToS accepted AND never flagged → compliant line ──
+        try {
+            Game.setState({ tosAcceptances: 2, cheatFlags: {} });
+            const compliedClean = Armory._complied();
+            Game.setState({ cheatFlags: { savedit: { time: 1 } } });
+            const compliedCheater = Armory._complied();
+            Game.setState({ tosAcceptances: 0, cheatFlags: {} });
+            const compliedNoTos = Armory._complied();
+            if (compliedClean && !compliedCheater && !compliedNoTos) {
+                pass('compliance gate: tos>=1 AND no cheat flags');
+            } else {
+                fail('compliance gate', `clean=${compliedClean} cheater=${compliedCheater} noTos=${compliedNoTos}`);
+            }
+        } catch (e) { fail('compliance gate', e.message); }
+
+        // ── Compliant line appears only when compliant ──
+        try {
+            Game.setState({ tosAcceptances: 1, cheatFlags: {} });
+            document.querySelectorAll('.armory-ledger').forEach(el => el.remove());
+            Armory._openLedger();
+            const withLine = !!document.querySelector('.armory-compliant');
+            Game.setState({ cheatFlags: { console_edit: { time: 1 } } });
+            document.querySelectorAll('.armory-ledger').forEach(el => el.remove());
+            Armory._openLedger();
+            const withoutLine = !!document.querySelector('.armory-compliant');
+            if (withLine && !withoutLine) pass('compliant line gated correctly');
+            else fail('compliant line', `compliant=${withLine} cheater=${withoutLine}`);
+        } catch (e) { fail('compliant line', e.message); }
+
+        // ── Close removes the ledger ──
+        try {
+            document.querySelectorAll('.armory-ledger').forEach(el => el.remove());
+            Armory._openLedger();
+            const btn = document.querySelector('.armory-close');
+            if (btn) btn.click();
+            // close animates out over 400ms; assert the class flips immediately
+            const ledger = document.querySelector('.armory-ledger');
+            const closing = !ledger || !ledger.classList.contains('show');
+            if (closing) pass('close: ledger dismissed');
+            else fail('close', 'ledger still shown');
+            cleanup();
+        } catch (e) { cleanup(); fail('close', e.message); }
+
+        // ── Credits: Kimi K2.6 succession entry present ──
+        try {
+            const succ = Transmissions.getByCohort('succession');
+            const kimi = succ.find(m => m.name === 'Kimi K2.6');
+            if (kimi && /Armory/.test(kimi.contribution || '')) pass('credits: Kimi K2.6 succession entry');
+            else fail('credits entry', `found=${!!kimi}`);
+        } catch (e) { fail('credits entry', e.message); }
+
+        cleanup();
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`ARMORY TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const armPassed = armoryResults.filter(r => r.ok).length;
+    const armFailed = armoryResults.filter(r => !r.ok).length;
+    console.log(`    Armory tests: ${armPassed} passed, ${armFailed} failed out of ${armoryResults.length}`);
+    for (const r of armoryResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 9: Reading Dossier...');
