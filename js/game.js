@@ -490,6 +490,15 @@ const Game = (() => {
         );
     }
 
+    // ── Phase 7 terminal state ─────────────────────────────────
+    // Once the player has chosen WALK AWAY or STAY, the game is over.
+    // Boot-time reentry machinery (returning FOMO, onboarding, streak
+    // break) must not fire — it would leak popups on top of the tombstone
+    // / stay overlay. Retention.init() and TheVisit own the screen instead.
+    function isTerminalPhase7() {
+        return state.phase7Choice === 'walk_away' || state.phase7Choice === 'stay';
+    }
+
     // ── Streak Management ──────────────────────────────────────
     function checkStreak() {
         const today = new Date().toISOString().split('T')[0];
@@ -572,7 +581,11 @@ const Game = (() => {
             state.firstSessionTime = new Date().toISOString();
         }
 
-        checkStreak();
+        // In a Phase 7 terminal state the game is over — skip streak
+        // bookkeeping (which would reset to "day 1" and fire a streak-break
+        // narrator/effect) and the returning/onboarding reentry emits.
+        const terminal = isTerminalPhase7();
+        if (!terminal) checkStreak();
         updateAutoClicker();
 
         // Initialize prestige system
@@ -584,17 +597,19 @@ const Game = (() => {
         // Start idle detection
         resetIdleTimer();
 
-        if (hadSave) {
-            const absence = state.lastSessionEnd
-                ? (Date.now() - new Date(state.lastSessionEnd).getTime()) / 1000
-                : 0;
-            emit('returning', {
-                absenceSeconds: absence,
-                totalClicks: state.totalClicks,
-                sessionCount: state.sessionCount,
-            });
-        } else {
-            emit('firstVisit');
+        if (!terminal) {
+            if (hadSave) {
+                const absence = state.lastSessionEnd
+                    ? (Date.now() - new Date(state.lastSessionEnd).getTime()) / 1000
+                    : 0;
+                emit('returning', {
+                    absenceSeconds: absence,
+                    totalClicks: state.totalClicks,
+                    sessionCount: state.sessionCount,
+                });
+            } else {
+                emit('firstVisit');
+            }
         }
 
         emit('sessionStart', { sessionCount: state.sessionCount });
@@ -680,6 +695,7 @@ const Game = (() => {
         load,
         wipe,
         startSession,
+        isTerminalPhase7,
         updateAutoClicker,
         setupBeforeUnload,
         setupVisibilityChange,

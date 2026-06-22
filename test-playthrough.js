@@ -3880,6 +3880,69 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.13: Phase 7 terminal-state leak guard
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.13: Terminal-state leak guard...');
+    const terminalGuardResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+        const fomoVisible = () => Array.from(document.querySelectorAll('.feature-modal'))
+            .some(m => /WHILE YOU WERE GONE/i.test(m.textContent || ''));
+        const clearFomo = () => document.querySelectorAll('.feature-modal').forEach(m => m.remove());
+
+        // ── isTerminalPhase7 reflects the choice ──
+        try {
+            Game.setState({ phase7Choice: 'walk_away' });
+            const walk = Game.isTerminalPhase7();
+            Game.setState({ phase7Choice: 'stay' });
+            const stay = Game.isTerminalPhase7();
+            Game.setState({ phase7Choice: null });
+            const none = Game.isTerminalPhase7();
+            if (walk && stay && !none) pass('isTerminalPhase7: walk_away/stay true, null false');
+            else fail('isTerminalPhase7', `walk=${walk} stay=${stay} none=${none}`);
+        } catch (e) { fail('isTerminalPhase7', e.message); }
+
+        // ── FOMO "while you were gone" suppressed in terminal state ──
+        try {
+            clearFomo();
+            Game.setState({ phase7Choice: 'walk_away', totalClicks: 1000 });
+            Game.emit('returning', { absenceSeconds: 100000, totalClicks: 1000, sessionCount: 9 });
+            await wait(200); // early return schedules no timer, so nothing will appear
+            if (!fomoVisible()) pass('FOMO suppressed while walked away');
+            else fail('FOMO suppressed', 'leak modal appeared on tombstone');
+            clearFomo();
+        } catch (e) { clearFomo(); fail('FOMO suppressed', e.message); }
+
+        // ── Control: FOMO still fires for a normal returning player ──
+        try {
+            clearFomo();
+            Game.setState({ phase7Choice: null, totalClicks: 1000 });
+            Game.emit('returning', { absenceSeconds: 100000, totalClicks: 1000, sessionCount: 9 });
+            await wait(3200); // FOMO modal is created after a 3s settle delay
+            if (fomoVisible()) pass('control: FOMO fires for normal returning player');
+            else fail('control FOMO', 'expected modal did not appear');
+            clearFomo();
+        } catch (e) { clearFomo(); fail('control FOMO', e.message); }
+
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`TERMINAL GUARD TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const tgPassed = terminalGuardResults.filter(r => r.ok).length;
+    const tgFailed = terminalGuardResults.filter(r => !r.ok).length;
+    console.log(`    Terminal guard tests: ${tgPassed} passed, ${tgFailed} failed out of ${terminalGuardResults.length}`);
+    for (const r of terminalGuardResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 9: Reading Dossier...');

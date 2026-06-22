@@ -3643,6 +3643,7 @@ const Features = (() => {
     ];
 
     function showFomoReturning(data) {
+        if (typeof Game.isTerminalPhase7 === 'function' && Game.isTerminalPhase7()) return; // game's over — no leaks onto the tombstone
         if (!data || data.absenceSeconds < 300) return; // 5 min minimum
         const state = Game.getState();
         if (state.totalClicks < 50) return; // Not enough investment
