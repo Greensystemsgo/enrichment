@@ -4461,6 +4461,24 @@ async function main() {
             else fail('tickCount advance', `a=${a} b=${b}`);
         } catch (e) { fail('tickCount advance', e.message); }
 
+        // ── core-tick suspends in terminal, resumes in active ──
+        try {
+            const ticksWithin = (ms) => new Promise((r) => {
+                let done = false;
+                const h = () => { if (!done) { done = true; Game.off('tick', h); r(true); } };
+                Game.on('tick', h);
+                setTimeout(() => { if (!done) { done = true; Game.off('tick', h); r(false); } }, ms);
+            });
+            // terminal → core-tick lifecycle suspends the clock
+            Game.setState({ phase7Triggered: true, phase7Choice: 'stay' }); Game.refreshMode();
+            const firedInTerminal = await ticksWithin(1600);
+            // back to active → resumes
+            Game.setState({ phase7Triggered: false, phase7Choice: null }); Game.refreshMode();
+            const firedInActive = await ticksWithin(1600);
+            if (!firedInTerminal && firedInActive) pass('core-tick: suspended in terminal, resumes in active');
+            else fail('core-tick suspend', `terminal=${firedInTerminal} active=${firedInActive}`);
+        } catch (e) { Game.setState({ phase7Triggered: false, phase7Choice: null }); Game.refreshMode(); fail('core-tick suspend', e.message); }
+
         for (const r of results) {
             const tag = r.ok ? 'PASS' : 'FAIL';
             UI.logAction(`MASTER CLOCK TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);

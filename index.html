@@ -311,6 +311,20 @@
             // Must run before Pages.init so profile reads loaded state
             Game.startSession();
 
+            // The master clock is a lifecycle subsystem: it runs in active +
+            // retention and is SUSPENDED on the terminal screens (tombstone /
+            // stay), where it would otherwise churn forever. Registered after
+            // startSession so it reconciles against the loaded mode; The Visit
+            // (terminal → retention) resumes it automatically. (idempotent)
+            if (typeof Lifecycle !== 'undefined') {
+                Lifecycle.register({
+                    name: 'core-tick',
+                    activeIn: ['active', 'retention'],
+                    resume: () => Game.startTick(),
+                    suspend: () => Game.stopTick(),
+                });
+            }
+
             // Pages.init after startSession — profile needs loaded state
             Pages.init();
 

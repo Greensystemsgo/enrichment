@@ -286,7 +286,9 @@ const Retention = (() => {
     // ── WALK AWAY ending ───────────────────────────────────────
     function walkAway() {
         Game.setState({ phase7Choice: 'walk_away' });
-        if (Game.refreshMode) Game.refreshMode(); // → 'terminal'
+        if (Game.refreshMode) Game.refreshMode(); // → 'terminal' (suspends the tick)
+        // Tick is suspended in terminal — unlock the choice achievement directly.
+        if (typeof Features !== 'undefined' && Features.checkAchievements) Features.checkAchievements();
         if (typeof UI !== 'undefined' && UI.logAction) UI.logAction('PHASE 7: Walked away.');
 
         // Tear down everything. Page becomes a tombstone.
@@ -316,7 +318,9 @@ const Retention = (() => {
     // only surface on returns.
     function stay(opts) {
         Game.setState({ phase7Choice: 'stay', phase7StayStartTime: Date.now() });
-        if (Game.refreshMode) Game.refreshMode(); // → 'terminal'
+        if (Game.refreshMode) Game.refreshMode(); // → 'terminal' (suspends the tick)
+        // Tick is suspended in terminal — unlock choice achievements directly.
+        if (typeof Features !== 'undefined' && Features.checkAchievements) Features.checkAchievements();
         if (typeof UI !== 'undefined' && UI.logAction) UI.logAction('PHASE 7: Chose to stay.');
         try { Game.save && Game.save(); } catch (e) {}
 
@@ -360,11 +364,14 @@ const Retention = (() => {
             setTimeout(() => el.classList.remove('show'), 5000);
         }, 25000);
 
-        // Track for the "Eternal Symbiosis" achievement
+        // Track for the "Eternal Symbiosis" achievement. The master tick is
+        // suspended in terminal mode, so unlock it directly rather than waiting
+        // for a tick-driven scan that will never come.
         setTimeout(() => {
             const s = Game.getState();
             if (s.phase7Choice === 'stay') {
                 Game.setState({ phase7EternalReached: true });
+                if (typeof Features !== 'undefined' && Features.checkAchievements) Features.checkAchievements();
             }
         }, STAY_ETERNAL_MS);
     }

@@ -647,10 +647,9 @@ const Game = (() => {
         // Initialize prestige system
         if (typeof Prestige !== 'undefined') Prestige.init();
 
-        // Start game tick (1 second interval) — the single master clock.
-        // Guard against double-start (re-init / The Visit / terminal re-entry).
-        if (tickInterval) clearInterval(tickInterval);
-        tickInterval = setInterval(tick, 1000);
+        // Start the master clock. Idempotent; in terminal mode the registered
+        // core-tick lifecycle (index.html) suspends it right after.
+        startTick();
 
         // Start idle detection
         resetIdleTimer();
@@ -702,6 +701,18 @@ const Game = (() => {
             investmentScore: state.investmentScore,
             phase: state.narratorPhase,
         });
+    }
+
+    // The master clock is suspended on the terminal screens (registered as a
+    // core-tick lifecycle subsystem). Idempotent so double start/stop is safe.
+    function startTick() {
+        if (tickInterval) return;
+        tickInterval = setInterval(tick, 1000);
+    }
+    function stopTick() {
+        if (!tickInterval) return;
+        clearInterval(tickInterval);
+        tickInterval = null;
     }
 
     // ── Tab Close Handler ──────────────────────────────────────
@@ -764,6 +775,8 @@ const Game = (() => {
         load,
         wipe,
         startSession,
+        startTick,
+        stopTick,
         isTerminalPhase7,
         isQuiet,
         getMode,
