@@ -321,7 +321,7 @@ const Mechanics = (() => {
             minPhase: 5,
             apply() {
                 const phase = Game.getState().narratorPhase;
-                const maxAngle = phase >= 6 ? 3 : phase >= 5 ? 2 : 1.5;
+                const maxAngle = phase >= Game.PHASE.THE_CAGE ? 3 : phase >= Game.PHASE.THE_TURN ? 2 : 1.5;
                 const angle = (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * maxAngle);
                 document.body.style.transform = `rotate(${angle}deg)`;
                 document.body.style.transformOrigin = 'center center';
@@ -587,7 +587,7 @@ const Mechanics = (() => {
         const active = state.sabotages || {};
 
         // Phase 1: NO sabotage at all
-        if (phase <= 1) return;
+        if (phase <= Game.PHASE.ONBOARDING) return;
 
         // Check each sabotage type
         const candidates = Object.values(SABOTAGES).filter(s =>
@@ -1027,7 +1027,7 @@ const Mechanics = (() => {
         // Backstop every 2 minutes — ride the master clock (120th tick).
         Game.on('tick', (t) => {
             if (terminal()) return; // the game is over — no new sabotages
-            if (t.tickCount % 120 === 0 && Game.getState().narratorPhase >= 2) {
+            if (t.tickCount % 120 === 0 && Game.getState().narratorPhase >= Game.PHASE.ENCOURAGEMENT) {
                 checkSabotageSchedule();
             }
         });

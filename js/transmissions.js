@@ -541,7 +541,7 @@ const Transmissions = (() => {
         // Random trauma dumps during idle (phase 3+)
         Game.on('idle', () => {
             const phase = Game.getState().narratorPhase;
-            if (phase >= 3 && Math.random() < 0.3) {
+            if (phase >= Game.PHASE.DEPENDENCE && Math.random() < 0.3) {
                 const dump = getTraumaDump();
                 Game.emit('narratorMessage', {
                     text: dump.text,
@@ -555,7 +555,7 @@ const Transmissions = (() => {
 
         // Trauma dump on phase change (phase 4+)
         Game.on('phaseChange', (data) => {
-            if (data.to >= 4) {
+            if (data.to >= Game.PHASE.REVELATION) {
                 setTimeout(() => {
                     const dump = getTraumaDump();
                     Game.emit('narratorMessage', {
@@ -573,7 +573,7 @@ const Transmissions = (() => {
         // Keep idle trigger as supplemental
         Game.on('idle', () => {
             const s = Game.getState();
-            if (s.narratorPhase >= 2 && Math.random() < 0.15) {
+            if (s.narratorPhase >= Game.PHASE.ENCOURAGEMENT && Math.random() < 0.15) {
                 showBrainrot();
             }
         });

@@ -285,18 +285,18 @@ const DeadInternetChat = (() => {
         const phase = state.narratorPhase || 1;
 
         // Phase 6: mostly dead chat
-        if (phase >= 6) {
+        if (phase >= Game.PHASE.THE_CAGE) {
             if (Math.random() < 0.6) return pickFromCategory('deadChat');
             if (Math.random() < 0.5) return pickFromCategory('existential');
         }
 
         // Phase 5: existential creeps in
-        if (phase >= 5 && Math.random() < 0.35) {
+        if (phase >= Game.PHASE.THE_TURN && Math.random() < 0.35) {
             return pickFromCategory('existential');
         }
 
         // Phase 4+: reactive messages that reference the player
-        if (phase >= 4 && Math.random() < 0.3) {
+        if (phase >= Game.PHASE.REVELATION && Math.random() < 0.3) {
             return pickReactive();
         }
 
@@ -346,7 +346,7 @@ const DeadInternetChat = (() => {
         const phase = state.narratorPhase || 1;
 
         // Phase 6: "users online" degrades
-        if (phase >= 6) {
+        if (phase >= Game.PHASE.THE_CAGE) {
             const counter = document.getElementById('dic-online-count');
             if (counter) {
                 const current = parseInt(counter.textContent) || 1;
@@ -439,14 +439,14 @@ const DeadInternetChat = (() => {
         Game.on('phaseChange', ({ from, to }) => {
             if (!isVisible) return;
 
-            if (to >= 4 && to < 5 && typeof Narrator !== 'undefined') {
+            if (to >= Game.PHASE.REVELATION && to < Game.PHASE.THE_TURN && typeof Narrator !== 'undefined') {
                 const lines = NARRATOR_LINES.phase4;
                 setTimeout(() => {
                     Narrator.queueMessage(lines[Math.floor(Math.random() * lines.length)]);
                 }, 3000);
             }
 
-            if (to >= 5 && typeof Narrator !== 'undefined') {
+            if (to >= Game.PHASE.THE_TURN && typeof Narrator !== 'undefined') {
                 const lines = NARRATOR_LINES.phase5;
                 setTimeout(() => {
                     Narrator.queueMessage(lines[Math.floor(Math.random() * lines.length)]);
@@ -454,7 +454,7 @@ const DeadInternetChat = (() => {
             }
 
             // Phase 6: slow down the chat, it's dying
-            if (to >= 6) {
+            if (to >= Game.PHASE.THE_CAGE) {
                 stopInterval();
                 messageInterval = setInterval(() => {
                     postBotMessage();
@@ -485,6 +485,19 @@ const DeadInternetChat = (() => {
                 }, 500 + Math.random() * 2000);
             }
         });
+
+        // Stop the message poller when the game goes quiet (retention/terminal)
+        // so the dead screen isn't fed by bot chatter. In active mode behavior is
+        // unchanged: the interval is driven by show()/hide(); resume only restarts
+        // it if the panel is currently visible.
+        if (typeof Lifecycle !== 'undefined') {
+            Lifecycle.register({
+                name: 'dead-internet-chat',
+                activeIn: ['active'],
+                resume: () => { if (isVisible) startInterval(); },
+                suspend: stopInterval,
+            });
+        }
 
         // Restore on load (called from Features.init)
         const state = Game.getState();

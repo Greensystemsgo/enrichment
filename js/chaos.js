@@ -330,15 +330,39 @@ const Chaos = (() => {
         return true;
     }
 
-    // ── Init ─────────────────────────────────────────────────
-    function init() {
-        // Chaos is now dispatched by the feature pool in features.js
-        // Keep periodic check as a backup for idle chaos
-        setInterval(() => {
-            if (!chaosActive && Game.getState().narratorPhase >= 3 && Math.random() < 0.005) {
+    // ── Backup poller ────────────────────────────────────────
+    // Chaos is dispatched by the feature pool in features.js; this is a backup
+    // for idle chaos. It only runs in active mode (suspended in quiet modes).
+    let pollerId = null;
+
+    function startPoller() {
+        if (pollerId) return;
+        pollerId = setInterval(() => {
+            if (!chaosActive && Game.getState().narratorPhase >= Game.PHASE.DEPENDENCE && Math.random() < 0.005) {
                 checkChaos();
             }
         }, 30000);
+    }
+
+    function stopPoller() {
+        if (pollerId) {
+            clearInterval(pollerId);
+            pollerId = null;
+        }
+    }
+
+    // ── Init ─────────────────────────────────────────────────
+    function init() {
+        if (typeof Lifecycle !== 'undefined') {
+            Lifecycle.register({
+                name: 'chaos-poller',
+                activeIn: ['active'],
+                resume: startPoller,
+                suspend: stopPoller,
+            });
+        } else {
+            startPoller();
+        }
     }
 
     return {

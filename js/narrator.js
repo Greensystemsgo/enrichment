@@ -716,7 +716,7 @@ const Narrator = (() => {
 
         Game.on('tabHidden', () => {
             // Player switched tabs
-            if (Game.getState().narratorPhase >= 3) {
+            if (Game.getState().narratorPhase >= Game.PHASE.DEPENDENCE) {
                 setTimeout(() => {
                     if (document.hidden) {
                         throttledMessage('idle');

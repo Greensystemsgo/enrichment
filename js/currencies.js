@@ -106,7 +106,7 @@ const Currencies = (() => {
     // Random chance on conversion: lose some of what you converted.
     function checkBusted(amount, currencyName) {
         const phase = Game.getState().narratorPhase;
-        if (phase < 2) return { busted: false };
+        if (phase < Game.PHASE.ENCOURAGEMENT) return { busted: false };
 
         // Bust chance scales with phase: 5% → 25%
         const bustChance = [0, 0, 0.05, 0.08, 0.12, 0.18, 0.25][phase] || 0;
@@ -431,7 +431,7 @@ const Currencies = (() => {
     function checkCrownSeizure(doubloonAmount) {
         const state = Game.getState();
         const phase = state.narratorPhase;
-        if (phase < 2) return { seized: false, amount: doubloonAmount };
+        if (phase < Game.PHASE.ENCOURAGEMENT) return { seized: false, amount: doubloonAmount };
 
         const president = getPlayerPresident();
         // Seizure chance scales with phase: base rate * phase multiplier
@@ -527,13 +527,13 @@ const Currencies = (() => {
                     `The transmutation bureau seized ${data.bustLost} ${data.to}. They cited "reasons." We didn't argue.`,
                 ];
                 Narrator.queueMessage(bustLines[Math.floor(Math.random() * bustLines.length)]);
-            } else if (data.remainder > 0 && Game.getState().narratorPhase >= 4) {
+            } else if (data.remainder > 0 && Game.getState().narratorPhase >= Game.PHASE.REVELATION) {
                 Narrator.queueMessage(`${data.remainder} ${data.from} left over. By design.`);
             }
         });
 
         Game.on('conversionFailed', (data) => {
-            if (Game.getState().narratorPhase >= 3) {
+            if (Game.getState().narratorPhase >= Game.PHASE.DEPENDENCE) {
                 Narrator.queueMessage(`You need ${data.need} ${data.from} for one ${data.to}. You have ${data.have}. So close.`);
             }
         });

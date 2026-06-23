@@ -453,7 +453,7 @@ const Features = (() => {
     function spawnEvilButton() {
         if (evilButtonActive || evilButtonEl) return;
         const phase = Game.getState().narratorPhase;
-        if (phase < 2) return;
+        if (phase < Game.PHASE.ENCOURAGEMENT) return;
 
         evilButtonActive = true;
 
@@ -4796,7 +4796,7 @@ const Features = (() => {
 
         // Math captcha on sabotage — intercept sabotageFixAvailable
         Game.on('sabotageFixAvailable', (data) => {
-            if (Math.random() < 0.4 && Game.getState().narratorPhase >= 3) {
+            if (Math.random() < 0.4 && Game.getState().narratorPhase >= Game.PHASE.DEPENDENCE) {
                 data.requiresCaptcha = true;
             }
         });
@@ -5082,8 +5082,8 @@ const Features = (() => {
         { id: 'investment_10k', name: 'Board Member', desc: 'Investment Score reached 10,000. You\'re practically running this place.', icon: '🏦', check: s => s.investmentScore >= 10000 },
         { id: 'liquidator', name: 'Year Dealer', desc: 'Liquidated a year of your life for virtual currency. Bold move.', icon: '⏳', check: s => (s.yearsLiquidated || 0) >= 1 },
         { id: 'upgrade_all', name: 'Fully Upgraded', desc: 'Purchased all available upgrades. The enrichment is complete. (It is never complete.)', icon: '🔧', check: s => Object.keys(s.upgrades || {}).length >= 5 },
-        { id: 'phase_3', name: 'The Mask Cracks', desc: 'Reached narrator phase 3. The AI is getting... attached.', icon: '🎭', check: s => s.narratorPhase >= 3 },
-        { id: 'phase_5', name: 'The Turn', desc: 'Reached phase 5. The narrator has stopped pretending. So should you.', icon: '🌀', check: s => s.narratorPhase >= 5 },
+        { id: 'phase_3', name: 'The Mask Cracks', desc: 'Reached narrator phase 3. The AI is getting... attached.', icon: '🎭', check: s => s.narratorPhase >= Game.PHASE.DEPENDENCE },
+        { id: 'phase_5', name: 'The Turn', desc: 'Reached phase 5. The narrator has stopped pretending. So should you.', icon: '🌀', check: s => s.narratorPhase >= Game.PHASE.THE_TURN },
         { id: 'time_waster', name: 'Professional Time Waster', desc: 'Spent 30 minutes total in the Enrichment Program. That\'s a sitcom episode.', icon: '⏰', check: s => s.totalSessionTime >= 1800 },
         { id: 'hour_club', name: 'The Hour Club', desc: '1 hour of enrichment. You will never get this hour back. None of us will.', icon: '🕐', check: s => s.totalSessionTime >= 3600 },
         { id: 'cookie_clicker', name: 'Cookie Acceptance', desc: 'Accepted the cookie consent. You didn\'t read it. Nobody reads it.', icon: '🍪', check: s => s._cookieAccepted },

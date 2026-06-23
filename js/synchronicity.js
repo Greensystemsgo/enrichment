@@ -246,11 +246,14 @@ const Synchronicity = (() => {
     // ── Auto-trigger ──────────────────────────────────────────
     // Fires every ~12 minutes during active play once the player reaches phase 3.
     // The user did not ask for synchronicity. Synchronicity asked for them.
+    const AUTO_INTERVAL_MS = 12 * 60 * 1000;
+    let autoTriggerId = null;
+
     function startAutoTrigger() {
-        const AUTO_INTERVAL_MS = 12 * 60 * 1000;
-        setInterval(() => {
+        if (autoTriggerId) return;
+        autoTriggerId = setInterval(() => {
             const s = Game.getState();
-            if ((s.narratorPhase || 1) < 3) return;
+            if ((s.narratorPhase || 1) < Game.PHASE.DEPENDENCE) return;
             if (s.phase7Choice) return; // respect the silence of phase 7 endings
             if (document.hidden) return;
             // Only fire if there's been recent click activity (last 90s)
@@ -260,12 +263,30 @@ const Synchronicity = (() => {
         }, AUTO_INTERVAL_MS);
     }
 
+    function stopAutoTrigger() {
+        if (autoTriggerId) {
+            clearInterval(autoTriggerId);
+            autoTriggerId = null;
+        }
+    }
+
     function init() {
         // Bind to the Synchronize button in the topup-bar
         const btn = document.getElementById('topup-synch');
         if (btn) btn.addEventListener('click', show);
 
-        startAutoTrigger();
+        // The auto-trigger only lives in active mode — in retention/terminal it
+        // truly stops rather than waking every 12 min to bail on the dead screen.
+        if (typeof Lifecycle !== 'undefined') {
+            Lifecycle.register({
+                name: 'synch-autotrigger',
+                activeIn: ['active'],
+                resume: startAutoTrigger,
+                suspend: stopAutoTrigger,
+            });
+        } else {
+            startAutoTrigger();
+        }
 
         // Keep lastClickTime fresh — mutate directly (nothing renders off it
         // reactively), so it doesn't fan out a full stateChange cascade per click.

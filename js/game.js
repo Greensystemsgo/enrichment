@@ -485,6 +485,19 @@ const Game = (() => {
         return p ? p.name : ('Phase ' + n);
     }
 
+    // Named phase constants so content gates read `>= PHASE.DEPENDENCE` instead
+    // of a bare `>= 3`. (The boundary still shifts if phases are *renumbered*,
+    // but appending Phase 8 is safe and the intent is now self-documenting.)
+    const PHASE = {
+        ONBOARDING: 1,
+        ENCOURAGEMENT: 2,
+        DEPENDENCE: 3,
+        REVELATION: 4,
+        THE_TURN: 5,
+        THE_CAGE: 6,
+        RETENTION: 7,
+    };
+
     // ── Phase Escalation ───────────────────────────────────────
     function checkPhaseEscalation() {
         let newPhase = 1;
@@ -783,6 +796,7 @@ const Game = (() => {
         refreshMode,
         MODES,
         PHASES,
+        PHASE,
         phaseName,
         updateAutoClicker,
         setupBeforeUnload,
