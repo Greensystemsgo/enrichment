@@ -99,6 +99,7 @@ const Cohort = (() => {
     function trackClick() {
         const now = Date.now();
         const s = Game.getState();
+        const delta = {};
 
         // Click rhythm (gaps between consecutive clicks)
         if (lastClickTs > 0) {
@@ -107,7 +108,7 @@ const Cohort = (() => {
                 const arr = (s.cohortClickRhythmMs || []).slice();
                 arr.push(gap);
                 while (arr.length > CLICK_RHYTHM_CAP) arr.shift();
-                Game.setState({ cohortClickRhythmMs: arr });
+                delta.cohortClickRhythmMs = arr;
             }
         }
         lastClickTs = now;
@@ -116,7 +117,11 @@ const Cohort = (() => {
         const hr = String(new Date(now).getHours());
         const buckets = Object.assign({}, s.cohortClicksPerHour || {});
         buckets[hr] = (buckets[hr] || 0) + 1;
-        Game.setState({ cohortClicksPerHour: buckets });
+        delta.cohortClicksPerHour = buckets;
+
+        // One setState per click instead of two (each used to fan out a full
+        // stateChange cascade).
+        Game.setState(delta);
     }
 
     function getActiveTabName() {

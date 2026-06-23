@@ -1323,10 +1323,22 @@ const UI = (() => {
 
         // Game events
         Game.on('narratorMessage', showNarratorMessage);
-        Game.on('stateChange', updateStats);
-        Game.on('tick', () => updateStats(Game.getState()));
-        Game.on('click', () => updateStats(Game.getState()));
-        Game.on('autoClick', () => updateStats(Game.getState()));
+        // updateStats is driven by 4 events that can all fire within one click
+        // (stateChange fires multiple times per click). Coalesce into a single
+        // DOM update per animation frame instead of ~4 redundant re-renders.
+        let statsRafScheduled = false;
+        const scheduleUpdateStats = () => {
+            if (statsRafScheduled) return;
+            statsRafScheduled = true;
+            requestAnimationFrame(() => {
+                statsRafScheduled = false;
+                updateStats(Game.getState());
+            });
+        };
+        Game.on('stateChange', scheduleUpdateStats);
+        Game.on('tick', scheduleUpdateStats);
+        Game.on('click', scheduleUpdateStats);
+        Game.on('autoClick', scheduleUpdateStats);
         Game.on('rewardAvailable', showRewardModal);
         Game.on('streakBroken', streakBreakEffect);
         Game.on('phaseChange', (data) => phaseChangeEffect(data.to));

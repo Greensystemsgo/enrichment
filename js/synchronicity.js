@@ -267,9 +267,10 @@ const Synchronicity = (() => {
 
         startAutoTrigger();
 
-        // Listen for click events to keep lastClickTime fresh in state
+        // Keep lastClickTime fresh — mutate directly (nothing renders off it
+        // reactively), so it doesn't fan out a full stateChange cascade per click.
         Game.on('click', () => {
-            Game.setState({ lastClickTime: Date.now() });
+            Game.getState().lastClickTime = Date.now();
         });
     }
 

@@ -4556,22 +4556,24 @@ const Features = (() => {
     let lastFeatureTime = 0;
 
     function dispatchFeature() {
-        // Suppress feature popups when an overlay/modal is already active
-        if (document.querySelector('.page-overlay.active') ||
-            document.querySelector('#quiz-overlay.active') ||
-            document.querySelector('.feature-modal.active') ||
-            document.querySelector('#forced-break-modal')) return;
+        const now = Date.now();
+
+        // Cheap guards first: 99% of clicks bail on the 8s cooldown or the
+        // rate roll, so do those BEFORE the four layout-querying DOM scans.
+        if (now - lastFeatureTime < 8000) return;
 
         const state = Game.getState();
         const clicks = state.totalClicks;
-        const now = Date.now();
-
-        // Global cooldown — 8s after any feature fires
-        if (now - lastFeatureTime < 8000) return;
 
         // Roll against base rate
         const baseRate = getBaseRate(clicks);
         if (baseRate === 0 || Math.random() > baseRate) return;
+
+        // Only now (rare) — suppress if an overlay/modal is already active
+        if (document.querySelector('.page-overlay.active') ||
+            document.querySelector('#quiz-overlay.active') ||
+            document.querySelector('.feature-modal.active') ||
+            document.querySelector('#forced-break-modal')) return;
 
         // Filter eligible features
         const eligible = FEATURE_POOL.filter(f => {
@@ -5225,12 +5227,13 @@ const Features = (() => {
         // toasts or log entries — the tombstone stays bare. Art piece intact.
         const onTombstone = state.phase7Choice === 'walk_away';
 
+        let newlyUnlocked = 0;
         for (const ach of ACHIEVEMENTS) {
             if (unlocked[ach.id]) continue;
             try {
                 if (ach.check(state)) {
                     unlocked[ach.id] = { time: Date.now() };
-                    Game.setState({ achievementsUnlocked: unlocked });
+                    newlyUnlocked++;
                     if (!onTombstone) {
                         showAchievementToast(ach);
                         UI.logAction(`ACHIEVEMENT UNLOCKED: ${ach.name}`);
@@ -5238,6 +5241,9 @@ const Features = (() => {
                 }
             } catch (e) { /* ignore check errors */ }
         }
+        // Write once after the scan instead of per-unlock (the per-unlock
+        // setState re-emitted stateChange and re-entered this scan recursively).
+        if (newlyUnlocked > 0) Game.setState({ achievementsUnlocked: unlocked });
     }
 
     function showAchievementToast(ach) {
@@ -5296,8 +5302,10 @@ const Features = (() => {
     }
 
     function initAchievements() {
-        // Check achievements on state changes and clicks
-        Game.on('stateChange', () => checkAchievements());
+        // Check on the master clock (catches non-click unlocks within ~1s)
+        // plus a click throttle — NOT on every stateChange, which re-scanned
+        // all 66 predicates several times per click.
+        Game.on('tick', () => checkAchievements());
         Game.on('click', () => {
             // Throttle to every 10 clicks
             if (Game.getState().totalClicks % 10 === 0) checkAchievements();
