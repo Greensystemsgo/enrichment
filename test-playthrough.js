@@ -3980,6 +3980,24 @@ async function main() {
             else fail('sabotage clear', `classGone=${classGone} stateGone=${stateGone}`);
         } catch (e) { fail('sabotage clear', e.message); }
 
+        // ── Ambient narrator/transmissions go silent when the game is quiet ──
+        try {
+            const nbox = document.getElementById('narrator-box');
+            // quiet (retention): a narratorMessage must NOT render (no glitch class)
+            Game.setState({ phase7Triggered: true, phase7Choice: null }); Game.refreshMode();
+            nbox && nbox.classList.remove('glitch');
+            Game.emit('narratorMessage', { text: 'x', glitch: true });
+            const suppressedQuiet = !!nbox && !nbox.classList.contains('glitch');
+            // active: the same message renders (glitch class applied synchronously)
+            Game.setState({ phase7Triggered: false, phase7Choice: null }); Game.refreshMode();
+            nbox && nbox.classList.remove('glitch');
+            Game.emit('narratorMessage', { text: 'x', glitch: true });
+            const firesActive = !!nbox && nbox.classList.contains('glitch');
+            nbox && nbox.classList.remove('glitch');
+            if (suppressedQuiet && firesActive) pass('narrator: ambient transmissions suppressed when quiet');
+            else fail('narrator quiet', `suppressedQuiet=${suppressedQuiet} firesActive=${firesActive}`);
+        } catch (e) { fail('narrator quiet', e.message); }
+
         for (const r of results) {
             const tag = r.ok ? 'PASS' : 'FAIL';
             UI.logAction(`TERMINAL GUARD TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);

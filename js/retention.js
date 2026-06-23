@@ -82,6 +82,7 @@ const Retention = (() => {
     let stayIntervalId = null;
     let confessionIntervalId = null;
     let receiptIntervalId = null;
+    let triggerWatchInterval = null;
 
     // ── Trigger check ──────────────────────────────────────────
     // Phase 7 is the canonical compound gate: clicks AND time AND phase,
@@ -117,6 +118,8 @@ const Retention = (() => {
             narratorPhase: 7,
         });
         if (Game.refreshMode) Game.refreshMode(); // → 'retention'
+        // The trigger poll has done its job — stop it waking every 30s forever.
+        if (triggerWatchInterval) { clearInterval(triggerWatchInterval); triggerWatchInterval = null; }
         document.body.setAttribute('data-phase', '7');
         // Sweep any lingering popups — Phase 7 owns the screen now.
         if (typeof Surface !== 'undefined') Surface.clearExcept(['phase7', 'system']);
@@ -403,6 +406,11 @@ const Retention = (() => {
         if (typeof Mechanics !== 'undefined' && Mechanics.clearAllSabotages) {
             try { Mechanics.clearAllSabotages(); } catch (e) {}
         }
+        // The noise stops — silence the ambient drone too (its two retune
+        // intervals + oscillators), not just the visual sabotages.
+        if (typeof SoundEngine !== 'undefined' && SoundEngine.stopAmbient) {
+            try { SoundEngine.stopAmbient(); } catch (e) {}
+        }
         try { document.querySelectorAll('.driftable').forEach(el => el.style.transform = ''); } catch (e) {}
     }
 
@@ -443,11 +451,12 @@ const Retention = (() => {
             return;
         }
 
-        // Otherwise watch for trigger conditions
+        // Otherwise watch for trigger conditions (click-driven + a slow poll).
+        // The poll is cleared the moment Phase 7 fires — it has no job after.
         Game.on('click', () => {
             if (Game.getState().totalClicks % 50 === 0) maybeTrigger();
         });
-        setInterval(maybeTrigger, 30000);
+        triggerWatchInterval = setInterval(maybeTrigger, 30000);
     }
 
     return {

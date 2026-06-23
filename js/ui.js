@@ -63,6 +63,10 @@ const UI = (() => {
     let typewriterInterval = null;
 
     function showNarratorMessage(data) {
+        // In Phase 7+ the screen is owned by the retention confessions (which
+        // write the narrator node directly). Suppress ambient transmissions/
+        // milestones so they can't stomp the confession mid-line.
+        if (typeof Game !== 'undefined' && Game.isQuiet && Game.isQuiet()) return;
         const { text, veilText, phase, glitch, source, isTransmission, isMilestone } = data;
 
         if (glitch) {

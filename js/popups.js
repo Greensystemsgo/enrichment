@@ -272,8 +272,13 @@ const Popups = (() => {
             </div>
         `;
 
-        if (typeof Surface !== 'undefined') Surface.mount(adEl, { layer: 'ambient' });
-        else document.body.appendChild(adEl);
+        const mounted = (typeof Surface !== 'undefined')
+            ? Surface.mount(adEl, { layer: 'ambient' })
+            : (document.body.appendChild(adEl), adEl);
+        // If the mount was suppressed (e.g. terminal screen), don't leave
+        // adShown stuck true with an orphaned node — that permanently kills the
+        // ad loop. Reset and bail so it can resume later.
+        if (!mounted) { adShown = false; adEl = null; return; }
 
         // Animate in
         requestAnimationFrame(() => {

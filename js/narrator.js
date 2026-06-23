@@ -562,6 +562,9 @@ const Narrator = (() => {
 
     function queueMessage(text, options = {}) {
         if (!text) return;
+        // Once the game goes quiet (Phase 7+), the ambient narrator stops — the
+        // retention confessions own the narrator node (they write it directly).
+        if (typeof Game !== 'undefined' && Game.isQuiet && Game.isQuiet()) return;
         // Drop oldest messages if queue is full — keeps it responsive
         if (messageQueue.length >= MAX_QUEUE_SIZE) {
             messageQueue.shift();
