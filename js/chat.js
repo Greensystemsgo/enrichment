@@ -192,7 +192,7 @@ const DeadInternetChat = (() => {
             </div>
         `;
 
-        if (typeof Surface !== 'undefined') Surface.mount(chatPanel, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(chatPanel, { layer: 'ambient' });
         else document.body.appendChild(chatPanel);
         messagesArea = chatPanel.querySelector('#dic-messages');
 

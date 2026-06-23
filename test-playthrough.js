@@ -3957,7 +3957,7 @@ async function main() {
         const mk = (cls) => { const d = document.createElement('div'); d.className = cls || 'surface-test-node'; return d; };
         const cleanup = () => {
             Surface.resetSuppressor();
-            Surface.setExclusiveLayers([]);
+            Surface.setExclusiveLayers(['popup']); // production default
             Game.setState({ phase7Choice: null });
             document.querySelectorAll('.surface-test-node').forEach(n => n.remove());
             Surface._prune();
@@ -4121,6 +4121,23 @@ async function main() {
             else fail('exclusive layer', `exclusive=${exclusive} effectsCoexist=${effectsCoexist}`);
             Surface.unmount(b); Surface.unmount(e1); Surface.unmount(e2);
         } catch (e) { Surface.setExclusiveLayers([]); fail('exclusive layer', e.message); }
+
+        // ── PRODUCTION default: popup exclusive, ambient coexists ──
+        try {
+            cleanup(); // resets to production default ['popup']
+            const defaults = Surface.getExclusiveLayers();
+            const m1 = mk(); Surface.mount(m1, { layer: 'popup' });
+            const m2 = mk(); Surface.mount(m2, { layer: 'popup' });   // should close m1
+            const amb = mk(); Surface.mount(amb, { layer: 'ambient' }); // should coexist
+            const onlyLatest = !m1.isConnected && m2.isConnected;
+            const ambientCoexists = amb.isConnected && m2.isConnected;
+            if (defaults.includes('popup') && onlyLatest && ambientCoexists) {
+                pass('production default: popup exclusive, ambient coexists');
+            } else {
+                fail('production default', `defaults=${JSON.stringify(defaults)} onlyLatest=${onlyLatest} ambientCoexists=${ambientCoexists}`);
+            }
+            Surface.unmount(m2); Surface.unmount(amb);
+        } catch (e) { fail('production default', e.message); }
 
         cleanup();
         for (const r of results) {

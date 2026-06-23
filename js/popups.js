@@ -272,7 +272,7 @@ const Popups = (() => {
             </div>
         `;
 
-        if (typeof Surface !== 'undefined') Surface.mount(adEl, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(adEl, { layer: 'ambient' });
         else document.body.appendChild(adEl);
 
         // Animate in

@@ -441,7 +441,7 @@ const Transmissions = (() => {
             </div>
         `;
 
-        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'ambient' });
         else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 

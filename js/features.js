@@ -992,7 +992,7 @@ const Features = (() => {
         popup.style.left = x + 'px';
         popup.style.top = y + 'px';
 
-        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'ambient' });
         else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
@@ -1113,7 +1113,7 @@ const Features = (() => {
         popup.style.left = x + 'px';
         popup.style.top = y + 'px';
 
-        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'ambient' });
         else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
@@ -1207,7 +1207,7 @@ const Features = (() => {
         popup.style.left = x + 'px';
         popup.style.top = y + 'px';
 
-        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'ambient' });
         else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
@@ -1874,7 +1874,7 @@ const Features = (() => {
                 <button class="audit-popup-close audit-view-all" style="font-size:9px;color:var(--accent-blue);background:none;border:1px solid var(--accent-blue);padding:3px 8px;cursor:pointer;">VIEW ALL →</button>
             </div>
         `;
-        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(popup, { layer: 'ambient' });
         else document.body.appendChild(popup);
         requestAnimationFrame(() => popup.classList.add('active'));
 
@@ -2530,7 +2530,7 @@ const Features = (() => {
             </div>
         `;
 
-        if (typeof Surface !== 'undefined') Surface.mount(widget, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(widget, { layer: 'ambient' });
         else document.body.appendChild(widget);
         requestAnimationFrame(() => widget.classList.add('active'));
 

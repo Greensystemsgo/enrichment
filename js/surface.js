@@ -40,9 +40,10 @@ const Surface = (() => {
     const LAYERS = ['base', 'effect', 'ambient', 'popup', 'chaos', 'phase7', 'system'];
 
     // Layers in which only one window shows at a time. Configurable so the
-    // policy can be tuned/tested without editing call sites. Empty by
-    // default — exclusivity is opt-in until the taxonomy is settled.
-    let exclusiveLayers = new Set();
+    // policy can be tuned/tested without editing call sites. 'popup' (the
+    // blocking centered modals) is exclusive — opening one closes any other.
+    // effect/ambient/chaos/phase7/system intentionally coexist.
+    let exclusiveLayers = new Set(['popup']);
 
     // node -> { id, layer, exclusive, mode: 'mount'|'toggle', activeClass }
     const registry = new Map();
