@@ -464,15 +464,33 @@ const Game = (() => {
         if (state.totalClicks % 50 === 0) save();
     }
 
+    // ── Phases ─────────────────────────────────────────────────
+    // Ordered, named phase table — the single source of truth for narrative
+    // progression. Adding a phase is one row here (and its dialogue), not a
+    // hunt for `narratorPhase >= N` magic numbers across the codebase.
+    // Phase 7 (Retention) is entered by a compound gate in retention.js, not
+    // by a click threshold, so its minClicks is Infinity.
+    const PHASES = [
+        { n: 1, name: 'Onboarding',    minClicks: 0 },
+        { n: 2, name: 'Encouragement', minClicks: 50 },
+        { n: 3, name: 'Dependence',    minClicks: 200 },
+        { n: 4, name: 'Revelation',    minClicks: 500 },
+        { n: 5, name: 'The Turn',      minClicks: 1000 },
+        { n: 6, name: 'The Cage',      minClicks: 2000 },
+        { n: 7, name: 'Retention',     minClicks: Infinity },
+    ];
+
+    function phaseName(n) {
+        const p = PHASES.find(x => x.n === n);
+        return p ? p.name : ('Phase ' + n);
+    }
+
     // ── Phase Escalation ───────────────────────────────────────
     function checkPhaseEscalation() {
         let newPhase = 1;
-        if (state.totalClicks >= 2000) newPhase = 6;
-        else if (state.totalClicks >= 1000) newPhase = 5;
-        else if (state.totalClicks >= 500) newPhase = 4;
-        else if (state.totalClicks >= 200) newPhase = 3;
-        else if (state.totalClicks >= 50) newPhase = 2;
-
+        for (const p of PHASES) {
+            if (p.minClicks !== Infinity && state.totalClicks >= p.minClicks) newPhase = p.n;
+        }
         if (newPhase !== state.narratorPhase) {
             const oldPhase = state.narratorPhase;
             state.narratorPhase = newPhase;
@@ -492,14 +510,46 @@ const Game = (() => {
         );
     }
 
-    // ── Phase 7 terminal state ─────────────────────────────────
-    // Once the player has chosen WALK AWAY or STAY, the game is over.
-    // Boot-time reentry machinery (returning FOMO, onboarding, streak
-    // break) must not fire — it would leak popups on top of the tombstone
-    // / stay overlay. Retention.init() and TheVisit own the screen instead.
-    function isTerminalPhase7() {
-        return state.phase7Choice === 'walk_away' || state.phase7Choice === 'stay';
+    // ── Lifecycle modes ────────────────────────────────────────
+    // Named modes are the single source of truth for "what state is the game
+    // in," so subsystems can SUSPEND on transitions (via lifecycle.js) instead
+    // of polling a flag, and so adding phases doesn't mean editing scattered
+    // `=== 7` checks. Modes are derived from the saved phase-7 fields:
+    //   active    — normal play (phases 1–6)
+    //   retention — Phase 7 tend / The Visit: the noise stops, the AI asks
+    //   terminal  — WALK AWAY (tombstone) or STAY: the game is over
+    const MODES = { ACTIVE: 'active', RETENTION: 'retention', TERMINAL: 'terminal' };
+
+    function deriveMode() {
+        if (state.phase7Choice === 'walk_away' || state.phase7Choice === 'stay') return MODES.TERMINAL;
+        if (state.phase7Triggered) return MODES.RETENTION;
+        return MODES.ACTIVE;
     }
+
+    // Predicates derive DIRECTLY from state so they're always accurate the
+    // instant phase7 fields change (no refreshMode() required to read truth).
+    // `state.mode` is only a cached change-detector for the modeChange event.
+    function getMode() { return deriveMode(); }
+
+    // Recompute the mode and emit modeChange if it changed since last refresh.
+    // Call after any transition that flips phase7Triggered / phase7Choice so
+    // Lifecycle subsystems suspend/resume. (Reading truth never needs this.)
+    function refreshMode() {
+        const next = deriveMode();
+        if (next === state.mode) return next;
+        const prev = state.mode || MODES.ACTIVE;
+        state.mode = next;
+        emit('modeChange', { from: prev, to: next });
+        return next;
+    }
+
+    // The game is "quiet" once it has left active play (Phase 7 onward) — the
+    // single predicate subsystems use to go silent. Replaces the scattered
+    // isTerminalPhase7() / phase7Triggered / `>= 7` checks.
+    function isQuiet() { return deriveMode() !== MODES.ACTIVE; }
+
+    // Terminal == the player has made the final choice (walk away / stay).
+    function isTerminalPhase7() { return deriveMode() === MODES.TERMINAL; }
 
     // ── Streak Management ──────────────────────────────────────
     function checkStreak() {
@@ -569,6 +619,10 @@ const Game = (() => {
     // ── Session Management ─────────────────────────────────────
     function startSession() {
         const hadSave = load();
+        // Establish the lifecycle mode from the loaded save before anything
+        // reads it (subsystems registered during init() get synced off the
+        // modeChange this fires).
+        refreshMode();
         sessionStartTime = Date.now();
         state.sessionClicks = 0;
         state.sessionCount++;
@@ -636,6 +690,8 @@ const Game = (() => {
         if (typeof Buildings !== 'undefined') Buildings.tickGeneration();
         emit('tick', {
             tickCount,
+            mode: getMode(),
+            quiet: isQuiet(),
             hidden: (typeof document !== 'undefined' && document.hidden),
             totalClicks: state.totalClicks,
             eu: state.eu,
@@ -709,6 +765,12 @@ const Game = (() => {
         wipe,
         startSession,
         isTerminalPhase7,
+        isQuiet,
+        getMode,
+        refreshMode,
+        MODES,
+        PHASES,
+        phaseName,
         updateAutoClicker,
         setupBeforeUnload,
         setupVisibilityChange,

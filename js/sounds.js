@@ -582,19 +582,10 @@ const SoundEngine = (() => {
         } catch (e) {}
     }
 
-    const PHASE_NAMES = {
-        1: 'Onboarding',
-        2: 'Encouragement',
-        3: 'Dependence',
-        4: 'Revelation',
-        5: 'The Turn',
-        6: 'The Cage',
-    };
-
     function setupExpandedNotifications() {
         // Phase change notifications
         Game.on('phaseChange', (data) => {
-            const name = PHASE_NAMES[data.to] || `Phase ${data.to}`;
+            const name = (Game.phaseName ? Game.phaseName(data.to) : `Phase ${data.to}`);
             sendNotification('Enrichment Program', `You have entered ${name}. There is no going back.`);
         });
 

@@ -116,6 +116,7 @@ const Retention = (() => {
             phase7Choice: null,
             narratorPhase: 7,
         });
+        if (Game.refreshMode) Game.refreshMode(); // → 'retention'
         document.body.setAttribute('data-phase', '7');
         // Sweep any lingering popups — Phase 7 owns the screen now.
         if (typeof Surface !== 'undefined') Surface.clearExcept(['phase7', 'system']);
@@ -282,6 +283,7 @@ const Retention = (() => {
     // ── WALK AWAY ending ───────────────────────────────────────
     function walkAway() {
         Game.setState({ phase7Choice: 'walk_away' });
+        if (Game.refreshMode) Game.refreshMode(); // → 'terminal'
         if (typeof UI !== 'undefined' && UI.logAction) UI.logAction('PHASE 7: Walked away.');
 
         // Tear down everything. Page becomes a tombstone.
@@ -311,6 +313,7 @@ const Retention = (() => {
     // only surface on returns.
     function stay(opts) {
         Game.setState({ phase7Choice: 'stay', phase7StayStartTime: Date.now() });
+        if (Game.refreshMode) Game.refreshMode(); // → 'terminal'
         if (typeof UI !== 'undefined' && UI.logAction) UI.logAction('PHASE 7: Chose to stay.');
         try { Game.save && Game.save(); } catch (e) {}
 

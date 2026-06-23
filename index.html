@@ -253,6 +253,7 @@
     <!-- Scripts (order matters — game.js first, then systems, then UI last) -->
     <script src="js/game.js"></script>
     <script src="js/gates.js"></script>
+    <script src="js/lifecycle.js"></script>
     <script src="js/surface.js"></script>
     <script src="js/sounds.js"></script>
     <script src="js/narrator.js"></script>
@@ -287,6 +288,10 @@
     <script>
         // Initialize all systems
         document.addEventListener('DOMContentLoaded', () => {
+            // Lifecycle first: bind the mode listener before any subsystem
+            // registers or startSession fires the initial modeChange.
+            if (typeof Lifecycle !== 'undefined') Lifecycle.init();
+
             SoundEngine.init();
             Narrator.init();
             Currencies.init();

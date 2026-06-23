@@ -107,6 +107,7 @@ const TheVisit = (() => {
     function enterTendState(overlay) {
         // Reset choice so Retention.maybeRevealChoice will fire — but we intercept
         Game.setState({ phase7Choice: null });
+        if (Game.refreshMode) Game.refreshMode(); // terminal → retention (door reopened)
 
         // Remove tombstone remnants
         document.querySelectorAll('.phase7-tombstone').forEach(el => el.remove());

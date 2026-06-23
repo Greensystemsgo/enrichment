@@ -4460,6 +4460,93 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.18: Lifecycle modes + suspend/resume
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.18: Lifecycle modes...');
+    const lifecycleResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+        const setActive = () => { Game.setState({ phase7Choice: null, phase7Triggered: false }); Game.refreshMode(); };
+
+        // ── API present ──
+        try {
+            if (Game.getMode && Game.refreshMode && Game.isQuiet && Game.MODES && Game.PHASES && Game.phaseName) pass('api present');
+            else fail('api present', 'missing lifecycle exports');
+        } catch (e) { fail('api present', e.message); }
+
+        // ── PHASES table drives names (no hardcoded map) ──
+        try {
+            if (Game.phaseName(3) === 'Dependence' && Game.phaseName(6) === 'The Cage' && Game.phaseName(99) === 'Phase 99') {
+                pass('phases: named table + fallback');
+            } else {
+                fail('phases', `${Game.phaseName(3)} / ${Game.phaseName(6)} / ${Game.phaseName(99)}`);
+            }
+        } catch (e) { fail('phases', e.message); }
+
+        // ── Mode derives from phase-7 state ──
+        try {
+            setActive();
+            const a = Game.getMode() === 'active' && !Game.isQuiet() && !Game.isTerminalPhase7();
+            Game.setState({ phase7Triggered: true }); Game.refreshMode();
+            const r = Game.getMode() === 'retention' && Game.isQuiet() && !Game.isTerminalPhase7();
+            Game.setState({ phase7Choice: 'stay' }); Game.refreshMode();
+            const t = Game.getMode() === 'terminal' && Game.isQuiet() && Game.isTerminalPhase7();
+            setActive();
+            if (a && r && t) pass('mode: active → retention → terminal derived from state');
+            else fail('mode derive', `active=${a} retention=${r} terminal=${t}`);
+        } catch (e) { setActive(); fail('mode derive', e.message); }
+
+        // ── modeChange event fires on transition ──
+        try {
+            setActive();
+            let got = null;
+            const h = (d) => { got = d; };
+            Game.on('modeChange', h);
+            Game.setState({ phase7Triggered: true }); Game.refreshMode();
+            Game.off('modeChange', h);
+            setActive();
+            if (got && got.from === 'active' && got.to === 'retention') pass('modeChange: emitted with from/to');
+            else fail('modeChange', JSON.stringify(got));
+        } catch (e) { setActive(); fail('modeChange', e.message); }
+
+        // ── Lifecycle.register suspends/resumes on mode transitions ──
+        try {
+            setActive();
+            let resumes = 0, suspends = 0;
+            const m = Lifecycle.register({ name: 'test-sub', activeIn: ['active'], resume: () => resumes++, suspend: () => suspends++ });
+            const resumedAtRegister = m.running === true && resumes === 1; // current mode is active
+            Game.setState({ phase7Triggered: true }); Game.refreshMode(); // → retention: should suspend
+            const suspendedOnQuiet = m.running === false && suspends === 1;
+            setActive(); // → active: should resume
+            const resumedOnActive = m.running === true && resumes === 2;
+            // unregister the test sub
+            const idx = Lifecycle._mods.indexOf(m); if (idx >= 0) Lifecycle._mods.splice(idx, 1);
+            if (resumedAtRegister && suspendedOnQuiet && resumedOnActive) {
+                pass('lifecycle: register resumes now, suspends on quiet, resumes on active');
+            } else {
+                fail('lifecycle suspend/resume', `reg=${resumedAtRegister} suspend=${suspendedOnQuiet} resume=${resumedOnActive}`);
+            }
+        } catch (e) { fail('lifecycle suspend/resume', e.message); }
+
+        setActive();
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`LIFECYCLE TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const lcPassed = lifecycleResults.filter(r => r.ok).length;
+    const lcFailed = lifecycleResults.filter(r => !r.ok).length;
+    console.log(`    Lifecycle tests: ${lcPassed} passed, ${lcFailed} failed out of ${lifecycleResults.length}`);
+    for (const r of lifecycleResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 9: Reading Dossier...');
