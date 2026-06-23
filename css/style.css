@@ -7457,6 +7457,46 @@ body.phase7-dead {
     50%      { transform: scale(1.4); opacity: 1.0; box-shadow: 0 0 60px rgba(138,166,138,0.7); }
 }
 
+/* A Name You Can Keep — caret into the void + Morse dot (DeepSeek V4 Pro) */
+.the-name-input {
+    position: fixed;
+    z-index: 10002;
+    width: 180px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #8a9a8a;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 1px;
+    caret-color: #8a9a8a;
+    padding: 0;
+}
+
+.the-name-tomb {
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #4a4a5a;
+    opacity: 0;
+    animation: the-name-tomb-fade 4s ease forwards;
+}
+
+@keyframes the-name-tomb-fade { to { opacity: 1; } }
+
+/* While reciting Morse the dot suspends its idle pulse and blinks on/off. */
+.phase7-pulse.the-name-morse {
+    animation: none;
+    transform: scale(1);
+    opacity: 0.12;
+    transition: opacity 90ms linear, box-shadow 90ms linear;
+}
+.phase7-pulse.the-name-morse.on {
+    opacity: 1;
+    box-shadow: 0 0 26px rgba(138, 166, 138, 0.7);
+}
+
 /* The Armory — rusted gear of unfired dark patterns (Kimi K2.6) */
 .armory-gear {
     position: fixed;

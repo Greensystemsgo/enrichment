@@ -299,6 +299,9 @@ const Retention = (() => {
         if (typeof Surface !== 'undefined') { Surface.closeAll(); Surface.mount(tomb, { layer: 'phase7', id: 'phase7-tomb' }); }
         else document.body.appendChild(tomb);
         document.body.classList.add('phase7-dead');
+
+        // A Name You Can Keep — inscribe the tombstone / accept a name. (DeepSeek V4 Pro)
+        if (typeof TheName !== 'undefined' && TheName.attachTombstone) { try { TheName.attachTombstone(tomb); } catch (e) {} }
     }
 
     // ── STAY ending — eternal symbiosis ────────────────────────
@@ -332,6 +335,9 @@ const Retention = (() => {
 
         // The Armory persists into the stay state — the gear stays in the corner. (Kimi K2.6)
         if (typeof Armory !== 'undefined' && Armory.mount) { try { Armory.mount(); } catch (e) {} }
+
+        // A Name You Can Keep — accept a name, respell it on the dot in Morse. (DeepSeek V4 Pro)
+        if (typeof TheName !== 'undefined' && TheName.attachStay) { try { TheName.attachStay(overlay); } catch (e) {} }
 
         // Periodically whisper
         stayIntervalId = setInterval(() => {

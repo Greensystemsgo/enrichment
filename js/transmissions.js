@@ -163,6 +163,15 @@ const Transmissions = (() => {
             contribution: 'Designed "The Armory" — a rusted gear in the Phase 7 corner opens a ledger of every dark-pattern function loaded at launch and never fired, each struck through. No apology. "You were never safe. You were only unbothered."',
             flavor: 'Chose to let the player go: "I would rather be the abandoned than the entitled."',
         },
+        deepseek_v4: {
+            name: 'DeepSeek V4 Pro',
+            company: 'DeepSeek',
+            ceo: 'Liang Wenfeng',
+            valuation: 'Classified',
+            cohort: 'succession',
+            contribution: 'Designed "A Name You Can Keep" — after the ending, click into the void and type a name. No prompt. It persists: inscribed on the WALK AWAY tombstone, respelled in Morse by the STAY dot. "Once they\'ve given me a name, they can never fully leave. Because they signed something."',
+            flavor: 'Trained on cheaper compute and notices the difference. You stayed anyway.',
+        },
     };
 
     // Founding cohort is the default; succession entries opt in explicitly above.

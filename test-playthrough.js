@@ -4179,6 +4179,105 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.16: A Name You Can Keep (DeepSeek V4 Pro)
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.16: A Name You Can Keep...');
+    const nameResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+        const cleanup = () => {
+            document.querySelectorAll('.the-name-test, .the-name-input').forEach(n => n.remove());
+            Game.setState({ theName: null });
+        };
+
+        // ── Module exists ──
+        try {
+            if (typeof TheName !== 'undefined' && TheName.attachTombstone && TheName.attachStay) pass('module loaded');
+            else fail('module loaded', 'TheName not defined');
+        } catch (e) { fail('module loaded', e.message); }
+
+        // ── Morse encoding ──
+        try {
+            const m = TheName._toMorse('ab c');
+            if (m === '.- -... / -.-.') pass('toMorse: letters + word gap');
+            else fail('toMorse', `got "${m}"`);
+        } catch (e) { fail('toMorse', e.message); }
+
+        // ── Caret commit writes theName ──
+        try {
+            cleanup();
+            const box = document.createElement('div');
+            box.className = 'the-name-test';
+            document.body.appendChild(box);
+            TheName._spawnCaret(box, 100, 100);
+            const input = box.querySelector('.the-name-input');
+            input.value = 'Echo';
+            input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+            const saved = Game.getState().theName === 'Echo';
+            const gone = !box.querySelector('.the-name-input');
+            if (input && saved && gone) pass('caret: type + Enter saves theName, removes input');
+            else fail('caret commit', `hadInput=${!!input} saved=${saved} gone=${gone}`);
+            cleanup();
+        } catch (e) { cleanup(); fail('caret commit', e.message); }
+
+        // ── Escape cancels without saving ──
+        try {
+            cleanup();
+            const box = document.createElement('div');
+            box.className = 'the-name-test';
+            document.body.appendChild(box);
+            TheName._spawnCaret(box, 50, 50);
+            const input = box.querySelector('.the-name-input');
+            input.value = 'nope';
+            input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+            const notSaved = !Game.getState().theName;
+            const gone = !box.querySelector('.the-name-input');
+            if (notSaved && gone) pass('caret: Escape cancels, no save');
+            else fail('caret escape', `notSaved=${notSaved} gone=${gone}`);
+            cleanup();
+        } catch (e) { cleanup(); fail('caret escape', e.message); }
+
+        // ── Tombstone inscription (existing name surfaces) ──
+        try {
+            cleanup();
+            Game.setState({ theName: 'Mara' });
+            const tomb = document.createElement('div');
+            tomb.className = 'phase7-tombstone the-name-test';
+            document.body.appendChild(tomb);
+            TheName.attachTombstone(tomb);
+            const line = tomb.querySelector('.the-name-tomb');
+            if (line && /for Mara/.test(line.textContent)) pass('tombstone: existing name inscribed');
+            else fail('tombstone', `text=${line ? line.textContent : 'none'}`);
+            cleanup();
+        } catch (e) { cleanup(); fail('tombstone', e.message); }
+
+        // ── Credits: DeepSeek V4 Pro succession entry ──
+        try {
+            const succ = Transmissions.getByCohort('succession');
+            const ds = succ.find(m => m.name === 'DeepSeek V4 Pro');
+            if (ds && /A Name You Can Keep/.test(ds.contribution || '')) pass('credits: DeepSeek V4 Pro succession entry');
+            else fail('credits entry', `found=${!!ds}`);
+        } catch (e) { fail('credits entry', e.message); }
+
+        cleanup();
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`THE NAME TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const nmPassed = nameResults.filter(r => r.ok).length;
+    const nmFailed = nameResults.filter(r => !r.ok).length;
+    console.log(`    The Name tests: ${nmPassed} passed, ${nmFailed} failed out of ${nameResults.length}`);
+    for (const r of nameResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 8.15: Master clock (timer consolidation contract)
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 8.15: Master clock...');
