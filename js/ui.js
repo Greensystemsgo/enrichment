@@ -54,6 +54,8 @@ const UI = (() => {
             gameContainer: document.getElementById('game-container'),
             actionLog: document.getElementById('action-log'),
             actionLogText: document.getElementById('action-log-text'),
+            buildingsList: document.getElementById('buildings-list'),
+            buildingsPane: document.querySelector('.tab-pane[data-tab="buildings"]'),
         };
     }
 
@@ -175,11 +177,16 @@ const UI = (() => {
         actionLogEntries.push({ timestamp, text, cat });
         if (actionLogEntries.length > 50) actionLogEntries.shift();
 
+        // Prepend the one new entry (newest-first) and trim overflow, instead
+        // of re-rendering all 50 nodes on every logged action (every click logs).
         if (els.actionLogText) {
-            const recent = actionLogEntries.slice(-50).reverse();
-            els.actionLogText.innerHTML = recent.map(e =>
-                `<div class="log-entry log-${e.cat}"><span class="log-timestamp">[${e.timestamp}]</span> ${e.text}</div>`
-            ).join('');
+            const div = document.createElement('div');
+            div.className = `log-entry log-${cat}`;
+            div.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${text}`;
+            els.actionLogText.insertBefore(div, els.actionLogText.firstChild);
+            while (els.actionLogText.childElementCount > 50) {
+                els.actionLogText.removeChild(els.actionLogText.lastElementChild);
+            }
         }
     }
 
@@ -474,10 +481,10 @@ const UI = (() => {
     let buyAmount = 1;
 
     function renderBuildings() {
-        const list = document.getElementById('buildings-list');
+        const list = els.buildingsList;
         if (!list) return;
         // Only render when tab is active (perf)
-        const pane = document.querySelector('.tab-pane[data-tab="buildings"]');
+        const pane = els.buildingsPane;
         if (!pane || !pane.classList.contains('active')) return;
 
         list.innerHTML = '';
@@ -551,9 +558,9 @@ const UI = (() => {
     // affordability classes on the existing cards instead of tearing down and
     // rebuilding the whole grid + chart every second.
     function refreshBuildingAffordability() {
-        const list = document.getElementById('buildings-list');
+        const list = els.buildingsList;
         if (!list || !list.firstChild) return;
-        const pane = document.querySelector('.tab-pane[data-tab="buildings"]');
+        const pane = els.buildingsPane;
         if (!pane || !pane.classList.contains('active')) return;
         const eu = Game.getState().eu;
 
@@ -1009,6 +1016,7 @@ const UI = (() => {
         // Re-render buildings when switching to that tab
         if (name === 'buildings') renderBuildings();
         if (name === 'prestige' && typeof Prestige !== 'undefined') Prestige.renderPrestige();
+        if (name === 'stuff' && typeof Collectibles !== 'undefined') Collectibles.renderGrid();
     }
 
     // ── Rate Charts (SVG Sparklines) ──────────────────────────
@@ -1420,9 +1428,8 @@ const UI = (() => {
             // and never while the tab is hidden.
             if (t.hidden) return;
             refreshBuildingAffordability();
-            if (t.tickCount % 30 === 0) {
-                const pane = document.querySelector('.tab-pane[data-tab="buildings"]');
-                if (pane && pane.classList.contains('active')) renderProductionChart();
+            if (t.tickCount % 30 === 0 && els.buildingsPane && els.buildingsPane.classList.contains('active')) {
+                renderProductionChart();
             }
         });
 

@@ -335,7 +335,12 @@ const Collectibles = (() => {
         Game.on('tick', (t) => {
             if (t.tickCount % 5 !== 0) return;
             tickDegradation();
-            if (!t.hidden) renderGrid();
+            // Only rebuild the grid when its tab is actually on screen
+            // (offsetParent is null when an ancestor is display:none). Switching
+            // to the Stuff tab re-renders it (ui.js switchTab).
+            if (t.hidden) return;
+            const grid = document.getElementById('collectibles-grid');
+            if (grid && grid.offsetParent !== null) renderGrid();
         });
 
         // Shop button

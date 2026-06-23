@@ -686,6 +686,13 @@ async function main() {
 
         const logEl = document.getElementById('action-log-text');
         if (logEl) {
+            // Seed with entries already in the log — boot lines (SESSION
+            // INITIALIZED, Subject returning) are logged before this collector
+            // attaches. (logAction now appends one node instead of rebuilding
+            // all 50, so the observer no longer re-surfaces pre-existing rows.)
+            logEl.querySelectorAll('.log-entry').forEach(n => {
+                if (n.textContent) window._testLogCollector.push(n.textContent.trim());
+            });
             const observer = new MutationObserver((mutations) => {
                 for (const m of mutations) {
                     for (const node of m.addedNodes) {

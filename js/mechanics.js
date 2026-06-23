@@ -450,16 +450,22 @@ const Mechanics = (() => {
 
     // ── Font Chaos Sabotage ──────────────────────────────────
     let fontChaosInterval = null;
+    let fontChaosPool = [];     // subtree snapshot, taken once per activation
+    let fontChaosTouched = [];  // only the elements we actually mangled
     const chaotFonts = ['Comic Sans MS', 'Papyrus', 'Impact', 'Brush Script MT', 'Courier New',
                          'Georgia', 'Trebuchet MS', 'Lucida Console', 'fantasy', 'cursive'];
 
     function startFontChaos() {
         stopFontChaos();
+        // Snapshot the subtree ONCE instead of re-materializing every descendant
+        // on every 1.5s fire just to pick a random element.
+        fontChaosPool = Array.from(document.querySelectorAll('#game-container *'));
         fontChaosInterval = setInterval(() => {
-            const elements = document.querySelectorAll('#game-container *');
-            const el = elements[Math.floor(Math.random() * elements.length)];
+            if (!fontChaosPool.length) return;
+            const el = fontChaosPool[Math.floor(Math.random() * fontChaosPool.length)];
             if (el) {
                 el.style.fontFamily = chaotFonts[Math.floor(Math.random() * chaotFonts.length)];
+                fontChaosTouched.push(el);
                 setTimeout(() => { el.style.fontFamily = ''; }, 3000);
             }
         }, 1500);
@@ -468,9 +474,10 @@ const Mechanics = (() => {
     function stopFontChaos() {
         if (fontChaosInterval) clearInterval(fontChaosInterval);
         fontChaosInterval = null;
-        document.querySelectorAll('#game-container *').forEach(el => {
-            el.style.fontFamily = '';
-        });
+        // Revert only what we touched, not the whole subtree.
+        fontChaosTouched.forEach(el => { el.style.fontFamily = ''; });
+        fontChaosTouched = [];
+        fontChaosPool = [];
     }
 
     // ── Z-Index Scramble Sabotage ────────────────────────────
