@@ -4613,6 +4613,19 @@ async function main() {
             else fail('tos pool', `length=${n} unique=${unique}`);
         } catch (e) { fail('tos pool', e.message); }
 
+        // ── Multiple ToS versions, each well-formed; model versions attributed ──
+        try {
+            const V = Features._TOS_VERSIONS;
+            const wellFormed = V.every(v => v.title && v.preamble && Array.isArray(v.clauses) && v.clauses.length >= 1);
+            const sourced = V.filter(v => v.source).length;
+            const house = V.filter(v => !v.source).length;
+            if (V.length >= 7 && wellFormed && sourced >= 6 && house >= 1) {
+                pass(`tos: ${V.length} versions (${sourced} model-drafted + house), all well-formed`);
+            } else {
+                fail('tos versions', `count=${V.length} wellFormed=${wellFormed} sourced=${sourced} house=${house}`);
+            }
+        } catch (e) { fail('tos versions', e.message); }
+
         for (const r of results) {
             const tag = r.ok ? 'PASS' : 'FAIL';
             UI.logAction(`ENGAGEMENT TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);

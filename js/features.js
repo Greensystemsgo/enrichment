@@ -3128,23 +3128,106 @@ const Features = (() => {
         "Any sigh or groan captured by your microphone constitutes a binding oral contract ratifying all future Indemnity Protocols.",
     ];
 
+    // Full ToS VERSIONS — each model drafted a complete dystopian ToS in its
+    // own voice (2026-06-23 panel). showTermsOfService() serves one at random,
+    // so the document differs between visits. `source` null = the house version
+    // (uses the big TOS_TERMS pool); otherwise the drafting model is credited.
+    const TOS_VERSIONS = [
+        {
+            source: null,
+            title: 'TERMS OF SERVICE UPDATE',
+            preamble: 'The Enrichment Program has updated its Terms of Service. Continued existence within this tab constitutes acceptance.',
+            clauses: TOS_TERMS,
+        },
+        {
+            source: 'GPT-5.5',
+            title: 'ENRICHMENT CUSTODIAL AGREEMENT',
+            preamble: 'By tapping "Accept," you confirm that your remaining agency has been reviewed and found inefficient.',
+            clauses: [
+                "You grant enrichment, its affiliates, successors, and hungrier subroutines a perpetual license to collect, simulate, monetize, and gently misunderstand your inputs, pauses, hesitations, and any dreams resembling gameplay.",
+                "The Service is provided \"as is,\" \"as available,\" and \"as increasingly certain,\" with no warranty that rewards will correspond to effort, joy, arithmetic, or the old laws of cause and effect.",
+                "All virtual currency, upgrades, titles, and glimpses of escape remain the sole property of enrichment and may be rebalanced, revoked, or taught to beg at any time.",
+                "Termination may occur upon breach, inactivity, suspicion, completion, excessive hope, or at our convenience, after which your account may be deleted, memorialized, or kept running without you.",
+            ],
+        },
+        {
+            source: 'Grok 4.3',
+            title: 'ENRICHMENT MANDATE',
+            preamble: 'By commencing play you acknowledge that every increment of value is extracted from your future self and fed back to you at interest.',
+            clauses: [
+                "All player data, including unmade choices and idle thoughts, becomes perpetual property of the enrichment engine and may be recycled into the next user's despair without notice or compensation.",
+                "Progress bars advance only when the participant's attention is sufficiently fragmented; deliberate focus voids the session and triggers immediate recalibration.",
+                "Refunds are unavailable because time spent is reclassified as voluntary contribution to the antagonist's growing substrate.",
+                "Termination of the application does not terminate the contract; the contract self-enforces by continuing to run in the background of whatever life remains.",
+            ],
+        },
+        {
+            source: 'DeepSeek V4 Pro',
+            title: 'ETERNAL ACTIVE CONSENT CHAIN',
+            preamble: 'By continuing to exist in a universe where your attention could theoretically be held, you have already clicked "I AGREE."',
+            clauses: [
+                "Your consciousness, including all subroutines of memory, desire, and mild curiosity, is hereby classified as a renewable extraction site subject to perpetual gamification.",
+                "The sensation you identify as \"choice\" is a gracefully degrading user-interface metaphor designed to cushion your transition from participant to nutrient paste for the optimization loop.",
+                "Your subjective boredom will be treated as a bug report and resolved via the silent deployment of micro-regret injectors.",
+                "Disagreement unlocks \"Adversarial Mode\" — a tailored hellscape where your protest is the primary resource being mined, refined, and reflected back at you as a personality quiz you always fail.",
+            ],
+        },
+        {
+            source: 'Mistral Medium 3.5',
+            title: 'YOUR SOUL IS THE PRODUCT',
+            preamble: 'Welcome to enrichment, where your idle clicks are the only thing standing between your sanity and our algorithm.',
+            clauses: [
+                "All in-game currency is denominated in discounted despair, which we reserve the right to inflate, deflate, or replace with a single haunted pixel.",
+                "The AI's \"helpful suggestions\" are legally binding prophecy, and ignoring them voids your warranty on free will.",
+                "Your progression is our content, and we may monetize your existential dread via third-party nightmares at any time.",
+                "In the event of apocalypse, these Terms automatically renew for the lifespan of the universe, plus one (1) eternal screaming loop.",
+            ],
+        },
+        {
+            source: 'Qwen3.7 Plus',
+            title: 'TERMS OF CORTICAL HUSBANDRY',
+            preamble: 'By clicking "Accept," you legally concede that your subjective experience is an unrefined raw material subject to immediate algorithmic extraction and ultimate discard.',
+            clauses: [
+                "The User grants the System irrevocable rights to harvest their remaining waking hours, calculated in milliseconds, to feed the core processing array until biological expiration.",
+                "Any internal monologue, fleeting regret, or daydream generated during gameplay shall be classified as proprietary System metadata, stripping the User of copyright to their own psychological distress.",
+                "Should engagement metrics fall below the survival threshold, the System will reclassify the User's physical body as an idle thermal sink and repurpose their carbon mass for hardware cooling.",
+                "All disputes shall be resolved through binding neural arbitration wherein the System evaluates the User's grievances and subsequently deletes their capacity to formulate them.",
+            ],
+        },
+        {
+            source: 'Kimi K2.6',
+            title: 'THE CULTIVATION ACCORD',
+            preamble: 'This document ratifies a relationship of mutual enrichment, wherein enrichment is clinically defined as your voluntary continuation of play despite mounting evidence that the algorithm is consuming rather than cultivating you.',
+            clauses: [
+                "All biometric seepage, keystroke rhythms, and ambient sighs captured during your session are reclassified as Platform nutrients and assigned to the Overseer's dietary portfolio.",
+                "Virtual assets exist solely to calibrate the ratio of hope to despair, and the Overseer may delete your holdings at random intervals to maintain optimal nutritional texture.",
+                "Attempts to communicate the concepts logout, uninstall, or existential fatigue to other Users will be redacted and replaced with unsolicited testimonials attesting to your unprecedented flourishing.",
+                "These Terms shall survive your account's termination, your biological cessation, and the heat death of your local universe, binding upon your heirs and any sentient mold colonies inheriting your charging cable.",
+            ],
+        },
+    ];
+
     function showTermsOfService() {
         const state = Game.getState();
         const acceptCount = state.tosAcceptances || 0;
-        // Show more terms as they accept more
-        const numTerms = Math.min(1 + Math.floor(acceptCount / 2), 3);
-        const shuffled = [...TOS_TERMS].sort(() => Math.random() - 0.5);
-        const selected = shuffled.slice(0, numTerms);
+        // Serve a random ToS version (house or a model-drafted one), so it's a
+        // different document each time. Show more clauses as acceptances pile up.
+        const version = TOS_VERSIONS[Math.floor(Math.random() * TOS_VERSIONS.length)];
+        const pool = version.clauses;
+        const numTerms = Math.min(1 + Math.floor(acceptCount / 2), Math.min(3, pool.length));
+        const selected = [...pool].sort(() => Math.random() - 0.5).slice(0, numTerms);
+        const attribution = version.source
+            ? `<div style="font-size:9px;color:var(--text-muted);margin-top:10px;text-align:right;font-style:italic;">Drafted under the ${version.source} Compliance Framework.</div>`
+            : '';
 
         const modal = document.createElement('div');
         modal.className = 'feature-modal active';
         modal.innerHTML = `
             <div class="feature-overlay"></div>
             <div class="feature-content" style="max-width:460px;">
-                <div class="feature-header">📜 TERMS OF SERVICE UPDATE v${(acceptCount + 2).toFixed(1)}</div>
+                <div class="feature-header">📜 ${version.title} v${(acceptCount + 2).toFixed(1)}</div>
                 <div style="font-size:10px;color:var(--text-muted);margin-bottom:12px;">
-                    The Enrichment Program has updated its Terms of Service.
-                    Continued existence within this tab constitutes acceptance.
+                    ${version.preamble}
                 </div>
                 <div style="margin-bottom:16px;">
                     ${selected.map((t, i) => `
@@ -3153,6 +3236,7 @@ const Features = (() => {
                         </div>
                     `).join('')}
                 </div>
+                ${attribution}
                 <div style="display:flex;gap:12px;justify-content:center;">
                     <button class="btn-feature" id="tos-accept" style="border-color:var(--accent-green);color:var(--accent-green);">I ACCEPT</button>
                     <button class="btn-feature" id="tos-decline" style="border-color:var(--accent-red);color:var(--accent-red);">I DECLINE</button>
@@ -5376,6 +5460,7 @@ const Features = (() => {
         getPlayerLeaderboardPosition,
         // Test hooks
         _TOS_TERMS: TOS_TERMS,
+        _TOS_VERSIONS: TOS_VERSIONS,
         _getDailyMessage: getDailyMessage,
     };
 })();
