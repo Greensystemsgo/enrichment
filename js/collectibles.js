@@ -329,11 +329,14 @@ const Collectibles = (() => {
 
     // ── Init ─────────────────────────────────────────────────
     function init() {
-        // Start degradation ticker (every 5 seconds)
-        degradationInterval = setInterval(() => {
+        // Degradation rides the master clock (every 5th tick, ~5s). Items keep
+        // decaying regardless of visibility, but the grid only re-renders when
+        // the tab is visible (pure cosmetic).
+        Game.on('tick', (t) => {
+            if (t.tickCount % 5 !== 0) return;
             tickDegradation();
-            renderGrid();
-        }, 5000);
+            if (!t.hidden) renderGrid();
+        });
 
         // Shop button
         const shopBtn = document.getElementById('shop-button');

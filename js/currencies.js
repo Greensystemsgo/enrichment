@@ -513,8 +513,9 @@ const Currencies = (() => {
         // Restore market tick
         marketTime = state.marketTick || 0;
 
-        // Start market oscillation (every 1 second)
-        marketInterval = setInterval(updateMarketRates, 1000);
+        // Market oscillation rides the master clock (every tick, ~1s).
+        // Cosmetic — skip while the tab is hidden.
+        Game.on('tick', (t) => { if (!t.hidden) updateMarketRates(); });
 
         // Narrator reactions to conversions
         Game.on('conversion', (data) => {

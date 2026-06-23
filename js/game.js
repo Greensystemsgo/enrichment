@@ -265,6 +265,8 @@ const Game = (() => {
     let clickTimes = [];  // recent click timestamps for burst detection
     let autoClickInterval = null;
     let tickInterval = null;
+    let saveInterval = null;
+    let tickCount = 0;  // master-clock counter — modules gate cadence on tickCount % N
     let idleTimer = null;
 
     // ── State Access ───────────────────────────────────────────
@@ -591,7 +593,9 @@ const Game = (() => {
         // Initialize prestige system
         if (typeof Prestige !== 'undefined') Prestige.init();
 
-        // Start game tick (1 second interval)
+        // Start game tick (1 second interval) — the single master clock.
+        // Guard against double-start (re-init / The Visit / terminal re-entry).
+        if (tickInterval) clearInterval(tickInterval);
         tickInterval = setInterval(tick, 1000);
 
         // Start idle detection
@@ -615,15 +619,24 @@ const Game = (() => {
         emit('sessionStart', { sessionCount: state.sessionCount });
         emit('stateChange', state);
 
-        // Auto-save periodically
-        setInterval(save, 30000);
+        // Auto-save periodically (store + guard so it can't stack on re-init)
+        if (saveInterval) clearInterval(saveInterval);
+        saveInterval = setInterval(save, 30000);
     }
 
-    // ── Game Tick ──────────────────────────────────────────────
+    // ── Game Tick — the single master clock ────────────────────
+    // One 1s interval drives everything. Modules subscribe to 'tick' and
+    // gate their own cadence on `tickCount % N` instead of spinning up
+    // their own setInterval. `hidden` lets cosmetic work skip when the tab
+    // isn't visible. Anything measuring elapsed time should diff Date.now()
+    // rather than counting ticks (intervals drift / throttle in the bg).
     function tick() {
+        tickCount++;
         updateInvestmentScore();
         if (typeof Buildings !== 'undefined') Buildings.tickGeneration();
         emit('tick', {
+            tickCount,
+            hidden: (typeof document !== 'undefined' && document.hidden),
             totalClicks: state.totalClicks,
             eu: state.eu,
             st: state.st,

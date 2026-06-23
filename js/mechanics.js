@@ -996,12 +996,12 @@ const Mechanics = (() => {
         // Periodic sabotage check
         Game.on('phaseChange', checkSabotageSchedule);
 
-        // Also check every 2 minutes
-        setInterval(() => {
-            if (Game.getState().narratorPhase >= 2) {
+        // Backstop every 2 minutes — ride the master clock (120th tick).
+        Game.on('tick', (t) => {
+            if (t.tickCount % 120 === 0 && Game.getState().narratorPhase >= 2) {
                 checkSabotageSchedule();
             }
-        }, 120000);
+        });
 
         // Restore active sabotages from state
         const state = Game.getState();

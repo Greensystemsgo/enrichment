@@ -4172,6 +4172,53 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.15: Master clock (timer consolidation contract)
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.15: Master clock...');
+    const clockResults = await page.evaluate(async () => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // ── tick payload carries tickCount + hidden (the contract modules use) ──
+        try {
+            const t = await new Promise((resolve) => {
+                const h = (data) => { Game.off('tick', h); resolve(data); };
+                Game.on('tick', h);
+                setTimeout(() => resolve(null), 2000);
+            });
+            if (t && typeof t.tickCount === 'number' && typeof t.hidden === 'boolean') {
+                pass('tick payload: tickCount + hidden present');
+            } else {
+                fail('tick payload', `got ${JSON.stringify(t)}`);
+            }
+        } catch (e) { fail('tick payload', e.message); }
+
+        // ── tickCount advances monotonically (single clock running) ──
+        try {
+            const a = await new Promise((r) => { const h = (d) => { Game.off('tick', h); r(d.tickCount); }; Game.on('tick', h); });
+            const b = await new Promise((r) => { const h = (d) => { Game.off('tick', h); r(d.tickCount); }; Game.on('tick', h); });
+            if (b > a) pass('tickCount advances monotonically');
+            else fail('tickCount advance', `a=${a} b=${b}`);
+        } catch (e) { fail('tickCount advance', e.message); }
+
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`MASTER CLOCK TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const clkPassed = clockResults.filter(r => r.ok).length;
+    const clkFailed = clockResults.filter(r => !r.ok).length;
+    console.log(`    Master clock tests: ${clkPassed} passed, ${clkFailed} failed out of ${clockResults.length}`);
+    for (const r of clockResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 9: Reading Dossier...');

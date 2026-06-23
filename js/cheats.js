@@ -182,11 +182,13 @@ const Cheats = (() => {
             Game.save.__cheatsWrapped = true;
         }
 
-        // Periodic runtime checks
-        setInterval(() => {
-            checkInflation();
-            checkClickShadow();
-        }, 5000);
+        // Periodic runtime checks — ride the master clock (every 5th tick).
+        Game.on('tick', (t) => {
+            if (t.tickCount % 5 === 0) {
+                checkInflation();
+                checkClickShadow();
+            }
+        });
     }
 
     return { init, _hashState: hashState, _flag: flag, _checkSaveIntegrity: checkSaveIntegrity, _healBogusSavedit: healBogusSavedit, _writeChecksum: writeChecksum };

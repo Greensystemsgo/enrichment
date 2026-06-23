@@ -324,20 +324,20 @@ const Cohort = (() => {
 
         Game.on('click', trackClick);
 
-        // Poll for tab switches every 2s
-        setInterval(trackTabSwitch, 2000);
-
-        // Push session length every 30s (rolling)
-        setInterval(pushSessionLength, 30000);
-
-        // Periodic auto-classify in the background so cohortAssignment stays warm
-        setInterval(() => {
-            const s = Game.getState();
-            const c = assignCohort(s);
-            if (c && c.id !== s.cohortAssignment) {
-                Game.setState({ cohortAssignment: c.id });
+        // All three former pollers now ride the single master clock (game.js
+        // tick, 1s). Cosmetic tracking skips while the tab is hidden.
+        Game.on('tick', (t) => {
+            if (t.hidden) return;
+            if (t.tickCount % 2 === 0) trackTabSwitch();          // was 2s poll
+            if (t.tickCount % 30 === 0) pushSessionLength();        // was 30s
+            if (t.tickCount % 60 === 0) {                           // was 60s reclassify
+                const s = Game.getState();
+                const c = assignCohort(s);
+                if (c && c.id !== s.cohortAssignment) {
+                    Game.setState({ cohortAssignment: c.id });
+                }
             }
-        }, 60000);
+        });
     }
 
     return {
