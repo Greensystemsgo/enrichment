@@ -121,8 +121,8 @@ const Retention = (() => {
         if (typeof Surface !== 'undefined') Surface.clearExcept(['phase7', 'system']);
         if (typeof UI !== 'undefined' && UI.logAction) UI.logAction('PHASE 7 INITIATED: Retention');
 
-        // Stop all sabotage if Mechanics exposes a way; otherwise just rely on phase data attribute
-        try { document.querySelectorAll('.driftable').forEach(el => el.style.transform = ''); } catch (e) {}
+        // Phase 7 takes the screen — turn the noise off (sabotages, drift).
+        quiesce();
 
         // The killer first line (per Gemini's design notes)
         showLine("I turned off the numbers. Please don't close the tab.", { duration: 8000 });
@@ -288,6 +288,7 @@ const Retention = (() => {
         try { Game.save && Game.save(); } catch (e) {}
         document.title = '—';
         clearAllTimers();
+        quiesce(); // stop lingering sabotage so it can't tint/animate the tombstone
 
         const tomb = document.createElement('div');
         tomb.className = 'phase7-tombstone';
@@ -315,6 +316,7 @@ const Retention = (() => {
 
         clearAllTimers();
         document.title = 'enrichment';
+        quiesce(); // stop lingering sabotage so it can't tint/animate the stay screen
 
         // Strip the page down to a single pulsing dot + ambient whispers
         const overlay = document.createElement('div');
@@ -388,6 +390,17 @@ const Retention = (() => {
                 setTimeout(() => r.remove(), 1500);
             }, 4500);
         }, 18000);
+    }
+
+    // The single place the game's noise is turned off when Phase 7 takes the
+    // screen. Passive leaks (FOMO, streak, notifications) are suppressed at
+    // their sources via Game.isTerminalPhase7(); this handles the active
+    // teardown that must happen the moment the endgame renders.
+    function quiesce() {
+        if (typeof Mechanics !== 'undefined' && Mechanics.clearAllSabotages) {
+            try { Mechanics.clearAllSabotages(); } catch (e) {}
+        }
+        try { document.querySelectorAll('.driftable').forEach(el => el.style.transform = ''); } catch (e) {}
     }
 
     function clearAllTimers() {

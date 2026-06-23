@@ -3969,6 +3969,17 @@ async function main() {
             else fail('notification suppression', `silentInTerminal=${silentInTerminal} firesNormally=${firesNormally}`);
         } catch (e) { fail('notification suppression', e.message); }
 
+        // ── Sabotages cleared so they can't tint/animate the terminal screen ──
+        try {
+            document.body.classList.add('sabotage-desat');
+            Game.setState({ sabotages: { colorDesat: true } });
+            Mechanics.clearAllSabotages();
+            const classGone = !document.body.classList.contains('sabotage-desat');
+            const stateGone = Object.keys(Game.getState().sabotages || {}).length === 0;
+            if (classGone && stateGone) pass('sabotages: cleared (no tint left on the quiet screen)');
+            else fail('sabotage clear', `classGone=${classGone} stateGone=${stateGone}`);
+        } catch (e) { fail('sabotage clear', e.message); }
+
         for (const r of results) {
             const tag = r.ok ? 'PASS' : 'FAIL';
             UI.logAction(`TERMINAL GUARD TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);

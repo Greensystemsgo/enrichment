@@ -1000,23 +1000,43 @@ const Mechanics = (() => {
         return 'Click';
     }
 
+    // Phase 7 / terminal: the sabotages stop. Remove every active effect
+    // (body classes + timers) and forget them so they don't restore on reload
+    // and bleed onto the tombstone / stay screen.
+    function clearAllSabotages() {
+        Object.keys(SABOTAGES).forEach(id => { try { SABOTAGES[id].remove(); } catch (e) {} });
+        // Defensive: strip the body effect classes directly in case state drifted.
+        ['sabotage-drift', 'sabotage-dodge', 'sabotage-desat', 'sabotage-corrupt',
+         'sabotage-tilt', 'sabotage-fontchaos', 'sabotage-zscramble']
+            .forEach(c => document.body.classList.remove(c));
+        try { Game.setState({ sabotages: {} }); } catch (e) {}
+    }
+
     // ── Init ───────────────────────────────────────────────────
     function init() {
+        const terminal = () => (typeof Game.isTerminalPhase7 === 'function' && Game.isTerminalPhase7());
+
         // Periodic sabotage check
-        Game.on('phaseChange', checkSabotageSchedule);
+        Game.on('phaseChange', (data) => { if (!terminal()) checkSabotageSchedule(data); });
 
         // Backstop every 2 minutes — ride the master clock (120th tick).
         Game.on('tick', (t) => {
+            if (terminal()) return; // the game is over — no new sabotages
             if (t.tickCount % 120 === 0 && Game.getState().narratorPhase >= 2) {
                 checkSabotageSchedule();
             }
         });
 
-        // Restore active sabotages from state
+        // Restore active sabotages from state — but NOT in a terminal state,
+        // where the screen must stay clean (no desaturation/drift on the tomb).
         const state = Game.getState();
-        Object.keys(state.sabotages || {}).forEach(id => {
-            if (SABOTAGES[id]) SABOTAGES[id].apply();
-        });
+        if (terminal()) {
+            clearAllSabotages();
+        } else {
+            Object.keys(state.sabotages || {}).forEach(id => {
+                if (SABOTAGES[id]) SABOTAGES[id].apply();
+            });
+        }
 
         // Restore veil if purchased
         if (state.hasSeenVeil) {
@@ -1050,6 +1070,7 @@ const Mechanics = (() => {
         claimReward,
         fixSabotage,
         applySabotage,
+        clearAllSabotages,
         getInvestmentBreakdown,
         getButtonLabel,
     };
