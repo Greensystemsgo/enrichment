@@ -509,6 +509,7 @@ const UI = (() => {
 
             const div = document.createElement('div');
             div.className = `building-item driftable corruptible${canAfford ? '' : ' unaffordable'}`;
+            div.dataset.bid = id;  // lets the per-tick affordability refresh find this card
             div.innerHTML = `
                 <div class="building-icon">${b.icon}</div>
                 <div class="building-info">
@@ -543,6 +544,30 @@ const UI = (() => {
             synergyGroup.className = `synergy-group${isExpanded ? '' : ' collapsed'}`;
             renderBuildingSynergies(synergyGroup, id, state, fmt);
             list.appendChild(synergyGroup);
+        });
+    }
+
+    // Per-tick refresh: only `state.eu` changes between ticks, so just retoggle
+    // affordability classes on the existing cards instead of tearing down and
+    // rebuilding the whole grid + chart every second.
+    function refreshBuildingAffordability() {
+        const list = document.getElementById('buildings-list');
+        if (!list || !list.firstChild) return;
+        const pane = document.querySelector('.tab-pane[data-tab="buildings"]');
+        if (!pane || !pane.classList.contains('active')) return;
+        const eu = Game.getState().eu;
+
+        Buildings.BUILDING_ORDER.forEach(id => {
+            const card = list.querySelector(`.building-item[data-bid="${id}"]`);
+            if (!card) return;
+            const canAfford = eu >= Buildings.getCost(id, buyAmount);
+            card.classList.toggle('unaffordable', !canAfford);
+            const costEl = card.querySelector('.building-cost');
+            if (costEl) costEl.classList.toggle('too-expensive', !canAfford);
+        });
+
+        list.querySelectorAll('.synergy-cost[data-syncost]').forEach(el => {
+            el.classList.toggle('too-expensive', eu < parseFloat(el.dataset.syncost));
         });
     }
 
@@ -583,7 +608,7 @@ const UI = (() => {
                 }
             } else {
                 const canAfford = state.eu >= syn.cost;
-                costText = `<span class="synergy-cost${canAfford ? '' : ' too-expensive'}">${fmt(syn.cost)} EU</span>`;
+                costText = `<span class="synergy-cost${canAfford ? '' : ' too-expensive'}" data-syncost="${syn.cost}">${fmt(syn.cost)} EU</span>`;
             }
 
             div.innerHTML = `
@@ -1389,10 +1414,16 @@ const UI = (() => {
         // Building events
         Game.on('buildingPurchased', () => renderBuildings());
         Game.on('synergyPurchased', () => renderBuildings());
-        Game.on('tick', () => {
-            // Refresh building affordability when tab is active
-            const pane = document.querySelector('.tab-pane[data-tab="buildings"]');
-            if (pane && pane.classList.contains('active')) renderBuildings();
+        Game.on('tick', (t) => {
+            // Cheap per-tick affordability retoggle instead of a full grid +
+            // chart rebuild. Redraw the chart only at its data cadence (~30s),
+            // and never while the tab is hidden.
+            if (t.hidden) return;
+            refreshBuildingAffordability();
+            if (t.tickCount % 30 === 0) {
+                const pane = document.querySelector('.tab-pane[data-tab="buildings"]');
+                if (pane && pane.classList.contains('active')) renderProductionChart();
+            }
         });
 
         setupButtonDodge();
