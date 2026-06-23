@@ -733,6 +733,8 @@ const Mechanics = (() => {
         Notification.requestPermission().then(perm => {
             if (perm === 'granted') {
                 Game.on('idle', (data) => {
+                    // Stay silent once the game is over (walked away / stayed).
+                    if (typeof Game.isTerminalPhase7 === 'function' && Game.isTerminalPhase7()) return;
                     if (data.duration >= 60) {
                         new Notification('Enrichment Program', {
                             body: 'Your engagement metrics are declining. The program misses you.',

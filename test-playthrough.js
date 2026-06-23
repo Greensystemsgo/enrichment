@@ -2572,22 +2572,29 @@ async function main() {
                 else fail('the-visit', 'expected false (gap < 1hr)');
             } catch (e) { fail('the-visit', e.message); }
 
-            // hasReturnConditions: false when already triggered
+            // hasReturnConditions: false only when a visit COMPLETED (not merely triggered)
             try {
-                Game.setState({ phase7Choice: 'walk_away', theVisitTriggered: true, lastSessionEnd: new Date(Date.now() - 2*3600*1000).toISOString() });
-                if (TheVisit._hasReturnConditions() === false) pass('the-visit: false when already triggered');
-                else fail('the-visit', 'expected false (already triggered)');
+                Game.setState({ phase7Choice: 'walk_away', theVisitTriggered: true, theVisitCompleted: true, lastSessionEnd: new Date(Date.now() - 2*3600*1000).toISOString() });
+                if (TheVisit._hasReturnConditions() === false) pass('the-visit: false when visit already completed');
+                else fail('the-visit', 'expected false (completed)');
+            } catch (e) { fail('the-visit', e.message); }
+
+            // Trap fix: triggered-but-not-completed (tab closed mid-visit) must REPLAY
+            try {
+                Game.setState({ phase7Choice: 'walk_away', theVisitTriggered: true, theVisitCompleted: false, lastSessionEnd: new Date(Date.now() - 2*3600*1000).toISOString() });
+                if (TheVisit._hasReturnConditions() === true) pass('the-visit: interrupted visit re-fires (no permanent tombstone trap)');
+                else fail('the-visit', 'expected true (interrupted visit should replay)');
             } catch (e) { fail('the-visit', e.message); }
 
             // hasReturnConditions: true when all conditions met
             try {
-                Game.setState({ phase7Choice: 'walk_away', theVisitTriggered: false, lastSessionEnd: new Date(Date.now() - 2*3600*1000).toISOString() });
+                Game.setState({ phase7Choice: 'walk_away', theVisitTriggered: false, theVisitCompleted: false, lastSessionEnd: new Date(Date.now() - 2*3600*1000).toISOString() });
                 if (TheVisit._hasReturnConditions() === true) pass('the-visit: true when conditions met');
                 else fail('the-visit', 'expected true');
             } catch (e) { fail('the-visit', e.message); }
 
             // Reset state so TheVisit doesn't accidentally fire during later tests
-            Game.setState({ phase7Choice: null, theVisitTriggered: false });
+            Game.setState({ phase7Choice: null, theVisitTriggered: false, theVisitCompleted: false });
         }
 
         // Dossier buttons rendered
@@ -3332,6 +3339,7 @@ async function main() {
             Game.setState({
                 phase7Choice: 'walk_away',
                 theVisitTriggered: false,
+                theVisitCompleted: false,  // exercise the GAP gate specifically
                 lastSessionEnd: new Date().toISOString(),  // right now — normally would block
             });
             // Without hatch → false
@@ -3936,6 +3944,30 @@ async function main() {
             else fail('control FOMO', 'expected modal did not appear');
             clearFomo();
         } catch (e) { clearFomo(); fail('control FOMO', e.message); }
+
+        // ── Browser notifications suppressed on the finished screen ──
+        try {
+            const RealNotif = window.Notification;
+            let notifCount = 0;
+            const Stub = function (t, o) { notifCount++; };
+            Stub.permission = 'granted';
+            Stub.requestPermission = () => Promise.resolve('granted');
+            window.Notification = Stub;
+
+            Game.setState({ phase7Choice: 'walk_away' });
+            Game.emit('phaseChange', { to: 6 });   // would normally push a notification
+            Game.emit('idle', { duration: 120 });  // and so would this
+            const silentInTerminal = notifCount === 0;
+
+            Game.setState({ phase7Choice: null });
+            Game.emit('phaseChange', { to: 6 });
+            const firesNormally = notifCount > 0;
+
+            window.Notification = RealNotif;
+            Game.setState({ phase7Choice: null });
+            if (silentInTerminal && firesNormally) pass('notifications: silent on tombstone, fire normally otherwise');
+            else fail('notification suppression', `silentInTerminal=${silentInTerminal} firesNormally=${firesNormally}`);
+        } catch (e) { fail('notification suppression', e.message); }
 
         for (const r of results) {
             const tag = r.ok ? 'PASS' : 'FAIL';

@@ -34,14 +34,18 @@ const TheVisit = (() => {
         if (typeof Game === 'undefined' || !Game.getState) return false;
         const s = Game.getState();
         if (s.phase7Choice !== 'walk_away') return false;
-        if (s.theVisitTriggered) return false;
-        if (!s.lastSessionEnd) return false;
-        // Dev/test hatch: localStorage.enrichment_visit_now = '1' skips the 1hr
-        // gate. Never documented in-game. Exists so manual QA doesn't require
-        // actually closing the tab for a full real hour to exercise the sequence.
+        // Dev/test hatch: localStorage.enrichment_visit_now = '1' forces the
+        // visit (skips the 1hr gate AND a consumed flag) — manual QA / recovery.
         try {
             if (localStorage.getItem('enrichment_visit_now') === '1') return true;
         } catch (e) {}
+        // Only a COMPLETED visit blocks a replay. Gating on theVisitTriggered
+        // (set at the START of the sequence) trapped anyone who closed the tab
+        // during the ~22s visit: the flag burned but phase7Choice stayed
+        // 'walk_away', leaving a permanent bare tombstone with no rescue. An
+        // interrupted visit now re-fires on the next 1hr+ return (self-heals).
+        if (s.theVisitCompleted) return false;
+        if (!s.lastSessionEnd) return false;
         const gap = Date.now() - new Date(s.lastSessionEnd).getTime();
         return gap >= RETURN_GAP_MS;
     }

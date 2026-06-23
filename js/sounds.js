@@ -574,6 +574,10 @@ const SoundEngine = (() => {
         try {
             if (!('Notification' in window)) return;
             if (Notification.permission !== 'granted') return;
+            // The game is over once the player walked away / stayed. Phase 7's
+            // whole premise is that the noise stops \u2014 so stay silent. (No push
+            // notifications onto the tombstone / stay screen.)
+            if (typeof Game !== 'undefined' && Game.isTerminalPhase7 && Game.isTerminalPhase7()) return;
             new Notification(title, { body, icon: '\uD83D\uDD14' });
         } catch (e) {}
     }
