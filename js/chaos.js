@@ -83,7 +83,8 @@ const Chaos = (() => {
                     </div>
                     <marquee direction="right" scrollamount="3">🌟 Sign my guestbook!! 🌟 Last updated: ${new Date().toLocaleDateString()} 🌟 Made with ❤️ and HTML 1.0 🌟</marquee>
                 `;
-                document.body.insertBefore(banner, document.body.firstChild);
+                if (typeof Surface !== 'undefined') Surface.mount(banner, { layer: 'chaos', id: 'chaos-90s-banner', prepend: true });
+                else document.body.insertBefore(banner, document.body.firstChild);
             },
             cleanup() {
                 document.body.classList.remove('chaos-90s');

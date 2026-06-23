@@ -322,7 +322,8 @@ const Collectibles = (() => {
         });
 
         shopModal.querySelector('#shop-close').addEventListener('click', () => {
-            shopModal.classList.remove('active');
+            if (typeof Surface !== 'undefined') Surface.hide(shopModal);
+            else shopModal.classList.remove('active');
         });
     }
 
@@ -340,7 +341,8 @@ const Collectibles = (() => {
             shopBtn.addEventListener('click', () => {
                 const shopModal = document.getElementById('shop-modal');
                 if (shopModal) {
-                    shopModal.classList.add('active');
+                    if (typeof Surface !== 'undefined') Surface.show(shopModal, { layer: 'popup', id: 'shop' });
+                    else shopModal.classList.add('active');
                     renderShop();
                 }
             });

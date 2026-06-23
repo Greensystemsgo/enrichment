@@ -12,47 +12,68 @@
 //   • a registry of every live window
 //   • central suppression (e.g. deny everything but Phase 7 surfaces
 //     once the player has walked away / stayed)
-//   • exclusivity (opt-in: one window per layer at a time)
+//   • exclusivity (per-layer: one window per layer at a time)
 //   • id replacement (re-opening 'fomo' closes the old 'fomo')
 //   • clearExcept() / closeAll() for clean state transitions
 //   • self-pruning: nodes removed via plain .remove() are reaped from
-//     the registry automatically, so callers only have to route the
-//     MOUNT through Surface — removals can stay as they are.
+//     the registry automatically
 //
-// Migration is therefore mechanical: replace
-//     document.body.appendChild(node)
-// with
-//     Surface.mount(node, { id, layer })
-// and (optionally) node.remove() with Surface.unmount(node).
+// Two ways in:
+//   • mount(node, opts)  — for DYNAMIC nodes you just created. Appends
+//     to body (or prepends with opts.prepend) and registers it.
+//   • show(node, opts)   — for STATIC nodes that already live in the
+//     HTML and are revealed by toggling a class (reward/shop modals).
+//     Adds the active class and registers it; hide() removes the class.
+// Both participate equally in suppression, exclusivity, and clearExcept.
+//
+// LAYERS (visual order is documentation only; Surface does NOT set
+// z-index). Exclusivity and suppression key off the layer:
+//   base    — structural, rarely used
+//   effect  — decorative, pointer-events:none (confetti, dim, matrix)
+//   ambient — non-blocking notices that may coexist (banners, brainrot)
+//   popup   — blocking/centered modals (the exclusive layer)
+//   chaos   — chaos events (multi-node; not exclusive)
+//   phase7  — the Phase 7 / endgame takeover
+//   system  — always-on chrome (cookie gate, armory gear)
 
 const Surface = (() => {
-    // Logical layers. Order is documentation; Surface does NOT set z-index
-    // (CSS still owns visual stacking). Layers drive suppression + exclusivity.
-    const LAYERS = ['base', 'popup', 'chaos', 'phase7', 'system'];
+    const LAYERS = ['base', 'effect', 'ambient', 'popup', 'chaos', 'phase7', 'system'];
 
-    // node -> { id, layer, exclusive }
+    // Layers in which only one window shows at a time. Configurable so the
+    // policy can be tuned/tested without editing call sites. Empty by
+    // default — exclusivity is opt-in until the taxonomy is settled.
+    let exclusiveLayers = new Set();
+
+    // node -> { id, layer, exclusive, mode: 'mount'|'toggle', activeClass }
     const registry = new Map();
 
-    // A predicate (meta) -> bool. If it returns true, the mount is denied.
     let suppressor = defaultSuppressor;
 
     function defaultSuppressor(meta) {
         // Once the player has chosen WALK AWAY or STAY, the game is over.
-        // Deny every surface except the Phase 7 / system layers that own
-        // the terminal screen. This is the one rule that used to be a dozen
-        // scattered guards.
+        // Deny every surface except the layers that own the terminal screen.
         if (typeof Game !== 'undefined' && Game.isTerminalPhase7 && Game.isTerminalPhase7()) {
             return meta.layer !== 'phase7' && meta.layer !== 'system';
         }
         return false;
     }
 
-    // Drop registry entries whose nodes have left the DOM (removed via plain
-    // .remove(), innerHTML wipes, etc). Keeps exclusivity/clearExcept honest
-    // even when callers don't route their removals through Surface.
+    function isExclusive(meta) {
+        return meta.exclusive || exclusiveLayers.has(meta.layer);
+    }
+
+    // An entry is dead if its node left the DOM, or (toggle mode) lost its
+    // active class. Keeps the registry honest even when callers tear their
+    // windows down without going through Surface.
+    function isDead(node, meta) {
+        if (!node || !node.isConnected) return true;
+        if (meta.mode === 'toggle') return !node.classList.contains(meta.activeClass);
+        return false;
+    }
+
     function prune() {
-        for (const node of [...registry.keys()]) {
-            if (!node || !node.isConnected) registry.delete(node);
+        for (const [node, meta] of [...registry]) {
+            if (isDead(node, meta)) registry.delete(node);
         }
     }
 
@@ -62,19 +83,36 @@ const Surface = (() => {
         return null;
     }
 
-    function closeExclusiveIn(layer) {
-        for (const [node, meta] of [...registry]) {
-            if (meta.layer === layer && meta.exclusive) unmount(node);
+    // Mode-aware teardown: detach a mounted node; un-toggle a static one.
+    function close(node) {
+        if (!node) return;
+        const meta = registry.get(node);
+        registry.delete(node);
+        if (meta && meta.mode === 'toggle') {
+            node.classList.remove(meta.activeClass);
+        } else if (node.parentNode) {
+            node.parentNode.removeChild(node);
         }
     }
 
-    // Mount a window node. Returns the node, or null if suppressed.
-    // opts: { id?, layer='popup', exclusive=false, onSuppressed? }
-    function mount(node, opts) {
-        if (!node) return null;
+    function closeLayer(layer) {
+        for (const [node, meta] of [...registry]) {
+            if (meta.layer === layer) close(node);
+        }
+    }
+
+    // Shared registration + arbitration. Returns the meta, or null if the
+    // mount was suppressed.
+    function register(node, opts, mode) {
         opts = opts || {};
         const layer = LAYERS.indexOf(opts.layer) >= 0 ? opts.layer : 'popup';
-        const meta = { id: opts.id || null, layer, exclusive: !!opts.exclusive };
+        const meta = {
+            id: opts.id || null,
+            layer,
+            exclusive: !!opts.exclusive,
+            mode,
+            activeClass: opts.activeClass || 'active',
+        };
 
         prune();
 
@@ -84,48 +122,67 @@ const Surface = (() => {
         }
 
         // Re-opening an id replaces the old instance.
-        if (meta.id) { const existing = byId(meta.id); if (existing) unmount(existing); }
-        // Exclusive layers hold one window at a time.
-        if (meta.exclusive) closeExclusiveIn(layer);
+        if (meta.id) { const existing = byId(meta.id); if (existing) close(existing); }
+        // Exclusive layers hold one window at a time — clear the rest first.
+        if (isExclusive(meta)) closeLayer(layer);
 
         node.setAttribute('data-surface-layer', layer);
         if (meta.id) node.setAttribute('data-surface-id', meta.id);
         registry.set(node, meta);
-        document.body.appendChild(node);
+        return meta;
+    }
+
+    // Mount a freshly-created window node. opts: { id?, layer='popup',
+    // exclusive?, prepend?, onSuppressed? }. Returns node, or null if denied.
+    function mount(node, opts) {
+        if (!node) return null;
+        const meta = register(node, opts, 'mount');
+        if (!meta) return null;
+        if (opts && opts.prepend) document.body.insertBefore(node, document.body.firstChild);
+        else document.body.appendChild(node);
         return node;
     }
 
-    function unmount(node) {
-        if (!node) return;
-        registry.delete(node);
-        if (node.parentNode) node.parentNode.removeChild(node);
+    // Reveal a STATIC node (already in the DOM) by adding its active class.
+    // opts: { id?, layer='popup', exclusive?, activeClass='active', onSuppressed? }.
+    function show(node, opts) {
+        if (!node) return null;
+        const meta = register(node, opts, 'toggle');
+        if (!meta) return null;
+        node.classList.add(meta.activeClass);
+        return node;
     }
 
-    // Tear down every surface NOT in the kept layer(s). Used on state
-    // transitions — e.g. entering Phase 7 clears popups/chaos but keeps
-    // the phase7 layer.
+    function hide(node) { close(node); }
+    function unmount(node) { close(node); }
+
+    // Tear down every surface NOT in the kept layer(s).
     function clearExcept(keepLayers) {
         const keep = Array.isArray(keepLayers) ? keepLayers : [keepLayers];
         prune();
         for (const [node, meta] of [...registry]) {
-            if (!keep.includes(meta.layer)) unmount(node);
+            if (!keep.includes(meta.layer)) close(node);
         }
     }
 
     function closeAll() {
-        for (const node of [...registry.keys()]) unmount(node);
+        for (const node of [...registry.keys()]) close(node);
     }
 
     function count() { prune(); return registry.size; }
+    function countLayer(layer) { prune(); let n = 0; for (const [, m] of registry) if (m.layer === layer) n++; return n; }
 
-    // Override the suppression predicate (mainly for tests).
+    function setExclusiveLayers(layers) { exclusiveLayers = new Set(layers || []); }
+    function getExclusiveLayers() { return [...exclusiveLayers]; }
     function setSuppressor(fn) { suppressor = (typeof fn === 'function') ? fn : defaultSuppressor; }
     function resetSuppressor() { suppressor = defaultSuppressor; }
 
-    function init() { /* suppressor is wired at definition; nothing to do on boot */ }
+    function init() { /* suppressor + exclusivity are wired at definition */ }
 
     return {
-        init, mount, unmount, byId, clearExcept, closeAll, count,
+        init, mount, show, hide, unmount, byId,
+        clearExcept, closeAll, count, countLayer,
+        setExclusiveLayers, getExclusiveLayers,
         setSuppressor, resetSuppressor,
         LAYERS,
         _registry: registry,

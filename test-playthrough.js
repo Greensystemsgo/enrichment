@@ -3957,6 +3957,7 @@ async function main() {
         const mk = (cls) => { const d = document.createElement('div'); d.className = cls || 'surface-test-node'; return d; };
         const cleanup = () => {
             Surface.resetSuppressor();
+            Surface.setExclusiveLayers([]);
             Game.setState({ phase7Choice: null });
             document.querySelectorAll('.surface-test-node').forEach(n => n.remove());
             Surface._prune();
@@ -4068,6 +4069,58 @@ async function main() {
             else fail('clearExcept', `popup=${popup.isConnected} p7=${p7.isConnected}`);
             Surface.unmount(p7);
         } catch (e) { fail('clearExcept', e.message); }
+
+        // ── show()/hide(): static toggle nodes participate ──
+        try {
+            cleanup();
+            const s = mk(); document.body.appendChild(s); // static node already in DOM
+            const r = Surface.show(s, { layer: 'popup', id: 'static-1' });
+            const shown = s.classList.contains('active') && r === s;
+            Surface.hide(s);
+            const hidden = !s.classList.contains('active') && s.isConnected; // stays in DOM, just inactive
+            if (shown && hidden) pass('show/hide: static toggle node');
+            else fail('show/hide', `shown=${shown} hidden=${hidden}`);
+            s.remove();
+        } catch (e) { fail('show/hide', e.message); }
+
+        // ── prune reaps a toggle node that lost its active class ──
+        try {
+            cleanup();
+            const s = mk(); document.body.appendChild(s);
+            Surface.show(s, { layer: 'popup' });
+            const before = Surface.count();
+            s.classList.remove('active'); // externally hidden
+            const after = Surface.count(); // triggers prune
+            if (after === before - 1) pass('prune: toggle node losing active is reaped');
+            else fail('prune toggle', `before=${before} after=${after}`);
+            s.remove();
+        } catch (e) { fail('prune toggle', e.message); }
+
+        // ── prepend mounts as first body child ──
+        try {
+            cleanup();
+            const n = mk();
+            Surface.mount(n, { layer: 'ambient', prepend: true });
+            if (document.body.firstChild === n) pass('prepend: mounts as first body child');
+            else fail('prepend', 'not first child');
+            Surface.unmount(n);
+        } catch (e) { fail('prepend', e.message); }
+
+        // ── exclusive-layer config: popup holds one; effect coexists ──
+        try {
+            cleanup();
+            Surface.setExclusiveLayers(['popup']);
+            const a = mk(); Surface.mount(a, { layer: 'popup' });
+            const b = mk(); Surface.mount(b, { layer: 'popup' });
+            const exclusive = !a.isConnected && b.isConnected;
+            const e1 = mk(); Surface.mount(e1, { layer: 'effect' });
+            const e2 = mk(); Surface.mount(e2, { layer: 'effect' });
+            const effectsCoexist = e1.isConnected && e2.isConnected;
+            Surface.setExclusiveLayers([]);
+            if (exclusive && effectsCoexist) pass('exclusive layer: popup one-at-a-time, effect coexists');
+            else fail('exclusive layer', `exclusive=${exclusive} effectsCoexist=${effectsCoexist}`);
+            Surface.unmount(b); Surface.unmount(e1); Surface.unmount(e2);
+        } catch (e) { Surface.setExclusiveLayers([]); fail('exclusive layer', e.message); }
 
         cleanup();
         for (const r of results) {

@@ -1603,7 +1603,7 @@ const Features = (() => {
         banner.innerHTML = `
             <marquee scrollamount="4" behavior="scroll">${banners.join(' ◆ ')}</marquee>
         `;
-        if (typeof Surface !== 'undefined') Surface.mount(banner, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(banner, { layer: 'ambient' });
         else document.body.appendChild(banner);
 
         // Clicking the banner does nothing useful
@@ -2922,7 +2922,7 @@ const Features = (() => {
         canvas.style.cssText = 'position:fixed;inset:0;z-index:6000;pointer-events:none;';
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        if (typeof Surface !== 'undefined') Surface.mount(canvas, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(canvas, { layer: 'effect' });
         else document.body.appendChild(canvas);
 
         const ctx = canvas.getContext('2d');
@@ -4118,7 +4118,7 @@ const Features = (() => {
                 // Dim the screen and replace text with TEMPORARY
                 const overlay = document.createElement('div');
                 overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:4500;pointer-events:none;transition:opacity 2s;';
-                if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup' });
+                if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'effect' });
                 else document.body.appendChild(overlay);
                 const tempLabel = document.createElement('div');
                 tempLabel.textContent = 'TEMPORARY';

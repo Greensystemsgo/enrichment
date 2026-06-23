@@ -294,7 +294,8 @@ const UI = (() => {
         els.rewardResult.style.display = 'none';
         els.rewardClaim.style.display = 'none';
         els.rewardReroll.style.display = 'inline-block';
-        els.rewardModal.classList.add('active');
+        if (typeof Surface !== 'undefined') Surface.show(els.rewardModal, { layer: 'popup', id: 'reward' });
+        else els.rewardModal.classList.add('active');
 
         // Particle burst
         spawnParticles(els.rewardSilhouette, 30);
@@ -347,7 +348,8 @@ const UI = (() => {
 
     function handleClaim() {
         Mechanics.claimReward(currentReward);
-        els.rewardModal.classList.remove('active');
+        if (typeof Surface !== 'undefined') Surface.hide(els.rewardModal);
+        else els.rewardModal.classList.remove('active');
         spawnFloatingText(`+${currentReward.name}!`, els.clickButton);
 
         logAction(`REWARD CLAIMED: ${currentReward.name}`);
@@ -1314,7 +1316,8 @@ const UI = (() => {
         }
         if (els.rewardClose) {
             els.rewardClose.addEventListener('click', () => {
-                els.rewardModal.classList.remove('active');
+                if (typeof Surface !== 'undefined') Surface.hide(els.rewardModal);
+        else els.rewardModal.classList.remove('active');
             });
         }
 
