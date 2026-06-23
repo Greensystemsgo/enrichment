@@ -1960,7 +1960,7 @@ const Features = (() => {
             </div>
         `;
 
-        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup' });
+        if (typeof Surface !== 'undefined') Surface.mount(overlay, { layer: 'popup', onClose: () => { stockMarketOpen = false; if (priceUpdateInterval) { clearInterval(priceUpdateInterval); priceUpdateInterval = null; } } });
         else document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 

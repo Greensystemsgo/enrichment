@@ -4139,6 +4139,21 @@ async function main() {
             Surface.unmount(m2); Surface.unmount(amb);
         } catch (e) { fail('production default', e.message); }
 
+        // ── onClose hook fires when Surface tears a window down ──
+        try {
+            cleanup();
+            let closedA = 0;
+            const a = mk(); Surface.mount(a, { layer: 'popup', onClose: () => closedA++ });
+            const b = mk(); Surface.mount(b, { layer: 'popup' }); // exclusivity should close a → fire onClose
+            const onExclusive = closedA === 1 && !a.isConnected;
+            let closedC = 0;
+            const c = mk(); Surface.mount(c, { layer: 'effect', onClose: () => closedC++ });
+            Surface.unmount(c); // explicit unmount should also fire onClose
+            if (onExclusive && closedC === 1) pass('onClose: fires on exclusivity close + unmount');
+            else fail('onClose', `onExclusive=${onExclusive} closedC=${closedC}`);
+            Surface.unmount(b);
+        } catch (e) { fail('onClose', e.message); }
+
         cleanup();
         for (const r of results) {
             const tag = r.ok ? 'PASS' : 'FAIL';

@@ -85,10 +85,17 @@ const Surface = (() => {
     }
 
     // Mode-aware teardown: detach a mounted node; un-toggle a static one.
+    // Fires the window's onClose hook first so it can clear its own timers /
+    // rAF / listeners — critical when Surface closes a window on its own
+    // (exclusivity, clearExcept, suppression, id-replacement) rather than via
+    // the window's own close button.
     function close(node) {
         if (!node) return;
         const meta = registry.get(node);
         registry.delete(node);
+        if (meta && typeof meta.onClose === 'function') {
+            try { meta.onClose(node); } catch (e) {}
+        }
         if (meta && meta.mode === 'toggle') {
             node.classList.remove(meta.activeClass);
         } else if (node.parentNode) {
@@ -113,6 +120,7 @@ const Surface = (() => {
             exclusive: !!opts.exclusive,
             mode,
             activeClass: opts.activeClass || 'active',
+            onClose: typeof opts.onClose === 'function' ? opts.onClose : null,
         };
 
         prune();

@@ -123,7 +123,7 @@ const Chaos = (() => {
                 canvas.className = 'chaos-matrix-canvas';
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
-                if (typeof Surface !== 'undefined') Surface.mount(canvas, { layer: 'chaos', id: 'chaos-matrix' });
+                if (typeof Surface !== 'undefined') Surface.mount(canvas, { layer: 'chaos', id: 'chaos-matrix', onClose: (n) => { if (n._interval) clearInterval(n._interval); } });
                 else document.body.appendChild(canvas);
 
                 const ctx = canvas.getContext('2d');
