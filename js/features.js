@@ -856,6 +856,8 @@ const Features = (() => {
                 // Tick up the fake revenue counter
                 let revenueLost = 0;
                 setInterval(() => {
+                    if (document.hidden) return;
+                    if (!document.getElementById('adblock-revenue-lost')) return;
                     revenueLost += 0.0001 + Math.random() * 0.0003;
                     const el = document.getElementById('adblock-revenue-lost');
                     if (el) el.textContent = revenueLost.toFixed(4);
@@ -880,6 +882,7 @@ const Features = (() => {
 
             // Periodic guilt (every 30 minutes, 3% chance, max 5 per session)
             setInterval(() => {
+                if (typeof Game !== 'undefined' && Game.isQuiet && Game.isQuiet()) return;
                 if ((Game.getState().adBlockNagCount || 0) >= 5) return;
                 if (Math.random() < 0.03) {
                     const reminders = [

@@ -5403,6 +5403,10 @@ body.crown-seizure {
     100% { transform: translateX(-50%); }
 }
 
+body[data-phase="7"] .news-ticker-content,
+body.phase7-dead .news-ticker-content,
+body.phase7-active .news-ticker-content { animation-play-state: paused; }
+
 /* ═══════════════════════════════════════════════════════════
    VALIDATION BOOTH — Confetti compliments
    ═══════════════════════════════════════════════════════════ */

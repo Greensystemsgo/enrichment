@@ -964,11 +964,12 @@ const Popups = (() => {
             let rawDebt = fact._rawDebt;
             const valueEl = factModalEl.querySelector('.fact-value');
             debtInterval = setInterval(() => {
+                if (document.hidden) return;
                 rawDebt += 1650;
                 if (valueEl) {
                     valueEl.textContent = '$' + rawDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
-            }, 50);
+            }, 200);
         }
 
         UI.logAction(`${categoryKey.toUpperCase()} FACT: ${fact.category} — ${fact.value}`);

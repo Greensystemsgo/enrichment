@@ -377,6 +377,7 @@ const Mechanics = (() => {
     let textCorruptionInterval = null;
     let humOscillator = null;
     let humGain = null;
+    let humDetuneInterval = null;
     let audioCtx = null;
 
     // Phase-scaled sabotage parameters
@@ -545,7 +546,7 @@ const Mechanics = (() => {
             humGain.connect(ctx.destination);
             humOscillator.start();
 
-            setInterval(() => {
+            humDetuneInterval = setInterval(() => {
                 if (humOscillator) {
                     humOscillator.frequency.value = 58 + Math.random() * 4;
                     humOscillator.detune.value = 10 + Math.random() * 15;
@@ -557,6 +558,10 @@ const Mechanics = (() => {
     }
 
     function stopAnnoyingHum() {
+        if (humDetuneInterval) {
+            clearInterval(humDetuneInterval);
+            humDetuneInterval = null;
+        }
         if (humAudio) {
             humAudio.pause();
             humAudio.currentTime = 0;
