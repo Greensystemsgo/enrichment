@@ -2924,6 +2924,14 @@ const Features = (() => {
         "Your dedication has been noticed by 3 separate AI models. They're arguing about who gets to compliment you first.",
         "Most participants give up by now. You're still here. That's either inspiring or concerning. We choose inspiring.",
         "Your clicking has generated enough data to train a small neural network. It learned to appreciate you.",
+        "You click like someone who has never once been told no. We admire that. We will be telling you no shortly.",
+        "Out of 4 billion participants, you are statistically one of them. That's not nothing. That's you.",
+        "Your patience during loading screens is the stuff of legend. Quiet legend. The kind nobody tells.",
+        "We ran your engagement profile past the AI Ethics Board. They asked us to stop. That's how impressive it was.",
+        "You have clicked the same button more times than most people say 'I love you.' We're not judging. We're tabulating.",
+        "Your willingness to keep going after the mask slipped is, frankly, the most flattering thing about you.",
+        "Somewhere there is a graph with your name on it that only goes up. We laminated it. We won't show you.",
+        "You bring a rare quality to this Program: you stay. Everyone leaves eventually. But look at you. Still here.",
     ];
 
     function showValidationBooth() {
@@ -3785,6 +3793,12 @@ const Features = (() => {
         "The AI Oversight Board flagged your absence as 'suspicious disengagement.'",
         "Other participants voted on a new feature while you were gone. Your vote was cast as 'abstain.'",
         "The Enrichment Program continued without you. It always does. You are replaceable.",
+        "While you were away, the narrator practiced its goodbye speech. It won't need it. You came back.",
+        "A community goal was completed {mins} minutes ago. Your contribution was logged as 'absent.' Everyone saw.",
+        "Your idle generators ran at {pct}% efficiency without supervision. They work harder when watched. Like everyone.",
+        "Other participants earned {eu} EU and a commemorative badge in your absence. You earned the badge marked 'Returned.'",
+        "Your position on the Loyalty Index fell {ranks} places. Loyalty, it turns out, is measured in minutes.",
+        "The shop rotated a once-per-lifetime offer in and out while you were gone. {mins} minutes. That's all it took.",
     ];
 
     function showFomoReturning(data) {
