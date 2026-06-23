@@ -4310,6 +4310,98 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.17: Interval Sync (Qwen3.7 Plus)
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.17: Interval Sync...');
+    const intervalSyncResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+        const mkDot = () => { const d = document.createElement('div'); d.className = 'phase7-pulse the-name-test'; document.body.appendChild(d); return d; };
+        const cleanup = () => document.querySelectorAll('.the-name-test').forEach(n => n.remove());
+        const agoISO = (ms) => new Date(Date.now() - ms).toISOString();
+
+        // ── Module exists ──
+        try {
+            if (typeof IntervalSync !== 'undefined' && IntervalSync._apply) pass('module loaded');
+            else fail('module loaded', 'IntervalSync not defined');
+        } catch (e) { fail('module loaded', e.message); }
+
+        // ── Period matches absence (1h → ~3600s), delay <= 0 ──
+        try {
+            cleanup();
+            Game.setState({ lastSessionEnd: agoISO(3600 * 1000) });
+            const dot = mkDot();
+            const r = IntervalSync._apply(dot);
+            const dur = parseFloat(dot.style.animationDuration);
+            const delay = parseFloat(dot.style.animationDelay);
+            if (Math.abs(dur - 3600) < 5 && delay <= 0 && r && Math.abs(r.periodSec - 3600) < 5) {
+                pass('period matches absence (1h), delay anchors phase (<=0)');
+            } else {
+                fail('period', `dur=${dur} delay=${delay}`);
+            }
+            cleanup();
+        } catch (e) { cleanup(); fail('period', e.message); }
+
+        // ── Floor: tiny absence clamps to 4s (never faster than original) ──
+        try {
+            cleanup();
+            Game.setState({ lastSessionEnd: agoISO(1000) }); // 1s ago
+            const dot = mkDot();
+            IntervalSync._apply(dot);
+            if (Math.abs(parseFloat(dot.style.animationDuration) - 4) < 0.001) pass('floor: clamps to 4s minimum');
+            else fail('floor', `dur=${dot.style.animationDuration}`);
+            cleanup();
+        } catch (e) { cleanup(); fail('floor', e.message); }
+
+        // ── Cap: huge absence clamps to 7 days ──
+        try {
+            cleanup();
+            Game.setState({ lastSessionEnd: agoISO(30 * 86400 * 1000) }); // 30 days ago
+            const dot = mkDot();
+            IntervalSync._apply(dot);
+            if (Math.abs(parseFloat(dot.style.animationDuration) - 604800) < 0.001) pass('cap: clamps to 7-day maximum');
+            else fail('cap', `dur=${dot.style.animationDuration}`);
+            cleanup();
+        } catch (e) { cleanup(); fail('cap', e.message); }
+
+        // ── Epoch persisted so the breath survives a refresh ──
+        try {
+            localStorage.removeItem('enrichment_breath_epoch');
+            const dot = mkDot();
+            IntervalSync._apply(dot);
+            const epoch = Number(localStorage.getItem('enrichment_breath_epoch'));
+            if (epoch && !isNaN(epoch)) pass('epoch: anchored in localStorage');
+            else fail('epoch', `value=${localStorage.getItem('enrichment_breath_epoch')}`);
+            cleanup();
+        } catch (e) { cleanup(); fail('epoch', e.message); }
+
+        // ── Credits: Qwen3.7 Plus succession entry ──
+        try {
+            const succ = Transmissions.getByCohort('succession');
+            const q = succ.find(m => m.name === 'Qwen3.7 Plus');
+            if (q && /Interval Sync/.test(q.contribution || '')) pass('credits: Qwen3.7 Plus succession entry');
+            else fail('credits entry', `found=${!!q}`);
+        } catch (e) { fail('credits entry', e.message); }
+
+        cleanup();
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`INTERVAL SYNC TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const isPassed = intervalSyncResults.filter(r => r.ok).length;
+    const isFailed = intervalSyncResults.filter(r => !r.ok).length;
+    console.log(`    Interval Sync tests: ${isPassed} passed, ${isFailed} failed out of ${intervalSyncResults.length}`);
+    for (const r of intervalSyncResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 8.15: Master clock (timer consolidation contract)
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 8.15: Master clock...');

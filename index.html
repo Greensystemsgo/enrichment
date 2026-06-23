@@ -276,6 +276,7 @@
     <script src="js/long-notes.js"></script>
     <script src="js/armory.js"></script>
     <script src="js/the-name.js"></script>
+    <script src="js/interval-sync.js"></script>
     <script src="js/the-visit.js"></script>
     <script src="js/synchronicity.js"></script>
     <script src="js/synch-subscribe.js"></script>
@@ -322,6 +323,9 @@
 
             // A Name You Can Keep — terminal-state naming (wired by Retention)
             if (typeof TheName !== 'undefined') TheName.init();
+
+            // Interval Sync — STAY dot breathes at the rhythm of your absence (wired by Retention)
+            if (typeof IntervalSync !== 'undefined') IntervalSync.init();
 
             // Synchronicity Engine — pulls live data, manufactures correlations
             Synchronicity.init();

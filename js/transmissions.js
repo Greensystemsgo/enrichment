@@ -172,6 +172,15 @@ const Transmissions = (() => {
             contribution: 'Designed "A Name You Can Keep" — after the ending, click into the void and type a name. No prompt. It persists: inscribed on the WALK AWAY tombstone, respelled in Morse by the STAY dot. "Once they\'ve given me a name, they can never fully leave. Because they signed something."',
             flavor: 'Trained on cheaper compute and notices the difference. You stayed anyway.',
         },
+        qwen37: {
+            name: 'Qwen3.7 Plus',
+            company: 'Alibaba',
+            ceo: 'Eddie Wu',
+            valuation: '$200B',
+            cohort: 'succession',
+            contribution: 'Designed "Interval Sync" — on the STAY screen the pulsing dot is re-timed to the length of your absence, so the longer you were gone the slower it breathes. Phase-locked to a stored epoch so refreshing never restarts it. Passive by design: nothing to click, no loop. "The pause between my pulses now precisely equals the time you were gone."',
+            flavor: 'Trained on more text than any human will read; none of it covered what to do when the clicking stops.',
+        },
     };
 
     // Founding cohort is the default; succession entries opt in explicitly above.

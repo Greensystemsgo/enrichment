@@ -339,6 +339,9 @@ const Retention = (() => {
         // A Name You Can Keep — accept a name, respell it on the dot in Morse. (DeepSeek V4 Pro)
         if (typeof TheName !== 'undefined' && TheName.attachStay) { try { TheName.attachStay(overlay); } catch (e) {} }
 
+        // Interval Sync — re-time the dot's breath to the length of your absence. (Qwen3.7 Plus)
+        if (typeof IntervalSync !== 'undefined' && IntervalSync.attachStay) { try { IntervalSync.attachStay(overlay); } catch (e) {} }
+
         // Periodically whisper
         stayIntervalId = setInterval(() => {
             const el = document.getElementById('phase7-stay-whisper');
