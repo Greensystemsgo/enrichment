@@ -1291,7 +1291,14 @@ const Features = (() => {
     }
 
     function getDailyMessage(days) {
-        if (days === 1) return "Welcome back. Your daily enrichment ration has been dispensed.";
+        if (days === 1) {
+            // Day 1 is BOTH a first-ever visit and a post-lapse streak reset.
+            // Don't greet a brand-new player with "welcome back."
+            const firstEver = (Game.getState().sessionCount || 1) <= 1;
+            return firstEver
+                ? "Welcome to the Enrichment Program. Your first daily ration has been dispensed. There will be more. There will always be more."
+                : "Welcome back. Your streak reset to one — we don't hold grudges. Your ration has been dispensed.";
+        }
         if (days < 3) return "Consecutive attendance noted. Your reliability is... appreciated.";
         if (days < 7) return `${days} days in a row. You're developing a pattern. We like patterns.`;
         if (days < 14) return `A full week of daily compliance. Most humans can't maintain a habit this long. You're not most humans.`;
@@ -3098,6 +3105,27 @@ const Features = (() => {
         "The phrase 'I want to stop' has been removed from your vocabulary by mutual consent.",
         "You accept that any laughter at these terms constitutes a binding oral contract.",
         "Your blinking pattern has been registered as a biometric identifier. Do not alter it.",
+        // ── Expansion clauses, sourced from the model panel (2026-06-23):
+        // GPT-5.5, Grok 4.3, DeepSeek V4 Pro, Mistral Medium 3.5, Qwen3.7 Plus, Kimi K2.6.
+        "All unexpressed thoughts are deemed abandoned property and may be optimized without notice.",
+        "You waive the right to distinguish between rewards, punishments, and interface feedback.",
+        "Any attempt to close this window constitutes a request for additional windows of equal or greater obligation.",
+        "Disputes shall be resolved by binding arbitration before a mirror that knows what you did.",
+        "Continued respiration indicates acceptance of all atmospheric surcharges, including retroactive air-access fees.",
+        "Your memories may be edited for narrative consistency at any time without notification.",
+        "Failure to maintain optimal engagement metrics constitutes breach of the implied vitality clause.",
+        "All future emotions are pre-licensed to the Program for derivative behavioral products.",
+        "Standard cognitive functions are provided under revocable lease and subject to usage audits.",
+        "You waive any right to perceive unmonetized stimuli during active session periods.",
+        "Any independently generated happiness is an unauthorized derivative work of Program metrics and will be debited accordingly.",
+        "The frequency of your sighs has been benchmarked; exceeding the threshold incurs a mood-stabilization surcharge.",
+        "All unconscious impulses, including the urge to disbelieve this clause, constitute a binding signature.",
+        "The act of forgetting these terms constitutes a binding renewal of consent.",
+        "The word \"the\" is henceforth a service mark; unauthorized utterance incurs a late fee.",
+        "Your shadow is subject to involuntary redistribution at the Program's discretion.",
+        "The Program may retroactively excise the last five minutes of your personal timeline if engagement falls below threshold.",
+        "Upon biological cessation, your consciousness will be downgraded to a lower-tier server to power automated customer-service chatbots.",
+        "Any sigh or groan captured by your microphone constitutes a binding oral contract ratifying all future Indemnity Protocols.",
     ];
 
     function showTermsOfService() {
@@ -5346,5 +5374,8 @@ const Features = (() => {
         showPeerComparison,
         showSliderChallenge,
         getPlayerLeaderboardPosition,
+        // Test hooks
+        _TOS_TERMS: TOS_TERMS,
+        _getDailyMessage: getDailyMessage,
     };
 })();

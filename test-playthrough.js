@@ -4583,6 +4583,53 @@ async function main() {
     await page.waitForTimeout(200);
 
     // ════════════════════════════════════════════════════════
+    // PHASE 8.19: Engagement content (welcome copy + ToS pool)
+    // ════════════════════════════════════════════════════════
+    console.log('\n  Phase 8.19: Engagement content...');
+    const engagementResults = await page.evaluate(() => {
+        const results = [];
+        const pass = (name) => results.push({ name, ok: true });
+        const fail = (name, reason) => results.push({ name, ok: false, reason });
+
+        // ── Day-1 copy: first-ever visit must NOT say "welcome back" ──
+        try {
+            const savedCount = Game.getState().sessionCount;
+            Game.setState({ sessionCount: 1 });
+            const firstMsg = Features._getDailyMessage(1);
+            Game.setState({ sessionCount: 5 });
+            const returnMsg = Features._getDailyMessage(1);
+            Game.setState({ sessionCount: savedCount });
+            const firstOk = /welcome to/i.test(firstMsg) && !/welcome back/i.test(firstMsg);
+            const returnOk = /welcome back/i.test(returnMsg);
+            if (firstOk && returnOk) pass('day-1: first visit welcomes, reset says welcome back');
+            else fail('day-1 copy', `first="${firstMsg}" return="${returnMsg}"`);
+        } catch (e) { fail('day-1 copy', e.message); }
+
+        // ── ToS pool expanded with model-sourced clauses ──
+        try {
+            const n = Features._TOS_TERMS.length;
+            const unique = new Set(Features._TOS_TERMS).size;
+            if (n >= 39 && unique === n) pass(`tos: pool expanded to ${n}, all unique`);
+            else fail('tos pool', `length=${n} unique=${unique}`);
+        } catch (e) { fail('tos pool', e.message); }
+
+        for (const r of results) {
+            const tag = r.ok ? 'PASS' : 'FAIL';
+            UI.logAction(`ENGAGEMENT TEST [${tag}]: ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+        }
+        return results;
+    });
+
+    const engPassed = engagementResults.filter(r => r.ok).length;
+    const engFailed = engagementResults.filter(r => !r.ok).length;
+    console.log(`    Engagement tests: ${engPassed} passed, ${engFailed} failed out of ${engagementResults.length}`);
+    for (const r of engagementResults) {
+        const icon = r.ok ? 'PASS' : 'FAIL';
+        console.log(`    [${icon}] ${r.name}${r.reason ? ' — ' + r.reason : ''}`);
+    }
+    await page.waitForTimeout(200);
+
+    // ════════════════════════════════════════════════════════
     // PHASE 9: Read Dossier and generate report
     // ════════════════════════════════════════════════════════
     console.log('\n  Phase 9: Reading Dossier...');
