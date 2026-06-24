@@ -538,7 +538,7 @@ const UI = (() => {
                     <div class="synergy-status" role="button" tabindex="0"><span class="building-chevron">${chevron}</span> ${synStatus}</div>
                 </div>
                 <button type="button" class="building-cost${canAfford ? '' : ' too-expensive'}"${canAfford ? '' : ' disabled'}>
-                    <span class="building-buy-label">HIRE</span>
+                    <span class="building-buy-label">HIRE${buyAmount > 1 ? ' ×' + buyAmount : ''}</span>
                     <span class="building-buy-amount">${fmt(cost)} EU</span>
                 </button>
             `;

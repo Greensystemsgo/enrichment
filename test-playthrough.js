@@ -151,6 +151,7 @@ const FEATURE_MANIFEST = [
     { id: 'building-buy-button',    pattern: 'BUILDING TEST [PASS]: buy-button',       category: 'Buildings', notes: 'Cost renders as HIRE button' },
     { id: 'building-cps-decimals',  pattern: 'BUILDING TEST [PASS]: cps-decimals',     category: 'Buildings', notes: 'Sub-1 CPS shows decimal' },
     { id: 'building-synergy-pill',  pattern: 'BUILDING TEST [PASS]: synergy-pill',     category: 'Buildings', notes: 'Available synergy buy pill' },
+    { id: 'building-buy-amount',    pattern: 'BUILDING TEST [PASS]: buy-amount-label', category: 'Buildings', notes: 'HIRE label reflects buy amount' },
 
     // ── Synergies ──
     { id: 'synergy-purchase',      pattern: 'SYNERGY PURCHASED:',                    category: 'Synergies', notes: 'Buy a synergy' },
@@ -1739,6 +1740,20 @@ async function main() {
                 || document.querySelector('.synergy-cost.buyable');
             if (internSyn) pass('synergy-pill: available synergy cost has buyable affordance');
             else fail('synergy-pill', 'no .synergy-cost.buyable found after render');
+
+            // (d) HIRE label reflects the active buy amount (×10), then resets to ×1.
+            const x10 = document.querySelector('.buy-amt-btn[data-amount="10"]');
+            if (x10) x10.click();
+            UI.renderBuildings();
+            const label10 = document.querySelector('.building-item[data-bid="intern"] .building-buy-label');
+            const ok10 = label10 && /×10/.test(label10.textContent);
+            const x1 = document.querySelector('.buy-amt-btn[data-amount="1"]');
+            if (x1) x1.click();           // reset so later sections see ×1
+            UI.renderBuildings();
+            const label1 = document.querySelector('.building-item[data-bid="intern"] .building-buy-label');
+            const ok1 = label1 && /^HIRE$/.test(label1.textContent.trim());
+            if (ok10 && ok1) pass('buy-amount-label: HIRE shows ×10 when active, plain at ×1');
+            else fail('buy-amount-label', `x10="${label10 && label10.textContent}" x1="${label1 && label1.textContent}"`);
         } catch (e) { fail('workforce-ui', e.message); }
 
         // Log results
