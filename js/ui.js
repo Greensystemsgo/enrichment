@@ -484,6 +484,14 @@ const UI = (() => {
     // ── Buildings Panel ────────────────────────────────────────
     let buyAmount = 1;
 
+    // Per-unit output for cheap workforce is fractional (intern = 0.1/s). The
+    // global formatter floors anything < 1000, so those rates read as a broken
+    // "0 EU/s each". Show one decimal under 10 so small producers aren't zeroed.
+    function fmtRate(n) {
+        if (n > 0 && n < 10) return (+n.toFixed(1)).toString();
+        return Game.formatNumber(n);
+    }
+
     function renderBuildings() {
         const list = els.buildingsList;
         if (!list) return;
@@ -525,11 +533,14 @@ const UI = (() => {
                 <div class="building-icon">${b.icon}</div>
                 <div class="building-info">
                     <div class="building-name">${b.name}${owned > 0 ? ` <span class="building-count">${owned}</span>` : ''}${mult > 1 ? ` <span class="building-mult">×${mult}</span>` : ''}</div>
-                    <div class="building-cps">${fmt(effectiveCPS)} EU/s each${owned > 0 ? ' · ' + fmt(totalCPS) + ' total' : ''}</div>
+                    <div class="building-cps">${fmtRate(effectiveCPS)} EU/s each${owned > 0 ? ' · ' + fmtRate(totalCPS) + ' total' : ''}</div>
                     <div class="building-flavor">${flavor}</div>
-                    <div class="synergy-status"><span class="building-chevron">${chevron}</span> ${synStatus}</div>
+                    <div class="synergy-status" role="button" tabindex="0"><span class="building-chevron">${chevron}</span> ${synStatus}</div>
                 </div>
-                <div class="building-cost${canAfford ? '' : ' too-expensive'}">${fmt(cost)} EU</div>
+                <button type="button" class="building-cost${canAfford ? '' : ' too-expensive'}"${canAfford ? '' : ' disabled'}>
+                    <span class="building-buy-label">HIRE</span>
+                    <span class="building-buy-amount">${fmt(cost)} EU</span>
+                </button>
             `;
 
             // Purchase on click (buy button area)
@@ -619,7 +630,7 @@ const UI = (() => {
                 }
             } else {
                 const canAfford = state.eu >= syn.cost;
-                costText = `<span class="synergy-cost${canAfford ? '' : ' too-expensive'}" data-syncost="${syn.cost}">${fmt(syn.cost)} EU</span>`;
+                costText = `<span class="synergy-cost buyable${canAfford ? '' : ' too-expensive'}" data-syncost="${syn.cost}">${fmt(syn.cost)} EU</span>`;
             }
 
             div.innerHTML = `
@@ -1461,5 +1472,6 @@ const UI = (() => {
         spawnFloatingText,
         screenShake,
         updateStats,
+        renderBuildings,
     };
 })();

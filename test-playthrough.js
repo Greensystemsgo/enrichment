@@ -148,6 +148,9 @@ const FEATURE_MANIFEST = [
     { id: 'gca-spawn',              pattern: 'GOLDEN COMPLIANCE AWARD:',               category: 'Buildings', notes: 'GCA spawn/collect' },
     { id: 'number-formatter',       pattern: 'BUILDING TEST [PASS]: formatNumber',     category: 'Buildings', notes: 'Number formatting' },
     { id: 'eu-per-second',          pattern: 'BUILDING TEST [PASS]: eps-display',      category: 'Buildings', notes: 'EU/s ticker element' },
+    { id: 'building-buy-button',    pattern: 'BUILDING TEST [PASS]: buy-button',       category: 'Buildings', notes: 'Cost renders as HIRE button' },
+    { id: 'building-cps-decimals',  pattern: 'BUILDING TEST [PASS]: cps-decimals',     category: 'Buildings', notes: 'Sub-1 CPS shows decimal' },
+    { id: 'building-synergy-pill',  pattern: 'BUILDING TEST [PASS]: synergy-pill',     category: 'Buildings', notes: 'Available synergy buy pill' },
 
     // ── Synergies ──
     { id: 'synergy-purchase',      pattern: 'SYNERGY PURCHASED:',                    category: 'Synergies', notes: 'Buy a synergy' },
@@ -1708,6 +1711,35 @@ async function main() {
             }
             Buildings.dismissGCA();
         } catch (e) { fail('gca', e.message); }
+
+        // ── Workforce UI: render affordance + value formatting ──
+        // Force the buildings tab active so renderBuildings() actually paints.
+        try {
+            const pane = document.querySelector('.tab-pane[data-tab="buildings"]');
+            if (pane) pane.classList.add('active');
+            // Own a sub-1 CPS producer (intern = 0.1/s) and an affordable synergy threshold.
+            Game.setState({ eu: 1e7, lifetimeEU: 1e7, buildings: { intern: 4 }, synergies: {}, _gcaMultiplier: 1, _prestigeMultiplier: 1 });
+            UI.renderBuildings();
+
+            // (a) HIRE button — cost is a real <button> with the HIRE label, not bare text.
+            const internCard = document.querySelector('.building-item[data-bid="intern"]');
+            const buyBtn = internCard && internCard.querySelector('button.building-cost');
+            const hireLabel = buyBtn && buyBtn.querySelector('.building-buy-label');
+            if (buyBtn && hireLabel && /HIRE/i.test(hireLabel.textContent)) pass('buy-button: cost renders as a HIRE button');
+            else fail('buy-button', `button=${!!buyBtn} label=${hireLabel && hireLabel.textContent}`);
+
+            // (b) Sub-1 CPS shows a decimal instead of being floored to "0 EU/s each".
+            const cpsLine = internCard && internCard.querySelector('.building-cps');
+            const cpsText = cpsLine ? cpsLine.textContent : '';
+            if (/0\.1 EU\/s each/.test(cpsText) && !/^0 EU\/s/.test(cpsText)) pass('cps-decimals: fractional rate shows 0.1, not 0');
+            else fail('cps-decimals', `cps line="${cpsText}"`);
+
+            // (c) Available synergy renders a buyable pill (intern_t1: threshold 1, owned 4, affordable).
+            const internSyn = document.querySelector('.synergy-item[class*="available"] .synergy-cost.buyable')
+                || document.querySelector('.synergy-cost.buyable');
+            if (internSyn) pass('synergy-pill: available synergy cost has buyable affordance');
+            else fail('synergy-pill', 'no .synergy-cost.buyable found after render');
+        } catch (e) { fail('workforce-ui', e.message); }
 
         // Log results
         for (const r of results) {
