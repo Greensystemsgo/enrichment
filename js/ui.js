@@ -523,6 +523,8 @@ const UI = (() => {
 
             // Compute synergy status summary
             const synStatus = getSynergyStatusLine(id, state);
+            const readyCount = [1, 2, 3].filter(t => Buildings.getSynergyState(id + '_t' + t) === 'available').length;
+            const upLabel = readyCount ? `${readyCount} upgrade${readyCount > 1 ? 's' : ''} ready` : 'Upgrades';
             const isExpanded = expanded.has(id);
             const chevron = isExpanded ? '▾' : '▸';
 
@@ -535,7 +537,7 @@ const UI = (() => {
                     <div class="building-name">${b.name}${owned > 0 ? ` <span class="building-count">${owned}</span>` : ''}${mult > 1 ? ` <span class="building-mult">×${mult}</span>` : ''}</div>
                     <div class="building-cps">${fmtRate(effectiveCPS)} EU/s each${owned > 0 ? ' · ' + fmtRate(totalCPS) + ' total' : ''}</div>
                     <div class="building-flavor">${flavor}</div>
-                    <div class="synergy-status" role="button" tabindex="0"><span class="building-chevron">${chevron}</span> ${synStatus}</div>
+                    <div class="synergy-status${readyCount ? ' has-ready' : ''}" role="button" tabindex="0"><span class="building-chevron">${chevron}</span><span class="synergy-status-label">${upLabel}</span><span class="tier-pills">${synStatus}</span></div>
                 </div>
                 <button type="button" class="building-cost${canAfford ? '' : ' too-expensive'}"${canAfford ? '' : ' disabled'}>
                     <span class="building-buy-label">HIRE${buyAmount > 1 ? ' ×' + buyAmount : ''}</span>
@@ -598,10 +600,11 @@ const UI = (() => {
         return tiers.map(t => {
             const sId = buildingId + '_t' + t;
             const synState = Buildings.getSynergyState(sId);
-            if (synState === 'purchased') return `T${t} ✓`;
-            if (synState === 'available') return `T${t} ★`;
-            return `T${t} 🔒`;
-        }).join(' · ');
+            // purchased = done (green ✓), available = ready (gold, buy me), else locked (dim 🔒)
+            if (synState === 'purchased') return `<span class="tier-pill done">T${t} ✓</span>`;
+            if (synState === 'available') return `<span class="tier-pill ready">T${t} ⬆</span>`;
+            return `<span class="tier-pill locked">T${t} 🔒</span>`;
+        }).join('');
     }
 
     function renderBuildingSynergies(container, buildingId, state, fmt) {

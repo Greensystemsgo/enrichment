@@ -151,6 +151,7 @@ const FEATURE_MANIFEST = [
     { id: 'building-buy-button',    pattern: 'BUILDING TEST [PASS]: buy-button',       category: 'Buildings', notes: 'Cost renders as HIRE button' },
     { id: 'building-cps-decimals',  pattern: 'BUILDING TEST [PASS]: cps-decimals',     category: 'Buildings', notes: 'Sub-1 CPS shows decimal' },
     { id: 'building-synergy-pill',  pattern: 'BUILDING TEST [PASS]: synergy-pill',     category: 'Buildings', notes: 'Available synergy buy pill' },
+    { id: 'building-ready-cue',     pattern: 'BUILDING TEST [PASS]: synergy-ready-cue', category: 'Buildings', notes: 'Collapsed card flags ready upgrade' },
     { id: 'building-buy-amount',    pattern: 'BUILDING TEST [PASS]: buy-amount-label', category: 'Buildings', notes: 'HIRE label reflects buy amount' },
 
     // ── Synergies ──
@@ -1740,6 +1741,15 @@ async function main() {
                 || document.querySelector('.synergy-cost.buyable');
             if (internSyn) pass('synergy-pill: available synergy cost has buyable affordance');
             else fail('synergy-pill', 'no .synergy-cost.buyable found after render');
+
+            // (c2) Collapsed card surfaces a "ready" upgrade cue (gold pill + has-ready label).
+            const internCard2 = document.querySelector('.building-item[data-bid="intern"]');
+            const statusEl = internCard2 && internCard2.querySelector('.synergy-status');
+            const readyPill = internCard2 && internCard2.querySelector('.tier-pill.ready');
+            const labelReady = statusEl && /UPGRADE/i.test(statusEl.querySelector('.synergy-status-label').textContent);
+            if (statusEl && statusEl.classList.contains('has-ready') && readyPill && labelReady)
+                pass('synergy-ready-cue: collapsed card flags an available upgrade');
+            else fail('synergy-ready-cue', `hasReady=${statusEl && statusEl.classList.contains('has-ready')} pill=${!!readyPill} label=${labelReady}`);
 
             // (d) HIRE label reflects the active buy amount (×10), then resets to ×1.
             const x10 = document.querySelector('.buy-amt-btn[data-amount="10"]');
